@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DOOM64", "DOOM64.vcproj", "{84E4DDA5-7FE9-45F9-A365-84C6A177D5B2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WadGen", "WadGen\WadGen.vcproj", "{F2B98555-BDB3-4329-A3B4-54F586108677}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Launcher", "Launcher\Launcher.vcproj", "{9FC948C4-1809-4001-BC60-A3D984BBCDC4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84E4DDA5-7FE9-45F9-A365-84C6A177D5B2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{84E4DDA5-7FE9-45F9-A365-84C6A177D5B2}.Debug|Win32.Build.0 = Debug|Win32
+		{84E4DDA5-7FE9-45F9-A365-84C6A177D5B2}.Release|Win32.ActiveCfg = Release|Win32
+		{84E4DDA5-7FE9-45F9-A365-84C6A177D5B2}.Release|Win32.Build.0 = Release|Win32
+		{F2B98555-BDB3-4329-A3B4-54F586108677}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F2B98555-BDB3-4329-A3B4-54F586108677}.Debug|Win32.Build.0 = Debug|Win32
+		{F2B98555-BDB3-4329-A3B4-54F586108677}.Release|Win32.ActiveCfg = Release|Win32
+		{F2B98555-BDB3-4329-A3B4-54F586108677}.Release|Win32.Build.0 = Release|Win32
+		{9FC948C4-1809-4001-BC60-A3D984BBCDC4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9FC948C4-1809-4001-BC60-A3D984BBCDC4}.Debug|Win32.Build.0 = Debug|Win32
+		{9FC948C4-1809-4001-BC60-A3D984BBCDC4}.Release|Win32.ActiveCfg = Release|Win32
+		{9FC948C4-1809-4001-BC60-A3D984BBCDC4}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
