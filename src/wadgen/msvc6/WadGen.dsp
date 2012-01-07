@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib libpng13.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"MSVCRT" /out:"WadGen.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib libpng13.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"MSVCRT" /out:"bin/WadGen.exe"
 # SUBTRACT LINK32 /nodefaultlib
 
 !ELSEIF  "$(CFG)" == "WadGen - Win32 Debug"
@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib libpng13.lib /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"MSVCRT" /out:"WadGen.exe" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib libpng13.lib /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"MSVCRT" /out:"bin/WadGen.exe" /pdbtype:sept
 
 !ENDIF 
 
@@ -93,55 +93,55 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\DeflateN64.c
+SOURCE=.\..\DeflateN64.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Files.c
+SOURCE=.\..\Files.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Gfx.c
+SOURCE=.\..\Gfx.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Level.c
+SOURCE=.\..\Level.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Mem.c
+SOURCE=.\..\Mem.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Png.c
+SOURCE=.\..\Png.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Rom.c
+SOURCE=.\..\Rom.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\SndFont.c
+SOURCE=.\..\SndFont.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Sound.c
+SOURCE=.\..\Sound.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Sprite.c
+SOURCE=.\..\Sprite.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Texture.c
+SOURCE=.\..\Texture.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Wad.c
+SOURCE=.\..\Wad.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\WadGen.c
+SOURCE=.\..\WadGen.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -149,51 +149,51 @@ SOURCE=.\WadGen.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\DeflateN64.h
+SOURCE=.\..\DeflateN64.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Files.h
+SOURCE=.\..\Files.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Gfx.h
+SOURCE=.\..\Gfx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Level.h
+SOURCE=.\..\Level.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Mem.h
+SOURCE=.\..\Mem.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Rom.h
+SOURCE=.\..\Rom.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\SndFont.h
+SOURCE=.\..\SndFont.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Sound.h
+SOURCE=.\..\Sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Sprite.h
+SOURCE=.\..\Sprite.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Texture.h
+SOURCE=.\..\Texture.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Wad.h
+SOURCE=.\..\Wad.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\WadGen.h
+SOURCE=.\..\WadGen.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -202,6 +202,10 @@ SOURCE=.\WadGen.h
 # Begin Source File
 
 SOURCE=.\icon.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\kex\msvc6\resource.h
 # End Source File
 # Begin Source File
 

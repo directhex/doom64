@@ -12,7 +12,7 @@
 #include <io.h>
 #include <math.h>
 #include <sys\stat.h>
-#include "resource.h"
+#include <resource.h>
 
 typedef unsigned char	byte;
 typedef unsigned short	word;

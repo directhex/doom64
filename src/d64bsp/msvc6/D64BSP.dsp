@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"D64BSP.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 /out:"bin/D64BSP.exe"
 
 !ELSEIF  "$(CFG)" == "D64BSP - Win32 Debug"
 
@@ -74,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /out:"D64BSP.exe" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /out:"bin/D64BSP.exe" /pdbtype:sept
 
 !ENDIF 
 
@@ -87,51 +87,51 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\analyze.c
+SOURCE=.\..\analyze.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\blockmap.c
+SOURCE=.\..\blockmap.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\display.c
+SOURCE=.\..\display.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\glbsp.c
+SOURCE=.\..\glbsp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\level.c
+SOURCE=.\..\level.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\main.c
+SOURCE=.\..\main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\node.c
+SOURCE=.\..\node.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\reject.c
+SOURCE=.\..\reject.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\seg.c
+SOURCE=.\..\seg.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\system.c
+SOURCE=.\..\system.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\util.c
+SOURCE=.\..\util.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wad.c
+SOURCE=.\..\wad.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -139,51 +139,51 @@ SOURCE=.\wad.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\analyze.h
+SOURCE=.\..\analyze.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\blockmap.h
+SOURCE=.\..\blockmap.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\display.h
+SOURCE=.\..\display.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\glbsp.h
+SOURCE=.\..\glbsp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\level.h
+SOURCE=.\..\level.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\node.h
+SOURCE=.\..\node.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\reject.h
+SOURCE=.\..\reject.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\seg.h
+SOURCE=.\..\seg.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\structs.h
+SOURCE=.\..\structs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\system.h
+SOURCE=.\..\system.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\util.h
+SOURCE=.\..\util.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\wad.h
+SOURCE=.\..\wad.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

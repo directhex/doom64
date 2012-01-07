@@ -53,12 +53,12 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng13.lib libfluidsynth.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"LIBCMT" /out:"E:\sources\Kex\DOOM64.EXE"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng13.lib libfluidsynth.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"LIBCMT" /out:"bin/DOOM64.EXE"
 # Begin Special Build Tool
 WkspDir=.
 SOURCE="$(InputPath)"
 PostBuild_Desc=Generate Revision String
-PostBuild_Cmds="C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" $(WkspDir) $(WkspDir)\revconfig.txt $(WkspDir)\version.h
+PostBuild_Cmds="C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" $(WkspDir) $(WkspDir)\revconfig.txt $(WkspDir)\..\version.h
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "DOOM64 - Win32 Debug"
@@ -85,7 +85,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng13.lib libfluidsynth.lib /nologo /subsystem:windows /map /debug /machine:I386 /nodefaultlib:"LIBCMT" /out:"E:\sources\Kex\DOOM64.EXE" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng13.lib libfluidsynth.lib /nologo /subsystem:windows /map /debug /machine:I386 /nodefaultlib:"LIBCMT" /out:"bin/DOOM64.EXE" /pdbtype:sept
 
 !ENDIF 
 
@@ -101,11 +101,11 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\am_draw.c
+SOURCE=.\..\am_draw.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\am_map.c
+SOURCE=.\..\am_map.c
 # End Source File
 # End Group
 # Begin Group "D"
@@ -113,15 +113,15 @@ SOURCE=.\am_map.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\d_devstat.c
+SOURCE=.\..\d_devstat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_main.c
+SOURCE=.\..\d_main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_net.c
+SOURCE=.\..\d_net.c
 # End Source File
 # End Group
 # Begin Group "F"
@@ -129,7 +129,7 @@ SOURCE=.\d_net.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\f_finale.c
+SOURCE=.\..\f_finale.c
 # End Source File
 # End Group
 # Begin Group "G"
@@ -137,19 +137,19 @@ SOURCE=.\f_finale.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\g_actions.c
+SOURCE=.\..\g_actions.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_cmds.c
+SOURCE=.\..\g_cmds.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_game.c
+SOURCE=.\..\g_game.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_settings.c
+SOURCE=.\..\g_settings.c
 # End Source File
 # End Group
 # Begin Group "I"
@@ -157,39 +157,35 @@ SOURCE=.\g_settings.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\i_audio.c
+SOURCE=.\..\i_audio.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_cpu.c
+SOURCE=.\..\i_cpu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_exception.c
+SOURCE=.\..\i_exception.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_launcher.c
+SOURCE=.\..\i_main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_main.c
+SOURCE=.\..\i_opndir.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_opndir.c
+SOURCE=.\..\i_png.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_png.c
+SOURCE=.\..\i_system.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_system.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\i_xinput.c
+SOURCE=.\..\i_xinput.c
 # End Source File
 # End Group
 # Begin Group "M"
@@ -197,35 +193,35 @@ SOURCE=.\i_xinput.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\m_cheat.c
+SOURCE=.\..\m_cheat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_fixed.c
+SOURCE=.\..\m_fixed.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_keys.c
+SOURCE=.\..\m_keys.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_menu.c
+SOURCE=.\..\m_menu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_misc.c
+SOURCE=.\..\m_misc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_password.c
+SOURCE=.\..\m_password.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_random.c
+SOURCE=.\..\m_random.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_shift.c
+SOURCE=.\..\m_shift.c
 # End Source File
 # End Group
 # Begin Group "P"
@@ -233,83 +229,83 @@ SOURCE=.\m_shift.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\p_ceilng.c
+SOURCE=.\..\p_ceilng.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_doors.c
+SOURCE=.\..\p_doors.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_enemy.c
+SOURCE=.\..\p_enemy.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_floor.c
+SOURCE=.\..\p_floor.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_inter.c
+SOURCE=.\..\p_inter.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_lights.c
+SOURCE=.\..\p_lights.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_macros.c
+SOURCE=.\..\p_macros.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_map.c
+SOURCE=.\..\p_map.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_maputl.c
+SOURCE=.\..\p_maputl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_mobj.c
+SOURCE=.\..\p_mobj.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_plats.c
+SOURCE=.\..\p_plats.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_pspr.c
+SOURCE=.\..\p_pspr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_saveg.c
+SOURCE=.\..\p_saveg.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_setup.c
+SOURCE=.\..\p_setup.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_sight.c
+SOURCE=.\..\p_sight.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_spec.c
+SOURCE=.\..\p_spec.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_switch.c
+SOURCE=.\..\p_switch.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_telept.c
+SOURCE=.\..\p_telept.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_tick.c
+SOURCE=.\..\p_tick.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_user.c
+SOURCE=.\..\p_user.c
 # End Source File
 # End Group
 # Begin Group "R"
@@ -317,47 +313,47 @@ SOURCE=.\p_user.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\r_bsp.c
+SOURCE=.\..\r_bsp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_clipper.c
+SOURCE=.\..\r_clipper.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_gl.c
+SOURCE=.\..\r_gl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_glExt.c
+SOURCE=.\..\r_glExt.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_lights.c
+SOURCE=.\..\r_lights.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_main.c
+SOURCE=.\..\r_main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_sky.c
+SOURCE=.\..\r_sky.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_texture.c
+SOURCE=.\..\r_texture.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_things.c
+SOURCE=.\..\r_things.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_vertices.c
+SOURCE=.\..\r_vertices.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_wipe.c
+SOURCE=.\..\r_wipe.c
 # End Source File
 # End Group
 # Begin Group "S"
@@ -365,7 +361,7 @@ SOURCE=.\r_wipe.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\s_sound.c
+SOURCE=.\..\s_sound.c
 # End Source File
 # End Group
 # Begin Group "W"
@@ -373,15 +369,15 @@ SOURCE=.\s_sound.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\w_file.c
+SOURCE=.\..\w_file.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\w_merge.c
+SOURCE=.\..\w_merge.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\w_wad.c
+SOURCE=.\..\w_wad.c
 # End Source File
 # End Group
 # Begin Group "Z"
@@ -389,7 +385,7 @@ SOURCE=.\w_wad.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\z_zone.c
+SOURCE=.\..\z_zone.c
 # End Source File
 # End Group
 # Begin Group "WI"
@@ -397,7 +393,7 @@ SOURCE=.\z_zone.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\wi_stuff.c
+SOURCE=.\..\wi_stuff.c
 # End Source File
 # End Group
 # Begin Group "V"
@@ -405,7 +401,7 @@ SOURCE=.\wi_stuff.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\v_sdl.c
+SOURCE=.\..\v_sdl.c
 # End Source File
 # End Group
 # Begin Group "ST"
@@ -413,7 +409,7 @@ SOURCE=.\v_sdl.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\st_stuff.c
+SOURCE=.\..\st_stuff.c
 # End Source File
 # End Group
 # Begin Group "CON"
@@ -421,11 +417,11 @@ SOURCE=.\st_stuff.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\con_console.c
+SOURCE=.\..\con_console.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\con_cvar.c
+SOURCE=.\..\con_cvar.c
 # End Source File
 # End Group
 # Begin Group "NET"
@@ -433,43 +429,43 @@ SOURCE=.\con_cvar.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_client.c
+SOURCE=.\..\Ext\ChocolateDoom\net_client.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_common.c
+SOURCE=.\..\Ext\ChocolateDoom\net_common.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_dedicated.c
+SOURCE=.\..\Ext\ChocolateDoom\net_dedicated.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_io.c
+SOURCE=.\..\Ext\ChocolateDoom\net_io.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_loop.c
+SOURCE=.\..\Ext\ChocolateDoom\net_loop.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_packet.c
+SOURCE=.\..\Ext\ChocolateDoom\net_packet.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_query.c
+SOURCE=.\..\Ext\ChocolateDoom\net_query.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_sdl.c
+SOURCE=.\..\Ext\ChocolateDoom\net_sdl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_server.c
+SOURCE=.\..\Ext\ChocolateDoom\net_server.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_structrw.c
+SOURCE=.\..\Ext\ChocolateDoom\net_structrw.c
 # End Source File
 # End Group
 # Begin Group "IN"
@@ -477,7 +473,7 @@ SOURCE=.\Ext\ChocolateDoom\net_structrw.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\in_stuff.c
+SOURCE=.\..\in_stuff.c
 # End Source File
 # End Group
 # Begin Group "SC"
@@ -485,24 +481,24 @@ SOURCE=.\in_stuff.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\sc_main.c
+SOURCE=.\..\sc_main.c
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\dgl.c
+SOURCE=.\..\dgl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\info.c
+SOURCE=.\..\info.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\md5.c
+SOURCE=.\..\Ext\md5.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\psnprntf.c
+SOURCE=.\..\psnprntf.c
 # End Source File
 # Begin Source File
 
@@ -510,11 +506,11 @@ SOURCE=.\resource.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\SDL_win32_main.c
+SOURCE=.\..\Ext\SDL_win32_main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\tables.c
+SOURCE=.\..\tables.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -525,11 +521,11 @@ SOURCE=.\tables.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\am_draw.h
+SOURCE=.\..\am_draw.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\am_map.h
+SOURCE=.\..\am_map.h
 # End Source File
 # End Group
 # Begin Group "D_H"
@@ -537,39 +533,39 @@ SOURCE=.\am_map.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\d_devstat.h
+SOURCE=.\..\d_devstat.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_englsh.h
+SOURCE=.\..\d_englsh.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_event.h
+SOURCE=.\..\d_event.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_keywds.h
+SOURCE=.\..\d_keywds.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_main.h
+SOURCE=.\..\d_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_net.h
+SOURCE=.\..\d_net.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_player.h
+SOURCE=.\..\d_player.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_think.h
+SOURCE=.\..\d_think.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\d_ticcmd.h
+SOURCE=.\..\d_ticcmd.h
 # End Source File
 # End Group
 # Begin Group "F_H"
@@ -577,7 +573,7 @@ SOURCE=.\d_ticcmd.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\f_finale.h
+SOURCE=.\..\f_finale.h
 # End Source File
 # End Group
 # Begin Group "G_H"
@@ -585,23 +581,23 @@ SOURCE=.\f_finale.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\g_actions.h
+SOURCE=.\..\g_actions.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_controls.h
+SOURCE=.\..\g_controls.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_game.h
+SOURCE=.\..\g_game.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_local.h
+SOURCE=.\..\g_local.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\g_settings.h
+SOURCE=.\..\g_settings.h
 # End Source File
 # End Group
 # Begin Group "I_H"
@@ -609,31 +605,31 @@ SOURCE=.\g_settings.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\i_audio.h
+SOURCE=.\..\i_audio.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_launcher.h
+SOURCE=.\..\i_launcher.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_opndir.h
+SOURCE=.\..\i_opndir.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_png.h
+SOURCE=.\..\i_png.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_swap.h
+SOURCE=.\..\i_swap.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_system.h
+SOURCE=.\..\i_system.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\i_xinput.h
+SOURCE=.\..\i_xinput.h
 # End Source File
 # End Group
 # Begin Group "M_H"
@@ -641,35 +637,35 @@ SOURCE=.\i_xinput.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\m_cheat.h
+SOURCE=.\..\m_cheat.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_fixed.h
+SOURCE=.\..\m_fixed.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_keys.h
+SOURCE=.\..\m_keys.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_menu.h
+SOURCE=.\..\m_menu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_misc.h
+SOURCE=.\..\m_misc.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_password.h
+SOURCE=.\..\m_password.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_random.h
+SOURCE=.\..\m_random.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\m_shift.h
+SOURCE=.\..\m_shift.h
 # End Source File
 # End Group
 # Begin Group "P_H"
@@ -677,39 +673,39 @@ SOURCE=.\m_shift.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\p_inter.h
+SOURCE=.\..\p_inter.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_local.h
+SOURCE=.\..\p_local.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_macros.h
+SOURCE=.\..\p_macros.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_mobj.h
+SOURCE=.\..\p_mobj.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_pspr.h
+SOURCE=.\..\p_pspr.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_saveg.h
+SOURCE=.\..\p_saveg.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_setup.h
+SOURCE=.\..\p_setup.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_spec.h
+SOURCE=.\..\p_spec.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\p_tick.h
+SOURCE=.\..\p_tick.h
 # End Source File
 # End Group
 # Begin Group "R_H"
@@ -717,51 +713,51 @@ SOURCE=.\p_tick.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\r_bsp.h
+SOURCE=.\..\r_bsp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_clipper.h
+SOURCE=.\..\r_clipper.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_gl.h
+SOURCE=.\..\r_gl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_glExt.h
+SOURCE=.\..\r_glExt.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_lights.h
+SOURCE=.\..\r_lights.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_local.h
+SOURCE=.\..\r_local.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_main.h
+SOURCE=.\..\r_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_sky.h
+SOURCE=.\..\r_sky.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_texture.h
+SOURCE=.\..\r_texture.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_things.h
+SOURCE=.\..\r_things.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_vertices.h
+SOURCE=.\..\r_vertices.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\r_wipe.h
+SOURCE=.\..\r_wipe.h
 # End Source File
 # End Group
 # Begin Group "S_H"
@@ -769,7 +765,7 @@ SOURCE=.\r_wipe.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\s_sound.h
+SOURCE=.\..\s_sound.h
 # End Source File
 # End Group
 # Begin Group "W_H"
@@ -777,15 +773,15 @@ SOURCE=.\s_sound.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\w_file.h
+SOURCE=.\..\w_file.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\w_merge.h
+SOURCE=.\..\w_merge.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\w_wad.h
+SOURCE=.\..\w_wad.h
 # End Source File
 # End Group
 # Begin Group "Z_H"
@@ -793,7 +789,7 @@ SOURCE=.\w_wad.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\z_zone.h
+SOURCE=.\..\z_zone.h
 # End Source File
 # End Group
 # Begin Group "WI_H"
@@ -801,7 +797,7 @@ SOURCE=.\z_zone.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\wi_stuff.h
+SOURCE=.\..\wi_stuff.h
 # End Source File
 # End Group
 # Begin Group "V_H"
@@ -809,7 +805,7 @@ SOURCE=.\wi_stuff.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\v_sdl.h
+SOURCE=.\..\v_sdl.h
 # End Source File
 # End Group
 # Begin Group "T_H"
@@ -817,7 +813,7 @@ SOURCE=.\v_sdl.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\t_bsp.h
+SOURCE=.\..\t_bsp.h
 # End Source File
 # End Group
 # Begin Group "ST_H"
@@ -825,7 +821,7 @@ SOURCE=.\t_bsp.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\st_stuff.h
+SOURCE=.\..\st_stuff.h
 # End Source File
 # End Group
 # Begin Group "CON_H"
@@ -833,11 +829,11 @@ SOURCE=.\st_stuff.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\con_console.h
+SOURCE=.\..\con_console.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\con_cvar.h
+SOURCE=.\..\con_cvar.h
 # End Source File
 # End Group
 # Begin Group "NET_H"
@@ -845,47 +841,47 @@ SOURCE=.\con_cvar.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_client.h
+SOURCE=.\..\Ext\ChocolateDoom\net_client.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_common.h
+SOURCE=.\..\Ext\ChocolateDoom\net_common.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_dedicated.h
+SOURCE=.\..\Ext\ChocolateDoom\net_dedicated.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_defs.h
+SOURCE=.\..\Ext\ChocolateDoom\net_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_io.h
+SOURCE=.\..\Ext\ChocolateDoom\net_io.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_loop.h
+SOURCE=.\..\Ext\ChocolateDoom\net_loop.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_packet.h
+SOURCE=.\..\Ext\ChocolateDoom\net_packet.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_query.h
+SOURCE=.\..\Ext\ChocolateDoom\net_query.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_sdl.h
+SOURCE=.\..\Ext\ChocolateDoom\net_sdl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_server.h
+SOURCE=.\..\Ext\ChocolateDoom\net_server.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\ChocolateDoom\net_structrw.h
+SOURCE=.\..\Ext\ChocolateDoom\net_structrw.h
 # End Source File
 # End Group
 # Begin Group "SC_H"
@@ -893,52 +889,52 @@ SOURCE=.\Ext\ChocolateDoom\net_structrw.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\sc_main.h
+SOURCE=.\..\sc_main.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\defconfig.inc
+SOURCE=.\..\defconfig.inc
 # End Source File
 # Begin Source File
 
-SOURCE=.\dgl.h
+SOURCE=.\..\dgl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\doomdata.h
+SOURCE=.\..\doomdata.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\doomdef.h
+SOURCE=.\..\doomdef.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\doomstat.h
+SOURCE=.\..\doomstat.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\doomtype.h
+SOURCE=.\..\doomtype.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\info.h
+SOURCE=.\..\info.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ext\md5.h
+SOURCE=.\..\Ext\md5.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\psnprntf.h
+SOURCE=.\..\psnprntf.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\sounds.h
+SOURCE=.\..\sounds.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\tables.h
+SOURCE=.\..\tables.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

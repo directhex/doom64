@@ -13,6 +13,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <commctrl.h>
+#include <resource.h>
 #include <rpcdce.h>
 #include <io.h>
 #else
@@ -28,7 +29,6 @@
 #include <sys/stat.h>
 
 #include "Mem.h"
-#include "resource.h"
 
 #ifdef PLATFORM_PC
 
