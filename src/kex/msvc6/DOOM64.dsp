@@ -205,6 +205,10 @@ SOURCE=.\..\m_keys.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\m_math.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\..\m_menu.c
 # End Source File
 # Begin Source File
@@ -646,6 +650,10 @@ SOURCE=.\..\m_fixed.h
 # Begin Source File
 
 SOURCE=.\..\m_keys.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\m_math.h
 # End Source File
 # Begin Source File
 
