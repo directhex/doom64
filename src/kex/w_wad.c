@@ -365,7 +365,7 @@ static dboolean nonmaplump = false;
 
 filelump_t *mapLump;
 int numMapLumps;
-byte *mapLumpData;
+byte *mapLumpData = NULL;
 
 //
 // W_CacheMapLump
@@ -406,7 +406,11 @@ void W_FreeMapLump(void)
     mapLump = NULL;
     numMapLumps = 0;
     nonmaplump = false;
-    Z_Free(mapLumpData);
+
+    if(mapLumpData)
+        Z_Free(mapLumpData);
+
+    mapLumpData = NULL;
 }
 
 //

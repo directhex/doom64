@@ -52,6 +52,7 @@ rcsid[] = "$Id$";
 #include "m_random.h"
 #include "z_zone.h"
 #include "sc_main.h"
+#include "m_math.h"
 
 void P_SpawnMapThing(mapthing_t *mthing);
 
@@ -910,6 +911,9 @@ void P_GroupLines (void)
         }
         if (linebuffer - sector->lines != sector->linecount)
             I_Error ("P_GroupLines: miscounted");
+
+        if(sector->linecount <= 2)
+            CON_Warnf("P_GroupLines: Sector #%i has only %i linedefs\n", sector - sectors, sector->linecount);
         
         // set the degenmobj_t to the middle of the bounding box
         sector->soundorg.x = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
@@ -967,30 +971,199 @@ void P_SetupSky(void)
 }
 
 //
+// P_PlaneAlign
+//
+// Aligns the floor or ceiling of a sector to the corresponding plane
+// on the other side of the reference line. (By definition, line must be
+// two-sided.)
+//
+// Adapted from Zdoom for Doom64EX
+//
+
+void P_PlaneAlign(sector_t* sector, line_t* line, dboolean floor, dboolean side)
+{
+    int bestdist;
+    int i;
+    line_t** rover;
+    sector_t* lsec;
+    vertex_t* selvert;
+    plane_t* plane;
+    fixed_t srcheight;
+    fixed_t destheight;
+    float p1[3];
+    float p2[3];
+    float c[3];
+
+    if(line->backsector == NULL)
+        return;
+
+    selvert = (*sector->lines)->v1;
+    bestdist = 0;
+
+    // Find furthest vertex from the reference line. It, along with the two ends
+    // of the line will define the plane.
+    for(i = 0, rover = sector->lines; i < sector->linecount * 2; i++)
+    {
+        int dist;
+        vertex_t* v;
+        int px1;
+        int px2;
+        int py1;
+        int py2;
+
+        // Do calculations with only the upper bits, because the lower ones
+        // are all zero, and we would overflow for a lot of distances if we
+        // kept them around.
+
+        if(i & 1)
+            v = (*rover++)->v2;
+        else
+            v = (*rover)->v1;
+
+        px1 = ((line->v1->x - v->x) >> FRACBITS);
+        py1 = ((line->v1->y - v->y) >> FRACBITS);
+        px2 = (line->dx >> FRACBITS);   // v2->x - v1->x
+        py2 = (line->dy >> FRACBITS);   // v2->y - v1->y
+
+        dist = D_abs(py1 * px2 - px1 * py2);
+
+        if(dist > bestdist)
+        {
+            bestdist = dist;
+            selvert = v;
+        }
+    }
+
+    if(!side)
+        lsec = line->backsector;
+    else
+        lsec = line->frontsector;
+
+    if(floor)
+    {
+        plane = &sector->floorplane;
+        srcheight = sector->floorheight;
+        destheight = lsec->floorheight;
+    }
+    else
+    {
+        plane = &sector->ceilingplane;
+        srcheight = sector->ceilingheight;
+        destheight = lsec->ceilingheight;
+    }
+
+    //
+    // calculate normals for plane
+    //
+    p1[0] = F2D3D(line->dx);    // v2->x - v1->x
+    p1[1] = F2D3D(line->dy);    // v2->y - v1->y
+    p1[2] = 0;
+    p2[0] = F2D3D(selvert->x - line->v1->x);
+    p2[1] = F2D3D(selvert->y - line->v1->y);
+	p2[2] = F2D3D(srcheight - destheight);
+
+    M_CrossProduct(c, p1, p2);
+    M_Normalize3(c);
+
+    plane->a    = D3D2F(c[0]);
+    plane->b    = D3D2F(c[1]);
+    plane->c    = D3D2F(c[2]);
+    plane->nc   = D3D2F(1.0f / c[2]);   // set normalized version of plane->c
+    plane->d    = -M_DotProduct(plane->a, plane->b, plane->c,
+        line->v1->x, line->v1->y, destheight);
+
+    if(side)
+    {
+        plane->a    = -plane->a;
+        plane->b    = -plane->b;
+        plane->c    = -plane->c;
+        plane->nc   = -plane->nc;
+        plane->d    = -plane->d;
+    }
+}
+
+//
 // P_SetupPlanes
 //
 
 void P_SetupPlanes(void)
 {
     int i;
+    line_t* line;
     sector_t* sector;
 
+    //
+    // setup default plane normals
+    //
     for(i = 0; i < numsectors; i++)
     {
         sector = &sectors[i];
 
-        if(sector->linecount <= 2)
-            continue;
+        sector->floorplane.a    = 0;
+        sector->floorplane.b    = 0;
+        sector->floorplane.c    = FRACUNIT;
+        sector->floorplane.nc   = FRACUNIT;
+        sector->floorplane.d    = -sector->floorheight;
 
-        sector->floorplane.a = 0;
-        sector->floorplane.b = 0;
-        sector->floorplane.c = FRACUNIT;
-        sector->floorplane.d = -sector->floorheight;
+        sector->ceilingplane.a  = 0;
+        sector->ceilingplane.b  = 0;
+        sector->ceilingplane.c  = -FRACUNIT;
+        sector->ceilingplane.nc = -FRACUNIT;
+        sector->ceilingplane.d  = sector->ceilingheight;
+    }
 
-        sector->ceilingplane.a = 0;
-        sector->ceilingplane.b = 0;
-        sector->ceilingplane.c = -FRACUNIT;
-        sector->ceilingplane.d = sector->ceilingheight;
+    //
+    // setup slope plane normals
+    //
+    for(i = 0; i < numlines; i++)
+    {
+        line = &lines[i];
+
+        if(SPECIALMASK(line->special) == 181)
+        {
+            dboolean side;
+
+            line->special &= ~SPECIALMASK(line->special);
+
+            if(line->backsector != NULL)
+            {
+                if(line->special & MLU_USE)
+                {
+                    line->special &= ~MLU_USE;
+                    if(line->special & MLU_SHOOT)
+                    {
+                        side = true;
+                        sector = line->backsector;
+                        line->special &= ~MLU_SHOOT;
+                    }
+                    else
+                    {
+                        side = false;
+                        sector = line->frontsector;
+                    }
+
+                    P_PlaneAlign(sector, line, 1, side);
+                }
+
+                if(line->special & MLU_CROSS)
+                {
+                    line->special &= ~MLU_CROSS;
+                    if(line->special & MLU_REPEAT)
+                    {
+                        side = true;
+                        sector = line->backsector;
+                        line->special &= ~MLU_REPEAT;
+                    }
+                    else
+                    {
+                        side = false;
+                        sector = line->frontsector;
+                    }
+
+                    P_PlaneAlign(sector, line, 0, side);
+                }
+            }
+        }
     }
 }
 
@@ -1046,6 +1219,7 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
     P_LoadReject(ML_REJECT);
     P_LoadLights(ML_LIGHTS);
     P_GroupLines();
+    P_SetupPlanes();
     P_LoadThings(ML_THINGS);
     W_FreeMapLump();
 
@@ -1058,7 +1232,6 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
     // set up world state
     P_SpawnSpecials();
     P_SetupSky();
-    P_SetupPlanes();
 
     // if deathmatch, randomly spawn the active players
     if(deathmatch)

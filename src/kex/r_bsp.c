@@ -39,6 +39,9 @@ static const char rcsid[] = "$Id$";
 #include "r_vertices.h"
 #include "con_console.h"
 #include "p_local.h"
+#include "m_math.h"
+
+#define SEG_EPSILON     0.005f
 
 sector_t    *frontsector;
 
@@ -324,17 +327,16 @@ dboolean R_GenerateLowerSegPlane(seg_t *line, vtx_t* v)
     rfloat      length;
     rfloat      rowoffs;
     rfloat      coloffs;
-    float       x;
-    float       y;
-    
-    x = F2D3D(line->v1->x);
-    y = F2D3D(line->v1->y);
+    fixed_t     ffz1;
+    fixed_t     ffz2;
+    fixed_t     bfz1;
+    fixed_t     bfz2;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
     
-    v[0].x = v[2].x = x;
-    v[0].y = v[2].y = y;
+    v[0].x = v[2].x = F2D3D(line->v1->x);
+    v[0].y = v[2].y = F2D3D(line->v1->y);
     v[1].x = v[3].x = F2D3D(line->v2->x);
     v[1].y = v[3].y = F2D3D(line->v2->y);
 
@@ -343,14 +345,18 @@ dboolean R_GenerateLowerSegPlane(seg_t *line, vtx_t* v)
     R_SetSegLineColor(line, v, 0);
     GetSideTopBottom(line->frontsector, &top, &bottom);
     GetSideTopBottom(line->backsector, &btop, &bbottom);
+
+    bfz1 = M_PointToZ(&line->backsector->floorplane, line->v1->x, line->v1->y);
+    bfz2 = M_PointToZ(&line->backsector->floorplane, line->v2->x, line->v2->y);
+    ffz1 = M_PointToZ(&line->frontsector->floorplane, line->v1->x, line->v1->y);
+    ffz2 = M_PointToZ(&line->frontsector->floorplane, line->v2->x, line->v2->y);
         
-    if((line->frontsector->ceilingpic == skyflatnum) && (line->backsector->ceilingpic == skyflatnum))
-        btop = top;
-        
-    if(bottom < bbottom)
+    if((ffz1 | ffz2) < (bfz1 | bfz2))
     {
-        v[0].z = v[1].z = bbottom;
-        v[2].z = v[3].z = bottom;
+        v[0].z = F2D3D(bfz1);
+        v[1].z = F2D3D(bfz2);
+        v[2].z = F2D3D(ffz1);
+        v[3].z = F2D3D(ffz2);
 
         R_SetSegLineColor(line, v, 2);
 
@@ -373,6 +379,12 @@ dboolean R_GenerateLowerSegPlane(seg_t *line, vtx_t* v)
             v[0].tv = v[1].tv = rowoffs;
             v[2].tv = v[3].tv = rowoffs + (bbottom - bottom) / height;
         }
+
+        // adjust for slopes
+        v[0].tv += (bbottom - v[0].z) / height;
+        v[1].tv += (bbottom - v[1].z) / height;
+        v[2].tv -= (v[2].z - bottom) / height;
+        v[3].tv -= (v[3].z - bottom) / height;
 
         return true;
     }
@@ -397,17 +409,16 @@ dboolean R_GenerateUpperSegPlane(seg_t *line, vtx_t* v)
     rfloat      length;
     rfloat      rowoffs;
     rfloat      coloffs;
-    float       x;
-    float       y;
-    
-    x = F2D3D(line->v1->x);
-    y = F2D3D(line->v1->y);
+    fixed_t     fcz1;
+    fixed_t     fcz2;
+    fixed_t     bcz1;
+    fixed_t     bcz2;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
     
-    v[0].x = v[2].x = x;
-    v[0].y = v[2].y = y;
+    v[0].x = v[2].x = F2D3D(line->v1->x);
+    v[0].y = v[2].y = F2D3D(line->v1->y);
     v[1].x = v[3].x = F2D3D(line->v2->x);
     v[1].y = v[3].y = F2D3D(line->v2->y);
 
@@ -416,14 +427,25 @@ dboolean R_GenerateUpperSegPlane(seg_t *line, vtx_t* v)
     R_SetSegLineColor(line, v, 0);
     GetSideTopBottom(line->frontsector, &top, &bottom);
     GetSideTopBottom(line->backsector, &btop, &bbottom);
-        
+
+    bcz1 = M_PointToZ(&line->backsector->ceilingplane, line->v1->x, line->v1->y);
+    bcz2 = M_PointToZ(&line->backsector->ceilingplane, line->v2->x, line->v2->y);
+    fcz1 = M_PointToZ(&line->frontsector->ceilingplane, line->v1->x, line->v1->y);
+    fcz2 = M_PointToZ(&line->frontsector->ceilingplane, line->v2->x, line->v2->y);
+
     if((line->frontsector->ceilingpic == skyflatnum) && (line->backsector->ceilingpic == skyflatnum))
-        btop = top;
-        
-    if(top > btop)
     {
-        v[0].z = v[1].z = top;
-        v[2].z = v[3].z = btop;
+        btop = top;
+        bcz1 = fcz1;
+        bcz2 = fcz2;
+    }
+
+    if((fcz1 | fcz2) > (bcz1 | bcz2))
+    {
+        v[0].z = F2D3D(fcz1);
+        v[1].z = F2D3D(fcz2);
+        v[2].z = F2D3D(bcz1);
+        v[3].z = F2D3D(bcz2);
 
         R_SetSegLineColor(line, v, 1);
 
@@ -450,6 +472,12 @@ dboolean R_GenerateUpperSegPlane(seg_t *line, vtx_t* v)
             v[0].tv = v[1].tv = 1 + rowoffs - (top - btop) / height;
         }
 
+        // adjust for slopes
+        v[0].tv += (top - v[0].z) / height;
+        v[1].tv += (top - v[1].z) / height;
+        v[2].tv -= (v[2].z - btop) / height;
+        v[3].tv -= (v[3].z - btop) / height;
+
         return true;
     }
 
@@ -473,17 +501,12 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
     rfloat      length;
     rfloat      rowoffs;
     rfloat      coloffs;
-    float       x;
-    float       y;
-    
-    x = F2D3D(line->v1->x);
-    y = F2D3D(line->v1->y);
     
     linedef = line->linedef;
     sidedef = line->sidedef;
     
-    v[0].x = v[2].x = x;
-    v[0].y = v[2].y = y;
+    v[0].x = v[2].x = F2D3D(line->v1->x);
+    v[0].y = v[2].y = F2D3D(line->v1->y);
     v[1].x = v[3].x = F2D3D(line->v2->x);
     v[1].y = v[3].y = F2D3D(line->v2->y);
 
@@ -493,7 +516,7 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
     GetSideTopBottom(line->frontsector, &top, &bottom);
 
     length = (rfloat)line->length;
-    
+
     if(line->backsector)
     {
         GetSideTopBottom(line->backsector, &btop, &bbottom);
@@ -506,13 +529,26 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
         
         if(top > btop)
             top = btop;
+
+        v[0].z = F2D3D(M_PointToZ(&line->backsector->ceilingplane, line->v1->x, line->v1->y));
+        v[1].z = F2D3D(M_PointToZ(&line->backsector->ceilingplane, line->v2->x, line->v2->y));
+        v[2].z = F2D3D(M_PointToZ(&line->backsector->floorplane, line->v1->x, line->v1->y));
+        v[3].z = F2D3D(M_PointToZ(&line->backsector->floorplane, line->v2->x, line->v2->y));
+    }
+    else
+    {
+        v[0].z = F2D3D(M_PointToZ(&line->frontsector->ceilingplane, line->v1->x, line->v1->y));
+        v[1].z = F2D3D(M_PointToZ(&line->frontsector->ceilingplane, line->v2->x, line->v2->y));
+        v[2].z = F2D3D(M_PointToZ(&line->frontsector->floorplane, line->v1->x, line->v1->y));
+        v[3].z = F2D3D(M_PointToZ(&line->frontsector->floorplane, line->v2->x, line->v2->y));
     }
 
-    v[0].z = v[1].z = top;
-    v[2].z = v[3].z = bottom;
-
     if(line->backsector)
+    {
         R_SetSegLineColor(line, v, 3);
+        if(linedef->flags & ML_TRANSLUCENT)
+            v[0].a = v[1].a = v[2].a = v[3].a = 128;
+    }
 
     width = texturewidth[sidedef->midtexture];
     height = textureheight[sidedef->midtexture];
@@ -553,6 +589,12 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
         }
     }
 
+    // adjust for slopes
+    v[0].tv += (top - v[0].z) / height;
+    v[1].tv += (top - v[1].z) / height;
+    v[2].tv -= (v[2].z - bottom) / height;
+    v[3].tv -= (v[3].z - bottom) / height;
+
     return true;
 }
 
@@ -569,11 +611,10 @@ void R_AddLine(seg_t *line)
     rfloat      bottom;
     rfloat      btop;
     rfloat      bbottom;
-    float       x;
-    float       y;
-    
-    x = F2D3D(line->v1->x);
-    y = F2D3D(line->v1->y);
+    fixed_t     ffz1;
+    fixed_t     ffz2;
+    fixed_t     fcz1;
+    fixed_t     fcz2;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
@@ -581,58 +622,82 @@ void R_AddLine(seg_t *line)
     if(!linedef)
         return;
     
-    v[0].x = v[2].x = x;
-    v[0].y = v[2].y = y;
+    v[0].x = v[2].x = F2D3D(line->v1->x);
+    v[0].y = v[2].y = F2D3D(line->v1->y);
     v[1].x = v[3].x = F2D3D(line->v2->x);
     v[1].y = v[3].y = F2D3D(line->v2->y);
     
-    GetSideTopBottom(line->frontsector, &top, &bottom);
+    GetSideTopBottom(line->frontsector, &top, &bottom);    
     
+    ffz1 = M_PointToZ(&line->frontsector->floorplane, line->v1->x, line->v1->y);
+    ffz2 = M_PointToZ(&line->frontsector->floorplane, line->v2->x, line->v2->y);
+    fcz1 = M_PointToZ(&line->frontsector->ceilingplane, line->v1->x, line->v1->y);
+    fcz2 = M_PointToZ(&line->frontsector->ceilingplane, line->v2->x, line->v2->y);
+
     if(line->backsector)
     {
+        fixed_t bfz1, bfz2;
+        fixed_t bcz1, bcz2;
+
         GetSideTopBottom(line->backsector, &btop, &bbottom);
-        
+
+        bfz1 = M_PointToZ(&line->backsector->floorplane, line->v1->x, line->v1->y);
+        bfz2 = M_PointToZ(&line->backsector->floorplane, line->v2->x, line->v2->y);
+        bcz1 = M_PointToZ(&line->backsector->ceilingplane, line->v1->x, line->v1->y);
+        bcz2 = M_PointToZ(&line->backsector->ceilingplane, line->v2->x, line->v2->y);
+
         if((line->frontsector->ceilingpic == skyflatnum) && (line->backsector->ceilingpic == skyflatnum))
+        {
             btop = top;
+            bcz1 = fcz1;
+            bcz2 = fcz2;
+        }
+        
         
         //
         // botom side line
         //
-        if(bottom < bbottom)
+        if((ffz1 | ffz2) < (bfz1 | bfz2))
         {
-            v[0].z = v[1].z = bbottom;
-            v[2].z = v[3].z = bottom;
+            v[0].z = F2D3D(bfz1);
+            v[1].z = F2D3D(bfz2);
+            v[2].z = F2D3D(ffz1);
+            v[3].z = F2D3D(ffz2);
 
-            if(line->sidedef[0].bottomtexture != 1)
+            if((v[0].z - v[2].z) > SEG_EPSILON || (v[1].z - v[3].z) > SEG_EPSILON)
             {
-                if(R_FrustrumTestVertex(v, 4))
+                if(line->sidedef[0].bottomtexture != 1)
                 {
-                    DL_PushSeg(&drawlist[DLT_WALL], line, sidedef->bottomtexture, 0);
-                    R_AddSwitchLine(line);
+                    if(R_FrustrumTestVertex(v, 4))
+                    {
+                        DL_PushSeg(&drawlist[DLT_WALL], line, sidedef->bottomtexture, 0);
+                        R_AddSwitchLine(line);
+                    }
                 }
             }
-            
-            bottom = bbottom;
         }
         
         //
         // upper side line
         //
-        if(top > btop)
+        if((fcz1 | fcz2) > (bcz1 | bcz2))
         {
-            v[0].z = v[1].z = top;
-            v[2].z = v[3].z = btop;
+            v[0].z = F2D3D(fcz1);
+            v[1].z = F2D3D(fcz2);
+            v[2].z = F2D3D(bcz1);
+            v[3].z = F2D3D(bcz2);
 
-            if(line->sidedef[0].toptexture != 1)
+            if((v[0].z - v[2].z) > SEG_EPSILON || (v[1].z - v[3].z) > SEG_EPSILON)
             {
-                if(R_FrustrumTestVertex(v, 4))
+                if(line->sidedef[0].toptexture != 1)
                 {
-                    DL_PushSeg(&drawlist[DLT_WALL], line, sidedef->toptexture, 1);
-                    R_AddSwitchLine(line);
+                    if(R_FrustrumTestVertex(v, 4))
+                    {
+                        DL_PushSeg(&drawlist[DLT_WALL], line, sidedef->toptexture, 1);
+                        R_AddSwitchLine(line);
+                    }
                 }
             }
-            
-            top = btop;
         }
     }
 
@@ -641,21 +706,24 @@ void R_AddLine(seg_t *line)
     //
     if(sidedef->midtexture != 1)
     {
-        v[0].z = v[1].z = top;
-        v[2].z = v[3].z = bottom;
-
-        if(!R_FrustrumTestVertex(v, 4))
-            return;
+        v[0].z = F2D3D(fcz1);
+        v[1].z = F2D3D(fcz2);
+        v[2].z = F2D3D(ffz1);
+        v[3].z = F2D3D(ffz2);
 
         if(line->backsector)
         {
             if(!(line->linedef->flags & ML_DRAWMIDTEXTURE))
                 return;
         }
+
+        if(!R_FrustrumTestVertex(v, 4))
+            return;
         
         if(!(line->linedef->flags & ML_SWITCHX02 && line->linedef->flags & ML_SWITCHX04))
         {
-            DL_PushSeg(&drawlist[DLT_WALL], line, sidedef->midtexture, 2);
+            DL_PushSeg(&drawlist[linedef->flags & ML_TRANSLUCENT ? DLT_TWALL : DLT_WALL],
+                line, sidedef->midtexture, 2);
             R_AddSwitchLine(line);
         }
     }
@@ -750,12 +818,16 @@ void R_CountSubsectorVerts(void)
 
 void R_AddLeaf(subsector_t *sub)
 {
-    int             i;
-    int             count;
-    float           x;
-    float           y;
-    vtx_t*          v;
-    leaf_t*         leaf;
+    int         i;
+    int         count;
+    float       x;
+    float       y;
+    vtx_t*      v;
+    leaf_t*     leaf;
+    dboolean    visible;
+    fixed_t     fx;
+    fixed_t     fy;
+    fixed_t     fz;
     
     if(sub->numleafs < 3)
         return;
@@ -763,6 +835,9 @@ void R_AddLeaf(subsector_t *sub)
     count = sub->numleafs;
     v = SSectorVertices;
     i = 0;
+
+    fx = sub->sector->lines[0]->v1->x - viewx;
+    fy = sub->sector->lines[0]->v1->y - viewy;
 
     while(count--)
     {
@@ -772,7 +847,8 @@ void R_AddLeaf(subsector_t *sub)
         y = F2D3D(leaf->vertex->y);
         v->x = x;
         v->y = y;
-        v->z = F2D3D(sub->sector->floorheight);
+        v->z = F2D3D(M_PointToZ(&sub->sector->floorplane,
+            leaf->vertex->x, leaf->vertex->y));
         v++;
         
         if(leaf->seg != NULL)
@@ -785,21 +861,32 @@ void R_AddLeaf(subsector_t *sub)
     
     if(sub->sector->floorpic != skyflatnum)
     {
-        if(R_FrustrumTestVertex(SSectorVertices, sub->numleafs) &&
-            viewz > sub->sector->floorheight)
+        plane_t* p;
+        fixed_t d;
+
+        p = &sub->sector->floorplane;
+        fz = sub->sector->floorheight - viewz;
+        d = M_FacePlaneDistance(p, fx, fy, fz);
+
+        visible = d != 0 ? (d > 0) : (viewz > sub->sector->floorheight);
+
+        if(visible)
         {
-            drawlist_t *dl = &drawlist[DLT_FLAT];
-
-            if(sub->sector->flags & MS_LIQUIDFLOOR)
+            if(R_FrustrumTestVertex(SSectorVertices, sub->numleafs))
             {
-                DL_PushLeaf(dl, sub, sub->sector->floorpic);
-                dl->list[dl->index - 1].flags |= DLF_WATER1;
+                drawlist_t *dl = &drawlist[DLT_FLAT];
 
-                DL_PushLeaf(dl, sub, sub->sector->floorpic + 1);
-                dl->list[dl->index - 1].flags |= DLF_WATER2;
+                if(sub->sector->flags & MS_LIQUIDFLOOR)
+                {
+                    DL_PushLeaf(dl, sub, sub->sector->floorpic);
+                    dl->list[dl->index - 1].flags |= DLF_WATER1;
+
+                    DL_PushLeaf(dl, sub, sub->sector->floorpic + 1);
+                    dl->list[dl->index - 1].flags |= DLF_WATER2;
+                }
+                else
+                    DL_PushLeaf(dl, sub, sub->sector->floorpic);
             }
-            else
-                DL_PushLeaf(dl, sub, sub->sector->floorpic);
         }
     }
     else
@@ -809,22 +896,34 @@ void R_AddLeaf(subsector_t *sub)
     
     if(sub->sector->ceilingpic != skyflatnum)
     {
-        for(i = 0; i < sub->numleafs; i++)
-        {
-            leaf = &leafs[(sub->leaf + (sub->numleafs - 1)) - i];
-            
-            SSectorVertices[i].z = F2D3D(sub->sector->ceilingheight);
-            SSectorVertices[i].x = F2D3D(leaf->vertex->x);
-            SSectorVertices[i].y = F2D3D(leaf->vertex->y);
-        }
-        
-        if(R_FrustrumTestVertex(SSectorVertices, sub->numleafs) &&
-            viewz < sub->sector->ceilingheight)
-        {
-            drawlist_t *dl = &drawlist[DLT_FLAT];
+        plane_t* p;
+        fixed_t d;
 
-            DL_PushLeaf(dl, sub, sub->sector->ceilingpic);
-            dl->list[dl->index - 1].flags |= DLF_CEILING;
+        p = &sub->sector->ceilingplane;
+        fz = sub->sector->ceilingheight - viewz;
+        d = M_FacePlaneDistance(p, fx, fy, fz);
+
+        visible = d != 0 ? (d < 0) : (viewz < sub->sector->ceilingheight);
+
+        if(visible)
+        {
+            for(i = 0; i < sub->numleafs; i++)
+            {
+                leaf = &leafs[(sub->leaf + (sub->numleafs - 1)) - i];
+
+                SSectorVertices[i].x = F2D3D(leaf->vertex->x);
+                SSectorVertices[i].y = F2D3D(leaf->vertex->y);
+                SSectorVertices[i].z = F2D3D(M_PointToZ(&sub->sector->ceilingplane,
+                    leaf->vertex->x, leaf->vertex->y));
+            }
+
+            if(R_FrustrumTestVertex(SSectorVertices, sub->numleafs))
+            {
+                drawlist_t *dl = &drawlist[DLT_FLAT];
+
+                DL_PushLeaf(dl, sub, sub->sector->ceilingpic);
+                dl->list[dl->index - 1].flags |= DLF_CEILING;
+            }
         }
     }
     else

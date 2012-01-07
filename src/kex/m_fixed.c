@@ -91,16 +91,4 @@ FixedDiv2
     return (fixed_t)((((int64)a)<<FRACBITS)/b);
 }
 
-//
-// FixedDot
-//
 
-fixed_t FixedDot(fixed_t a1, fixed_t b1,
-                 fixed_t c1, fixed_t a2,
-                 fixed_t b2, fixed_t c2)
-{
-    return 
-        FixedMul(a1, a2) +
-        FixedMul(b1, b2) +
-        FixedMul(c1, c2);
-}

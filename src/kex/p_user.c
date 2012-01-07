@@ -45,6 +45,7 @@ rcsid[] = "$Id$";
 #include "sounds.h"
 #include "r_local.h"
 #include "st_stuff.h"
+#include "m_math.h"
 
 
 //
@@ -54,6 +55,7 @@ rcsid[] = "$Id$";
 // 16 pixels of bob
 #define MAXBOB          0x100000
 #define MAXLOOKPITCH    0x3effffff
+#define EXTRAPITCHFRAC  0x1600000
 #define MAXMOCKTIME     1800
 #define MAXJUMP         (8*FRACUNIT)
 
@@ -283,10 +285,46 @@ void P_MovePlayer(player_t* player)
 {
     ticcmd_t*   cmd;
     int         mpitch;
+    int         extrapitch;
     
     cmd = &player->cmd;
     
     player->mo->angle += INT2F(cmd->angleturn);
+
+    extrapitch = 0;
+
+    //
+    // [kex] adjust pitch when standing on sloped surfaces
+    //
+    if(p_alignpitch.value)
+    {
+        fixed_t z;
+        plane_t* plane = &player->mo->subsector->sector->floorplane;
+
+        z = M_PointToZ(plane, player->mo->x, player->mo->y);
+
+        // steep surfaces will not align pitch
+        if((player->mo->z <= (z + 32*FRACUNIT)) && plane->c < -(dcos(ANG45)))
+            extrapitch = (int)M_AlignPitchToPlane(plane, player->mo->angle, 0.35f);
+    }
+
+    //
+    // [kex] calibrate extrapitch
+    //
+    if(player->extrapitch < extrapitch)
+    {
+        player->extrapitch += EXTRAPITCHFRAC;
+
+        if(player->extrapitch > extrapitch)
+            player->extrapitch = extrapitch;
+    }
+    else if(player->extrapitch > extrapitch)
+    {
+        player->extrapitch -= EXTRAPITCHFRAC;
+
+        if(player->extrapitch < extrapitch)
+            player->extrapitch = extrapitch;
+    }
     
     if(cmd->buttons2 & BT2_CENTER)
         player->mo->pitch = 0;
@@ -509,14 +547,17 @@ void P_AdvanceWeapon(player_t *player, dboolean direction)
 
 void P_PlayerXYMovment(mobj_t* mo)
 {
-    fixed_t x = mo->momx + mo->x;
-    fixed_t y = mo->momy + mo->y;
+    fixed_t x = mo->momx;
+    fixed_t y = mo->momy;
 
     if(mo->player->cheats & CF_SPECTATOR)
         return;
 
+    if(P_CheckSlopeWalk(mo, &x, &y))
+        mo->z = M_PointToZ(&mo->subsector->sector->floorplane, mo->x + x, mo->y + y);
+
     // try to slide along a blocked move
-    if(!P_TryMove(mo, x, y))
+    if(!P_TryMove(mo, mo->x + x, mo->y + y))
         P_SlideMove(mo);
 
     if(mo->z > mo->floorz && (!(mo->blockflag & BF_MOBJSTAND)))

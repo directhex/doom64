@@ -40,6 +40,7 @@ typedef enum
     DLT_FLAT,
     DLT_SPRITE,
     DLT_AMAP,
+    DLT_TWALL,
     NUMDRAWLISTS
 } drawlisttag_e;
 
@@ -66,12 +67,18 @@ int qsort_CompareDL(const void *a, const void *b);
 #define MAXDLDRAWCOUNT  0x10000
 vtx_t drawVertex[MAXDLDRAWCOUNT];
 
+dboolean DL_ProcessWalls(vtxlist_t* vl, int* drawcount);
+dboolean DL_ProcessLeafs(vtxlist_t* vl, int* drawcount);
+dboolean DL_ProcessSprites(vtxlist_t* vl, int* drawcount);
+
 void DL_PushVertex(drawlist_t *dl);
 void DL_PushSprite(drawlist_t *dl, visspritelist_t *vis, int texid);
 void DL_PushSeg(drawlist_t *dl, seg_t *line, int texid, int sidetype);
 void DL_PushLeaf(drawlist_t *dl, subsector_t *sub, int texid);
+void DL_BeginDrawList(dboolean t, dboolean a);
+void DL_ProcessDrawList(int tag, dboolean (*procfunc)(vtxlist_t*, int*));
 void DL_RenderDrawList(void);
-void DL_Init(drawlist_t *list);
+void DL_Init(void);
 
 #endif
 

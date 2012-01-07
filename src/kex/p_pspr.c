@@ -479,9 +479,11 @@ void A_Punch(player_t* player, pspdef_t* psp)
     angle = player->mo->angle;
     angle += P_RandomShift(18);
     
-    slope = P_AimLineAttack(player->mo, angle, 0, MELEERANGE);
+    slope = P_AimLineAttack(player->mo, angle,
+        player->mo->pitch + player->extrapitch, 0, MELEERANGE);
     
-    P_LineAttack(player->mo, angle, MELEERANGE, slope, damage);
+    P_LineAttack(player->mo, angle,
+        player->mo->pitch + player->extrapitch, MELEERANGE, slope, damage);
     
     // turn to face target
     if(linetarget)
@@ -508,9 +510,11 @@ void A_Saw(player_t* player, pspdef_t* psp)
     angle += P_RandomShift(18);
     
     // use meleerange + 1 se the puff doesn't skip the flash
-    slope = P_AimLineAttack(player->mo, angle, 0, MELEERANGE+1);
+    slope = P_AimLineAttack(player->mo, angle,
+        player->mo->pitch + player->extrapitch, 0, MELEERANGE+1);
     
-    P_LineAttack(player->mo, angle, MELEERANGE + 1, slope, damage);
+    P_LineAttack(player->mo, angle,
+        player->mo->pitch + player->extrapitch, MELEERANGE + 1, slope, damage);
     
     if(!linetarget)
     {
@@ -621,17 +625,20 @@ void P_BulletSlope(mobj_t* mo)
     
     // see which target is to be aimed at
     an = mo->angle;
-    bulletslope = P_AimLineAttack(mo, an, 0, ATTACKRANGE);
+    bulletslope = P_AimLineAttack(mo, an,
+        mo->pitch + mo->player->extrapitch, 0, ATTACKRANGE);
     
     if(!linetarget)
     {
         an += 1<<26;
-        bulletslope = P_AimLineAttack(mo, an, 0, ATTACKRANGE);
+        bulletslope = P_AimLineAttack(mo, an,
+            mo->pitch + mo->player->extrapitch, 0, ATTACKRANGE);
         
         if(!linetarget)
         {
             an -= 2<<26;
-            bulletslope = P_AimLineAttack(mo, an, 0, ATTACKRANGE);
+            bulletslope = P_AimLineAttack(mo, an,
+                mo->pitch + mo->player->extrapitch, 0, ATTACKRANGE);
         }
     }
 }
@@ -651,7 +658,8 @@ void P_GunShot(mobj_t* mo, dboolean accurate)
     if (!accurate)
         angle += P_RandomShift(18);
     
-    P_LineAttack (mo, angle, MISSILERANGE, bulletslope, damage);
+    P_LineAttack(mo, angle,
+        mo->pitch + mo->player->extrapitch, MISSILERANGE, bulletslope, damage);
 }
 
 
@@ -726,8 +734,10 @@ void A_FireShotgun2(player_t* player, pspdef_t* psp)
     {
         damage = 5 * (P_Random() % 3 + 1);
         angle = player->mo->angle;
-        angle += P_RandomShift(ANGLETOFINESHIFT);
-        P_LineAttack(player->mo, angle, MISSILERANGE, bulletslope + P_RandomShift(5), damage);
+        angle += P_RandomShift(19);
+        P_LineAttack(player->mo, angle,
+            player->mo->pitch + player->extrapitch, MISSILERANGE,
+            bulletslope + P_RandomShift(5), damage);
     }
 }
 
@@ -804,7 +814,7 @@ void A_BFGSpray(mobj_t* mo)
         //
         // [kex] add 1 to distance so autoaim can be forced
         //
-        P_AimLineAttack(mo->target, an, 0, ATTACKRANGE + 1);
+        P_AimLineAttack(mo->target, an, 0, 0, ATTACKRANGE + 1);
         
         if(!linetarget)
             continue;
@@ -1082,7 +1092,8 @@ void A_FireLaser(player_t *player, pspdef_t *psp)
         int	hitdice = 0;
         int	damage = 0;
 
-        slope = P_AimLineAttack(mobj, angleoffs, LASERAIMHEIGHT, LASERRANGE);
+        slope = P_AimLineAttack(mobj, angleoffs,
+            mobj->pitch + player->extrapitch, LASERAIMHEIGHT, LASERRANGE);
         
         player->ammo[weaponinfo[player->readyweapon].ammo]--;
         
@@ -1106,7 +1117,8 @@ void A_FireLaser(player_t *player, pspdef_t *psp)
         hitdice = (P_Random() & 7);
         damage = (((hitdice << 2) + hitdice) << 1) + 10;
 
-        P_LineAttack(mobj, angleoffs, LASERRANGE, slope, damage);
+        P_LineAttack(mobj, angleoffs,
+            player->mo->pitch + player->extrapitch, LASERRANGE, slope, damage);
         
         // setup laser
         laser[i] = Z_Malloc(sizeof(*laser[i]), PU_LEVSPEC, 0);
@@ -1156,7 +1168,7 @@ void A_FireLaser(player_t *player, pspdef_t *psp)
         laserthinker[i]->thinker.function.acp1 = (actionf_p1)T_LaserThinker;
         laserthinker[i]->dest = P_SpawnMobj(x, y, z, MT_PROJ_LASER);
         laserthinker[i]->laser = laser[i];
-        
+
         /*if(linetarget)
         {
             int	hitdice = 0;

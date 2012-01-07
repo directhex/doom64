@@ -871,6 +871,7 @@ enum
     misc_aim,
     misc_jump,
     misc_context,
+    misc_align,
     misc_header3,
     misc_wipe,
     misc_texresize,
@@ -901,6 +902,7 @@ menuitem_t MiscMenu[]=
     {2,"Auto Aim:",M_MiscChoice, 'a'},
     {2,"Jumping:",M_MiscChoice, 'j'},
     {2,"Use Context:",M_MiscChoice, 'u'},
+    {2,"Aligned Pitch:",M_MiscChoice, 'l'},
     {-1,"Rendering",0 },
     {2,"Screen Melt:",M_MiscChoice, 's' },
     {2,"Texture Fit:",M_MiscChoice,'t' },
@@ -930,6 +932,7 @@ char* MiscHints[misc_end]=
     "toggle classic style auto-aiming",
     "toggle the ability to jump",
     "if enabled interactive objects will highlight when near",
+    "adjust view pitch when standing on sloped surfaces",
     NULL,
     "enable the melt effect when completing a level",
     "set how texture dimentions are stretched",
@@ -956,6 +959,7 @@ menudefault_t MiscDefault[] =
     { &p_autoaim, 1 },
     { &p_allowjump, 0 },
     { &p_usecontext, 0 },
+    { &p_alignpitch, 1 },
     { &r_wipe, 1 },
     { &r_texnonpowresize, 0 },
     { &i_interpolateframes, 0 },
@@ -1031,6 +1035,10 @@ void M_MiscChoice(int choice)
 
     case misc_context:
         M_SetCvar(&p_usecontext, (float)choice);
+        break;
+
+    case misc_align:
+        M_SetCvar(&p_alignpitch, (float)choice);
         break;
 
     case misc_wipe:
@@ -1141,6 +1149,7 @@ void M_DrawMisc(void)
     DRAWMISCITEM(misc_aim, p_autoaim.value, msgNames);
     DRAWMISCITEM(misc_jump, p_allowjump.value, msgNames);
     DRAWMISCITEM(misc_context, p_usecontext.value, mapdisplaytype);
+    DRAWMISCITEM(misc_align, p_alignpitch.value, msgNames);
     DRAWMISCITEM(misc_wipe, r_wipe.value, msgNames);
     DRAWMISCITEM(misc_texresize, r_texnonpowresize.value, texresizetype);
     DRAWMISCITEM(misc_frame, i_interpolateframes.value, frametype);

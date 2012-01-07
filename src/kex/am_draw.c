@@ -36,6 +36,7 @@ static const char rcsid[] = "$Id$";
 #include "m_cheat.h"
 #include "r_sky.h"
 #include "p_local.h"
+#include "r_clipper.h"
 #include "r_vertices.h"
 
 extern fixed_t automappanx;
@@ -76,6 +77,8 @@ void AM_BeginDraw(angle_t view, fixed_t x, fixed_t y)
     dglTranslatef(-F2D3D(x), -F2D3D(y), 0);
 
     drawlist[DLT_AMAP].index = 0;
+
+    R_FrustrumSetup();
 }
 
 //
@@ -98,6 +101,97 @@ void AM_EndDraw(void)
 }
 
 //
+// DL_ProcessAutomap
+//
+
+static float am_drawscale = 0.0f;
+dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
+{
+    leaf_t* leaf;
+    rcolor color;
+    fixed_t	tx;
+    fixed_t	ty;
+    vtx_t *v;
+    int j;
+    int count;
+    subsector_t* sub;
+
+    sub     = (subsector_t*)vl->data;
+    leaf    = &leafs[sub->leaf];
+    count   = *drawcount;
+
+    for(j = 0; j < sub->numleafs - 2; j++)
+        dglTriangle(count, count + 1 + j, count + 2 + j);
+
+    tx = (leaf->vertex->x >> 6) & ~(FRACUNIT - 1);
+    ty = (leaf->vertex->y >> 6) & ~(FRACUNIT - 1);
+
+    //
+    // setup RGB data
+    //
+    if(am_ssect.value)
+    {
+        int num = sub - subsectors;
+        color = D_RGBA(
+            (num * 0x3f) & 0xff,
+            (num * 0xf) & 0xff,
+            (num * 0x7) & 0xff,
+            0xff
+            );
+
+        if(color == 0xff000000)
+            color = D_RGBA(0x80, 0x80, 0x80, 0xff);
+    }
+    else
+    {
+        if(nolights)
+            color = WHITE;
+        else
+        {
+            light_t* light;
+
+            light = &lights[sub->sector->colors[LIGHT_FLOOR]];
+            color = D_RGBA(
+                light->active_r,
+                light->active_g,
+                light->active_b,
+                0xff
+                );
+        }
+    }
+
+    if(am_overlay.value)
+        color -= D_RGBA(0, 0, 0, 0xBF);
+
+    v = &drawVertex[count];
+
+    dglSetVertexColor(v, color, sub->numleafs);
+
+    //
+    // setup vertex data
+    //
+    for(j = 0; j < sub->numleafs; j++)
+    {
+        vertex_t *vertex;
+
+        vertex = leafs[sub->leaf + j].vertex;
+
+        v[j].x = F2D3D(vertex->x);
+        v[j].y = F2D3D(vertex->y);
+        v[j].z = -(am_drawscale*2);
+
+        v[j].tu = F2D3D((vertex->x >> 6) - tx);
+        v[j].tv = -F2D3D((vertex->y >> 6) - ty);
+
+        count++;
+    }
+
+    *drawcount = count;
+
+    return true;
+}
+
+//
 // AM_DrawLeafs
 //
 
@@ -106,6 +200,7 @@ void AM_DrawLeafs(float scale)
     subsector_t* sub;
     drawlist_t* am_drawlist;
     int i;
+    int j;
 
     am_drawlist = &drawlist[DLT_AMAP];
 
@@ -130,6 +225,21 @@ void AM_DrawLeafs(float scale)
             if(!(sub->sector->flags & MS_HIDESSECTOR) || am_fulldraw.value)
             {
                 vtxlist_t *list;
+                vtx_t *v = &drawVertex[0];
+
+                for(j = 0; j < sub->numleafs; j++)
+                {
+                    vertex_t *vertex;
+
+                    vertex = leafs[sub->leaf + j].vertex;
+
+                    v[j].x = F2D3D(vertex->x);
+                    v[j].y = F2D3D(vertex->y);
+                    v[j].z = -(scale*2);
+                }
+
+                if(!R_FrustrumTestVertex(v, sub->numleafs))
+                    continue;
 
                 DL_PushVertex(am_drawlist);
 
@@ -141,143 +251,19 @@ void AM_DrawLeafs(float scale)
         }
     }
 
-    //
-    // set vertex pointer
-    //
-    dglSetVertex(drawVertex);
+    am_drawscale = scale;
 
     //
-    // setup texture environments
+    // process draw list
     //
-    dglActiveTexture(GL_TEXTURE0_ARB);
-
-    if(am_ssect.value || !r_fillmode.value)
-        dglDisable(GL_TEXTURE_2D);
+    DL_BeginDrawList(!am_ssect.value && r_fillmode.value, 0);
 
     if(!nolights)
         dglTexCombModulate(GL_TEXTURE0_ARB, GL_PRIMARY_COLOR);
     else
         dglTexCombReplace();
 
-    //
-    // draw everything in list
-    //
-    if(am_drawlist->max > 0)
-    {
-        vtxlist_t* head;
-        vtxlist_t* tail;
-        int drawcount = 0;
-
-        qsort(am_drawlist->list, am_drawlist->index, sizeof(vtxlist_t), qsort_CompareDL);
-
-        tail = &am_drawlist->list[am_drawlist->index];
-
-        for(i = 0; i < am_drawlist->index; i++)
-        {
-            vtxlist_t* rover;
-            leaf_t* leaf;
-            rcolor color;
-            fixed_t	tx;
-            fixed_t	ty;
-            vtx_t *v;
-            int j;
-
-            head = &am_drawlist->list[i];
-
-            if(!head->data)
-                break;
-
-            if(drawcount >= MAXDLDRAWCOUNT)
-                I_Error("AM_DrawLeafs: Leaf draw overflow by %i", am_drawlist->index);
-
-            sub = (subsector_t*)head->data;
-            leaf = &leafs[sub->leaf];
-
-            for(j = 0; j < sub->numleafs - 2; j++)
-                dglTriangle(drawcount, drawcount + 1 + j, drawcount + 2 + j);
-
-            tx = (leaf->vertex->x >> 6) & ~(FRACUNIT - 1);
-            ty = (leaf->vertex->y >> 6) & ~(FRACUNIT - 1);
-
-            //
-            // setup RGB data
-            //
-            if(am_ssect.value)
-            {
-                int num = sub - subsectors;
-                color = D_RGBA(
-                    (num * 0x3f) & 0xff,
-                    (num * 0xf) & 0xff,
-                    (num * 0x7) & 0xff,
-                    0xff
-                    );
-
-                if(color == 0xff000000)
-                    color = D_RGBA(0x80, 0x80, 0x80, 0xff);
-            }
-            else
-            {
-                if(nolights)
-                    color = WHITE;
-                else
-                {
-                    light_t* light;
-
-                    light = &lights[sub->sector->colors[LIGHT_FLOOR]];
-                    color = D_RGBA(
-                        light->active_r,
-                        light->active_g,
-                        light->active_b,
-                        0xff
-                        );
-                }
-            }
-
-            if(am_overlay.value)
-                color -= D_RGBA(0, 0, 0, 0xBF);
-
-            v = &drawVertex[drawcount];
-
-            dglSetVertexColor(v, color, sub->numleafs);
-
-            //
-            // setup vertex data
-            //
-            for(j = 0; j < sub->numleafs; j++)
-            {
-                vertex_t *vertex;
-
-                vertex = leafs[sub->leaf + j].vertex;
-        
-                v[j].x = F2D3D(vertex->x);
-                v[j].y = F2D3D(vertex->y);
-                v[j].z = -(scale*2);
-        
-                v[j].tu = F2D3D((vertex->x >> 6) - tx);
-                v[j].tv = -F2D3D((vertex->y >> 6) - ty);
-
-                drawcount++;
-            }
-
-            rover = head + 1;
-
-            if(rover != tail)
-            {
-                if(head->texid == rover->texid)
-                    continue;
-            }
-
-            R_BindWorldTexture(head->texid, 0, 0);
-
-            dglDrawGeometry(drawcount, drawVertex);
-            
-            // count vertex size
-            if(devparm) vertCount += drawcount;
-            
-            drawcount = 0;
-            head->data = NULL;
-        }
-    }
+    DL_ProcessDrawList(DLT_AMAP, DL_ProcessAutomap);
 }
 
 //

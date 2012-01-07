@@ -701,6 +701,7 @@ void G_PlayerReborn(int player)
     p->weaponowned[wp_pistol] = true;
     p->ammo[am_clip] = 50;
     p->recoilpitch = 0;
+    p->extrapitch = 0;
     
     for(i = 0; i < NUMAMMO; i++)
         p->maxammo[i] = maxammo[i];

@@ -131,6 +131,7 @@ cvar_t  p_sdoubleclick      = { "p_dsoubleclick", "0", 0 };
 cvar_t  p_usecontext        = { "p_usecontext", "0", 0 };
 cvar_t  p_damageindicator   = { "p_damageindicator", "0", 0 };
 cvar_t  p_regionmode        = { "p_regionmode", "0", 0 };
+cvar_t  p_alignpitch        = { "p_alignpitch", "1", 0 };
 
 // ST CVARS
 
@@ -272,7 +273,7 @@ void CON_CvarSet(char *var_name, char *value)
     var = CON_CvarGet(var_name);
     if(!var)
     {	// there is an error in C code if this happens
-        CON_Printf(WHITE, "CON_CvarSet: variable %s not found\n", var_name);
+        CON_Printf(YELLOW, "CON_CvarSet: variable %s not found\n", var_name);
         return;
     }
     
@@ -416,6 +417,7 @@ void CON_CvarInit(void)
     CON_CvarRegister(&p_usecontext);
     CON_CvarRegister(&p_damageindicator);
     CON_CvarRegister(&p_regionmode);
+    CON_CvarRegister(&p_alignpitch);
     
     // ST CVARS
     

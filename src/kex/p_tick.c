@@ -215,7 +215,10 @@ static void P_UpdateFrameStates(void)
     pitch = viewcamera->pitch + ANG90;
 
     if(viewcamera == player->mo)
+    {
         pitch += player->recoilpitch;
+        pitch += player->extrapitch;
+    }
 
     //
     // update player position/view for interpolation

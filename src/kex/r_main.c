@@ -321,10 +321,7 @@ void R_SetupLevel(void)
     R_CountSubsectorVerts();
     R_RefreshBrightness();
 
-    DL_Init(&drawlist[DLT_WALL]);
-    DL_Init(&drawlist[DLT_FLAT]);
-    DL_Init(&drawlist[DLT_SPRITE]);
-    DL_Init(&drawlist[DLT_AMAP]);
+    DL_Init();
     
     drawListSize = 0;
     bRenderSky = true;
@@ -357,7 +354,10 @@ void R_SetupFrame(player_t *player)
     cam_z = (viewcamera == player->mo ? player->viewz : viewcamera->z) + quakeviewy;
 
     if(viewcamera == player->mo)
+    {
         pitch += player->recoilpitch;
+        pitch += player->extrapitch;
+    }
 
     viewangle   = R_Interpolate(angle, frame_angle, (int)i_interpolateframes.value);
     viewpitch   = R_Interpolate(pitch, frame_pitch, (int)i_interpolateframes.value);
@@ -809,6 +809,7 @@ void R_RenderPlayerView(player_t *player)
     drawlist[DLT_WALL].index = 0;
     drawlist[DLT_FLAT].index = 0;
     drawlist[DLT_SPRITE].index = 0;
+    drawlist[DLT_TWALL].index = 0;
     
     R_ClearSprites();
     
@@ -877,7 +878,60 @@ void R_RenderPlayerView(player_t *player)
     //
     // render world
     //
-    DL_RenderDrawList();
+    DL_BeginDrawList(r_fillmode.value >= 1, r_texturecombiner.value >= 1);
+
+    // setup texture environment for effects
+    if(r_texturecombiner.value)
+    {
+        if(!nolights)
+        {
+            dglActiveTexture(GL_TEXTURE1_ARB);
+            dglEnable(GL_TEXTURE_2D);
+            dglTexCombModulate(GL_PREVIOUS, GL_PRIMARY_COLOR);
+        }
+
+        if(st_flashoverlay.value <= 0)
+        {
+            dglActiveTexture(GL_TEXTURE2_ARB);
+            dglEnable(GL_TEXTURE_2D);
+            dglTexCombColor(GL_PREVIOUS, flashcolor, GL_ADD);
+        }
+
+        dglTexCombReplaceAlpha(GL_TEXTURE0_ARB);
+        dglActiveTexture(GL_TEXTURE0_ARB);
+    }
+    else
+        dglTexCombReplace();
+
+    dglEnable(GL_ALPHA_TEST);
+    
+    // begin draw list loop
+    
+    // -------------- Draw walls (segs) --------------------------
+
+    DL_ProcessDrawList(DLT_WALL, DL_ProcessWalls);
+    
+    // -------------- Draw floors/ceilings (leafs) ---------------
+    
+    R_GLToggleBlend(1);
+    DL_ProcessDrawList(DLT_FLAT, DL_ProcessLeafs);
+    
+    // -------------- Draw things (sprites) ----------------------
+    
+    dglDepthMask(0);
+    DL_ProcessDrawList(DLT_SPRITE, DL_ProcessSprites);
+
+    // -------------- Draw translucent walls (segs) --------------
+
+    DL_ProcessDrawList(DLT_TWALL, DL_ProcessWalls);
+    
+    // -------------- Restore states -----------------------------
+    
+    dglDisable(GL_ALPHA_TEST);
+    dglDepthMask(1);
+
+    R_GLToggleBlend(0);
+    R_GLResetCombiners();
 
     if(r_drawblockmap.value)
         R_DrawBlockMap();
@@ -912,8 +966,6 @@ void R_RenderPlayerView(player_t *player)
     
     if(devparm)
         renderTic = (I_GetTimeMS() - renderTic);
-    
-    dglDisable(GL_CULL_FACE);
 
     //
     // check for new console commands

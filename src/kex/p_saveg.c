@@ -1418,6 +1418,16 @@ void P_ArchiveWorld(void)
         saveg_write16(sec->lightlevel);
         saveg_write32(sec->xoffset);
         saveg_write32(sec->yoffset);
+        saveg_write32(sec->floorplane.a);
+        saveg_write32(sec->floorplane.b);
+        saveg_write32(sec->floorplane.c);
+        saveg_write32(sec->floorplane.nc);
+        saveg_write32(sec->floorplane.d);
+        saveg_write32(sec->ceilingplane.a);
+        saveg_write32(sec->ceilingplane.b);
+        saveg_write32(sec->ceilingplane.c);
+        saveg_write32(sec->ceilingplane.nc);
+        saveg_write32(sec->ceilingplane.d);
         saveg_write_mobjindex(sec->soundtarget);
 
         for(j = 0; j < 5; j++)
@@ -1480,16 +1490,26 @@ void P_UnArchiveWorld (void)
     // do sectors
     for(i = 0, sec = sectors; i < numsectors; i++, sec++)
     {
-        sec->floorheight    = INT2F(saveg_read16());
-        sec->ceilingheight  = INT2F(saveg_read16());
-        sec->floorpic       = saveg_read16();
-        sec->ceilingpic     = saveg_read16();
-        sec->special        = saveg_read16();
-        sec->tag            = saveg_read16();
-        sec->flags          = saveg_read16();
-        sec->lightlevel     = saveg_read16();
-        sec->xoffset        = saveg_read32();
-        sec->yoffset        = saveg_read32();
+        sec->floorheight        = INT2F(saveg_read16());
+        sec->ceilingheight      = INT2F(saveg_read16());
+        sec->floorpic           = saveg_read16();
+        sec->ceilingpic         = saveg_read16();
+        sec->special            = saveg_read16();
+        sec->tag                = saveg_read16();
+        sec->flags              = saveg_read16();
+        sec->lightlevel         = saveg_read16();
+        sec->xoffset            = saveg_read32();
+        sec->yoffset            = saveg_read32();
+        sec->floorplane.a       = saveg_read32();
+        sec->floorplane.b       = saveg_read32();
+        sec->floorplane.c       = saveg_read32();
+        sec->floorplane.nc      = saveg_read32();
+        sec->floorplane.d       = saveg_read32();
+        sec->ceilingplane.a     = saveg_read32();
+        sec->ceilingplane.b     = saveg_read32();
+        sec->ceilingplane.c     = saveg_read32();
+        sec->ceilingplane.nc    = saveg_read32();
+        sec->ceilingplane.d     = saveg_read32();
 
         saveg_set_mobjtarget(&sec->soundtarget, saveg_read_mobjindex());
 

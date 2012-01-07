@@ -146,7 +146,7 @@ typedef struct
 #define ML_BLENDFULLBOTTOM      0x400000		// do not extend blending for bottom texture
 #define ML_BLENDING             0x800000		// use sector color blending (top/lower, ceiling, floor colors).
 #define ML_TRIGGERFRONT         0x1000000		// can only trigger from the front of the line
-#define ML_UNKNOWN2000000       0x2000000		// reserved
+#define ML_TRANSLUCENT          0x2000000		// [kex] line is translucent
 #define ML_INVERSEBLEND         0x4000000		// reverse the blending of the sector colors
 #define ML_UNKNOWN8000000       0x8000000		// reserved
 #define ML_UNKNOWN10000000      0x10000000		// reserved

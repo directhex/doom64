@@ -119,6 +119,7 @@ extern cvar_t   p_sdoubleclick;
 extern cvar_t   p_usecontext;
 extern cvar_t   p_damageindicator;
 extern cvar_t   p_regionmode;
+extern cvar_t   p_alignpitch;
 
 // ST CVARS
 

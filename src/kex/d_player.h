@@ -178,6 +178,9 @@ typedef struct player_s
 
     // [kex] display pic as message instead of text
     int             messagepic;
+
+    // [kex] adjusted pitch for sloped floors
+    int             extrapitch;
     
 } player_t;
 

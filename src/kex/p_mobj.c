@@ -45,6 +45,7 @@ rcsid[] = "$Id$";
 #include "m_misc.h"
 #include "con_console.h"
 #include "m_password.h"
+#include "m_math.h"
 
 mapthing_t* spawnlist;
 int         numspawnlist;
@@ -248,6 +249,9 @@ void P_XYMovement(mobj_t* mo)
             ptryy = mo->y + ymove;
             xmove = ymove = 0;
         }
+
+        if(P_CheckSlopeWalk(mo, &ptryx, &ptryx))
+            mo->z = M_PointToZ(&mo->subsector->sector->floorplane, ptryx, ptryy);
         
         if(!P_TryMove(mo, ptryx, ptryy))
         {
@@ -301,7 +305,7 @@ void P_XYMovement(mobj_t* mo)
             || mo->momy > FRACUNIT/4
             || mo->momy < -FRACUNIT/4)
         {
-            if(mo->floorz != mo->subsector->sector->floorheight)
+            if(mo->floorz != M_PointToZ(&mo->subsector->sector->floorplane, mo->x, mo->y))
                 return;
         }
     }
@@ -642,8 +646,8 @@ mobj_t* P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
     
     P_SetThingPosition(mobj);   // set subsector and/or block links
     
-    mobj->floorz    = mobj->subsector->sector->floorheight;
-    mobj->ceilingz  = mobj->subsector->sector->ceilingheight;
+    mobj->floorz    = M_PointToZ(&mobj->subsector->sector->floorplane, x, y);
+    mobj->ceilingz  = M_PointToZ(&mobj->subsector->sector->ceilingplane, x, y);
     
     if(z == ONFLOORZ)
         mobj->z = mobj->frame_z = mobj->floorz;
@@ -753,6 +757,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
     p->bfgcount         = 0;
     p->viewheight       = VIEWHEIGHT;
     p->recoilpitch      = 0;
+    p->extrapitch       = 0;
     p->palette          = mthing->type-1;
     p->cameratarget     = p->mo;
     
@@ -1132,11 +1137,23 @@ extern fixed_t attackrange;
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z)
 {
     mobj_t* th;
+    plane_t *plane;
+    fixed_t pz;
     
     z += P_RandomShift(10);
     
     th = P_SpawnMobj(x, y, z, MT_SMOKE_SMALL);
-    th->momz = FRACUNIT;
+    plane = &th->subsector->sector->ceilingplane;
+
+    //
+    // [kex] allow puffs to move downward if it touches the ceiling
+    //
+    if((plane->a | plane->b) != 0)
+        pz = M_PointToZ(plane, x, y);
+    else
+        pz = th->subsector->sector->ceilingheight;
+
+    th->momz = (th->z + th->height < pz) ? FRACUNIT : -FRACUNIT;
     th->tics -= P_Random() & 3;
     
     if(th->tics < 1)
@@ -1185,6 +1202,7 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 {
     mobj_t*     th;
     angle_t     an;
+    angle_t     pitch;
     fixed_t     x;
     fixed_t     y;
     fixed_t     z;
@@ -1217,18 +1235,19 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
     
     // see which target is to be aimed at
     an = source->angle;
+    pitch = source->pitch + source->player->extrapitch;
 
-    slope = P_AimLineAttack(source, an, missileheight, ATTACKRANGE);
+    slope = P_AimLineAttack(source, an, pitch, missileheight, ATTACKRANGE);
     
     if(!linetarget)
     {
         an += 1<<26;
-        slope = P_AimLineAttack(source, an, missileheight, ATTACKRANGE);
+        slope = P_AimLineAttack(source, an, pitch, missileheight, ATTACKRANGE);
         
         if(!linetarget)
         {
             an -= 2<<26;
-            slope = P_AimLineAttack(source, an, missileheight, ATTACKRANGE);
+            slope = P_AimLineAttack(source, an, pitch, missileheight, ATTACKRANGE);
         }
     }
 
@@ -1249,7 +1268,7 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 
     // [kex] adjust velocity based on viewpitch
     if(!linetarget)
-        frac = FixedMul(th->info->speed, dcos(source->pitch));
+        frac = FixedMul(th->info->speed, dcos(source->pitch + source->player->extrapitch));
     else
         frac = th->info->speed;
 

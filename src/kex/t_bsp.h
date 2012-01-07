@@ -68,6 +68,7 @@ typedef struct
     fixed_t a;
     fixed_t b;
     fixed_t c;
+    fixed_t nc;
     fixed_t d;
 } plane_t;
 
