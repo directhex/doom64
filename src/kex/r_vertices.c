@@ -271,17 +271,37 @@ dboolean DL_ProcessLeafs(vtxlist_t* vl, int* drawcount)
 
         if(vl->flags & DLF_CEILING)
         {
-            /*if(i_interpolateframes.value)
-                v->z = F2D3D(sector->frame_z2[1]);
-            else*/
+            if(i_interpolateframes.value)
+            {
+                plane_t plane;
+
+                plane.a     = sector->ceilingplane.a;
+                plane.b     = sector->ceilingplane.b;
+                plane.c     = sector->ceilingplane.c;
+                plane.nc    = sector->ceilingplane.nc;
+                plane.d     = sector->frame_z2[1];
+
+                v->z = F2D3D(M_PointToZ(&plane, leaf->vertex->x, leaf->vertex->y));
+            }
+            else
                 v->z = F2D3D(M_PointToZ(&sector->ceilingplane,
                 leaf->vertex->x, leaf->vertex->y));
         }
         else
         {
-            /*if(i_interpolateframes.value)
-                v->z = F2D3D(sector->frame_z1[1]);
-            else*/
+            if(i_interpolateframes.value)
+            {
+                plane_t plane;
+
+                plane.a     = sector->floorplane.a;
+                plane.b     = sector->floorplane.b;
+                plane.c     = sector->floorplane.c;
+                plane.nc    = sector->floorplane.nc;
+                plane.d     = sector->frame_z1[1];
+
+                v->z = F2D3D(M_PointToZ(&plane, leaf->vertex->x, leaf->vertex->y));
+            }
+            else
                 v->z = F2D3D(M_PointToZ(&sector->floorplane,
                 leaf->vertex->x, leaf->vertex->y));
         }

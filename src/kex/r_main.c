@@ -473,8 +473,8 @@ static void R_InterpolateSectors(void)
     {
         sector_t* s = &sectors[i];
 
-        s->frame_z1[1] = R_Interpolate(s->floorheight, s->frame_z1[0], 1);
-        s->frame_z2[1] = R_Interpolate(s->ceilingheight, s->frame_z2[0], 1);
+        s->frame_z1[1] = R_Interpolate(s->floorplane.d, s->frame_z1[0], 1);
+        s->frame_z2[1] = R_Interpolate(s->ceilingplane.d, s->frame_z2[0], 1);
     }
 }
 

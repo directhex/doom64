@@ -293,20 +293,55 @@ dboolean R_GenerateSwitchPlane(seg_t *line, vtx_t *v)
     return true;
 }
 
-d_inline static void GetSideTopBottom(sector_t* sector, rfloat *top, rfloat *bottom)
+d_inline static void GetSideTopBottom(sector_t* sector,
+                                      rfloat *top, rfloat *bottom,
+                                      plane_t *p1, plane_t *p2)
 {
     if(i_interpolateframes.value)
     {
-        fixed_t frame_c = sector->frame_z2[1];
-        fixed_t frame_f = sector->frame_z1[1];
+        *bottom = F2D3D(-sector->frame_z1[1]);
+        *top    = F2D3D(sector->frame_z2[1]);
 
-        *bottom = F2D3D(frame_f);
-        *top = F2D3D(frame_c);
+        if(p1)
+        {
+            p1->a   = sector->floorplane.a;
+            p1->b   = sector->floorplane.b;
+            p1->c   = sector->floorplane.c;
+            p1->nc  = sector->floorplane.nc;
+            p1->d   = sector->frame_z1[1];
+        }
+
+        if(p2)
+        {
+            p2->a   = sector->ceilingplane.a;
+            p2->b   = sector->ceilingplane.b;
+            p2->c   = sector->ceilingplane.c;
+            p2->nc  = sector->ceilingplane.nc;
+            p2->d   = sector->frame_z2[1];
+        }
     }
     else
     {
-        *top = F2D3D(sector->ceilingheight);
+        *top    = F2D3D(sector->ceilingheight);
         *bottom = F2D3D(sector->floorheight);
+
+        if(p1)
+        {
+            p1->a   = sector->floorplane.a;
+            p1->b   = sector->floorplane.b;
+            p1->c   = sector->floorplane.c;
+            p1->nc  = sector->floorplane.nc;
+            p1->d   = sector->floorplane.d;
+        }
+
+        if(p2)
+        {
+            p2->a   = sector->ceilingplane.a;
+            p2->b   = sector->ceilingplane.b;
+            p2->c   = sector->ceilingplane.c;
+            p2->nc  = sector->ceilingplane.nc;
+            p2->d   = sector->ceilingplane.d;
+        }
     }
 }
 
@@ -331,6 +366,8 @@ dboolean R_GenerateLowerSegPlane(seg_t *line, vtx_t* v)
     fixed_t     ffz2;
     fixed_t     bfz1;
     fixed_t     bfz2;
+    plane_t     ffp;
+    plane_t     bfp;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
@@ -343,13 +380,13 @@ dboolean R_GenerateLowerSegPlane(seg_t *line, vtx_t* v)
     length = (rfloat)line->length;
     
     R_SetSegLineColor(line, v, 0);
-    GetSideTopBottom(line->frontsector, &top, &bottom);
-    GetSideTopBottom(line->backsector, &btop, &bbottom);
+    GetSideTopBottom(line->frontsector, &top, &bottom, &ffp, NULL);
+    GetSideTopBottom(line->backsector, &btop, &bbottom, &bfp, NULL);
 
-    bfz1 = M_PointToZ(&line->backsector->floorplane, line->v1->x, line->v1->y);
-    bfz2 = M_PointToZ(&line->backsector->floorplane, line->v2->x, line->v2->y);
-    ffz1 = M_PointToZ(&line->frontsector->floorplane, line->v1->x, line->v1->y);
-    ffz2 = M_PointToZ(&line->frontsector->floorplane, line->v2->x, line->v2->y);
+    bfz1 = M_PointToZ(&bfp, line->v1->x, line->v1->y);
+    bfz2 = M_PointToZ(&bfp, line->v2->x, line->v2->y);
+    ffz1 = M_PointToZ(&ffp, line->v1->x, line->v1->y);
+    ffz2 = M_PointToZ(&ffp, line->v2->x, line->v2->y);
         
     if((ffz1 | ffz2) < (bfz1 | bfz2))
     {
@@ -413,6 +450,8 @@ dboolean R_GenerateUpperSegPlane(seg_t *line, vtx_t* v)
     fixed_t     fcz2;
     fixed_t     bcz1;
     fixed_t     bcz2;
+    plane_t     bcp;
+    plane_t     fcp;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
@@ -425,13 +464,13 @@ dboolean R_GenerateUpperSegPlane(seg_t *line, vtx_t* v)
     length = (rfloat)line->length;
     
     R_SetSegLineColor(line, v, 0);
-    GetSideTopBottom(line->frontsector, &top, &bottom);
-    GetSideTopBottom(line->backsector, &btop, &bbottom);
+    GetSideTopBottom(line->frontsector, &top, &bottom, NULL, &fcp);
+    GetSideTopBottom(line->backsector, &btop, &bbottom, NULL, &bcp);
 
-    bcz1 = M_PointToZ(&line->backsector->ceilingplane, line->v1->x, line->v1->y);
-    bcz2 = M_PointToZ(&line->backsector->ceilingplane, line->v2->x, line->v2->y);
-    fcz1 = M_PointToZ(&line->frontsector->ceilingplane, line->v1->x, line->v1->y);
-    fcz2 = M_PointToZ(&line->frontsector->ceilingplane, line->v2->x, line->v2->y);
+    bcz1 = M_PointToZ(&bcp, line->v1->x, line->v1->y);
+    bcz2 = M_PointToZ(&bcp, line->v2->x, line->v2->y);
+    fcz1 = M_PointToZ(&fcp, line->v1->x, line->v1->y);
+    fcz2 = M_PointToZ(&fcp, line->v2->x, line->v2->y);
 
     if((line->frontsector->ceilingpic == skyflatnum) && (line->backsector->ceilingpic == skyflatnum))
     {
@@ -501,6 +540,8 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
     rfloat      length;
     rfloat      rowoffs;
     rfloat      coloffs;
+    plane_t     ffp;
+    plane_t     fcp;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
@@ -513,13 +554,16 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
     length = (rfloat)line->length;
     
     R_SetSegLineColor(line, v, 0);
-    GetSideTopBottom(line->frontsector, &top, &bottom);
+    GetSideTopBottom(line->frontsector, &top, &bottom, &ffp, &fcp);
 
     length = (rfloat)line->length;
 
     if(line->backsector)
     {
-        GetSideTopBottom(line->backsector, &btop, &bbottom);
+        plane_t bfp;
+        plane_t bcp;
+
+        GetSideTopBottom(line->backsector, &btop, &bbottom, &bfp, &bcp);
         
         if((line->frontsector->ceilingpic == skyflatnum) && (line->backsector->ceilingpic == skyflatnum))
             btop = top;
@@ -530,17 +574,17 @@ dboolean R_GenerateMiddleSegPlane(seg_t *line, vtx_t* v)
         if(top > btop)
             top = btop;
 
-        v[0].z = F2D3D(M_PointToZ(&line->backsector->ceilingplane, line->v1->x, line->v1->y));
-        v[1].z = F2D3D(M_PointToZ(&line->backsector->ceilingplane, line->v2->x, line->v2->y));
-        v[2].z = F2D3D(M_PointToZ(&line->backsector->floorplane, line->v1->x, line->v1->y));
-        v[3].z = F2D3D(M_PointToZ(&line->backsector->floorplane, line->v2->x, line->v2->y));
+        v[0].z = F2D3D(M_PointToZ(&bcp, line->v1->x, line->v1->y));
+        v[1].z = F2D3D(M_PointToZ(&bcp, line->v2->x, line->v2->y));
+        v[2].z = F2D3D(M_PointToZ(&bfp, line->v1->x, line->v1->y));
+        v[3].z = F2D3D(M_PointToZ(&bfp, line->v2->x, line->v2->y));
     }
     else
     {
-        v[0].z = F2D3D(M_PointToZ(&line->frontsector->ceilingplane, line->v1->x, line->v1->y));
-        v[1].z = F2D3D(M_PointToZ(&line->frontsector->ceilingplane, line->v2->x, line->v2->y));
-        v[2].z = F2D3D(M_PointToZ(&line->frontsector->floorplane, line->v1->x, line->v1->y));
-        v[3].z = F2D3D(M_PointToZ(&line->frontsector->floorplane, line->v2->x, line->v2->y));
+        v[0].z = F2D3D(M_PointToZ(&fcp, line->v1->x, line->v1->y));
+        v[1].z = F2D3D(M_PointToZ(&fcp, line->v2->x, line->v2->y));
+        v[2].z = F2D3D(M_PointToZ(&ffp, line->v1->x, line->v1->y));
+        v[3].z = F2D3D(M_PointToZ(&ffp, line->v2->x, line->v2->y));
     }
 
     if(line->backsector)
@@ -615,6 +659,8 @@ void R_AddLine(seg_t *line)
     fixed_t     ffz2;
     fixed_t     fcz1;
     fixed_t     fcz2;
+    plane_t     ffp;
+    plane_t     fcp;
     
     linedef = line->linedef;
     sidedef = line->sidedef;
@@ -627,24 +673,25 @@ void R_AddLine(seg_t *line)
     v[1].x = v[3].x = F2D3D(line->v2->x);
     v[1].y = v[3].y = F2D3D(line->v2->y);
     
-    GetSideTopBottom(line->frontsector, &top, &bottom);    
+    GetSideTopBottom(line->frontsector, &top, &bottom, &ffp, &fcp);    
     
-    ffz1 = M_PointToZ(&line->frontsector->floorplane, line->v1->x, line->v1->y);
-    ffz2 = M_PointToZ(&line->frontsector->floorplane, line->v2->x, line->v2->y);
-    fcz1 = M_PointToZ(&line->frontsector->ceilingplane, line->v1->x, line->v1->y);
-    fcz2 = M_PointToZ(&line->frontsector->ceilingplane, line->v2->x, line->v2->y);
+    ffz1 = M_PointToZ(&ffp, line->v1->x, line->v1->y);
+    ffz2 = M_PointToZ(&ffp, line->v2->x, line->v2->y);
+    fcz1 = M_PointToZ(&fcp, line->v1->x, line->v1->y);
+    fcz2 = M_PointToZ(&fcp, line->v2->x, line->v2->y);
 
     if(line->backsector)
     {
         fixed_t bfz1, bfz2;
         fixed_t bcz1, bcz2;
+        plane_t bfp, bcp;
 
-        GetSideTopBottom(line->backsector, &btop, &bbottom);
+        GetSideTopBottom(line->backsector, &btop, &bbottom, &bfp, &bcp);
 
-        bfz1 = M_PointToZ(&line->backsector->floorplane, line->v1->x, line->v1->y);
-        bfz2 = M_PointToZ(&line->backsector->floorplane, line->v2->x, line->v2->y);
-        bcz1 = M_PointToZ(&line->backsector->ceilingplane, line->v1->x, line->v1->y);
-        bcz2 = M_PointToZ(&line->backsector->ceilingplane, line->v2->x, line->v2->y);
+        bfz1 = M_PointToZ(&bfp, line->v1->x, line->v1->y);
+        bfz2 = M_PointToZ(&bfp, line->v2->x, line->v2->y);
+        bcz1 = M_PointToZ(&bcp, line->v1->x, line->v1->y);
+        bcz2 = M_PointToZ(&bcp, line->v2->x, line->v2->y);
 
         if((line->frontsector->ceilingpic == skyflatnum) && (line->backsector->ceilingpic == skyflatnum))
         {
