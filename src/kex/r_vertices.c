@@ -458,7 +458,7 @@ void DL_ProcessDrawList(int tag, dboolean (*procfunc)(vtxlist_t*, int*))
             }
             
             // non sprite textures must repeat or mirrored-repeat
-            if(tag == DLT_WALL)
+            if(tag == DLT_WALL || tag == DLT_TWALL)
             {
                 dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                     head->flags & DLF_MIRRORS ? GL_MIRRORED_REPEAT : GL_REPEAT);
