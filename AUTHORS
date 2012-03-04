@@ -14,22 +14,20 @@ Samuel 'Kaiser' Villarreal <svkaiser@gmail.com>
 Doom64 EX Author
 
 Paul Brook
-For originally creating the Doom3D source port for Doom and Doom2. Only to have it
-ripped apart by Kaiser :-)
+Author of the Doom3D source port in which Doom64 EX was originally based off of.
 
-James "Quasar" Haley <haleyjd@hotmail.com>
+Urchlay B. Watson
+*Unix maintainer
+
+James 'Quasar' Haley <haleyjd@hotmail.com>
 For providing wisdom when it comes to working with all the backend stuff such as
 Doom's zone memory allocator. Also provided the macro script compiler utility.
+
+Simon 'Fraggle' Howard
+Networking system
 
 Lee Killough
 For just about anything that fixed all of Doom's mistakes, bugs, and errors.
 
 Team TNT
 For all Boom related enhancements and fixes.
-
-Josh.W
-For being the original Doom64 USF ripper. Without his knowledge on the USF format,
-Doom64 EX's music wouldn't be possible without some form of bulky mp3 files.
-
-Adam Gashlin
-For everything N64 and USF related. http://www.hcs64.com/
