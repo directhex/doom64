@@ -102,7 +102,9 @@ static void R_InitTextures(void)
     t_start     = W_GetNumForName("T_START") + 1;
     t_end       = W_GetNumForName("T_END") - 1;
     numtextures = (t_end - t_start) + 1;
-    gfxtextures = (dtexture*)Z_Calloc(sizeof(dtexture) * numtextures, PU_STATIC, NULL);
+    gfxtextures = (dtexture*)Z_Malloc(sizeof(dtexture) * numtextures, PU_STATIC, NULL);
+
+    memset(gfxtextures, -1, sizeof(dtexture) * numtextures);
 }
 
 //
@@ -114,7 +116,21 @@ static void R_InitSprites(void)
     s_start     = W_GetNumForName("S_START") + 1;
     s_end       = W_GetNumForName("S_END") - 1;
     numsprites  = (s_end - s_start) + 1;
-    gfxsprites  = (dtexture*)Z_Calloc(sizeof(dtexture) * numsprites, PU_STATIC, NULL);
+    gfxsprites  = (dtexture*)Z_Malloc(sizeof(dtexture) * numsprites, PU_STATIC, NULL);
+
+    memset(gfxsprites, -1, sizeof(dtexture) * numsprites);
+}
+
+//
+// R_GetTexturePointer
+//
+
+gl_texture_data *R_GetTexturePointer(dtexture texture)
+{
+    if(glGlob->activeTexture)
+    return (gl_texture_data*)DynamicArrayGet(&glGlob->texturePtrs, glGlob->activeTexture);
+
+    return NULL;
 }
 
 //
@@ -152,6 +168,7 @@ void R_DrawFrame(void)
     fixed_t cam_z;
     mobj_t* viewcamera;
     player_t* player;
+    int i;
 
     //
     // setup view rotation/position
@@ -198,7 +215,14 @@ void R_DrawFrame(void)
 
     R_RenderView();
 
-    // TODO - fog
+    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x200;
+    GFX_FOG_COLOR = 0x1F7FFF;
+
+    for(i = 0; i < 32; i++)
+        GFX_FOG_TABLE[i] = i * 4;
+
+    GFX_FOG_TABLE[31] = 0x7F;
+    GFX_FOG_OFFSET = 0x6000;
 
     R_DrawScene();
 }

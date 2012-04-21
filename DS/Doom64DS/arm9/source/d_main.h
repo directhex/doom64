@@ -95,6 +95,7 @@ extern dboolean     demoplayback;
 extern dboolean     respawnparm;    // checkparm of -respawn
 extern dboolean     respawnitem;
 extern dboolean     paused;
+extern dboolean     nolights;
 
 extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];

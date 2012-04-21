@@ -30,6 +30,7 @@ dboolean        respawnitem     = false;    // checkparm of -respawnitem
 skill_t         startskill;
 int             startmap;
 dboolean        paused          = false;
+dboolean        nolights        = false;
 
 player_t players[MAXPLAYERS];
 dboolean playeringame[MAXPLAYERS];
@@ -684,7 +685,8 @@ void D_DoomMain(void)
     // temp
     {
         nomonsters = true;
-        gamemap = 14;
+        nolights = true;
+        gamemap = 1;
         G_DoLoadLevel();
         I_Printf("%s\n", P_GetMapInfo(gamemap)->mapname);
         D_MiniLoop(P_Start, P_Stop, TestDrawer, TestTicker);

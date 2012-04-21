@@ -13,7 +13,7 @@ typedef unsigned char   byte;
 typedef unsigned short  word;
 typedef unsigned long   dword;
 typedef unsigned int    rcolor;
-typedef unsigned int    dtexture;
+typedef int             dtexture;
 typedef int8_t          int8;
 typedef uint8_t         uint8;
 typedef int16_t         int16;

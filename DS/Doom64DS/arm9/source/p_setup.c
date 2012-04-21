@@ -201,7 +201,7 @@ void P_LoadSegs(int lump)
         x = F2D3D(li->v1->x - li->v2->x);
         y = F2D3D(li->v1->y - li->v2->y);
 
-        li->length = (fixed_t)sqrt(x * x + y * y);
+        li->length = (fixed_t)(sqrt(x * x + y * y) * FRACUNIT);
         li->draw = false;
     }
 }

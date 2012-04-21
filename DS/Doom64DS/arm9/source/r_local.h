@@ -72,6 +72,7 @@ angle_t         R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist);
 int             _R_PointOnSide(fixed_t x, fixed_t y, node_t* node);
 void            R_Init(void);
 void            R_DrawFrame(void);
+gl_texture_data *R_GetTexturePointer(dtexture texture);
 
 //
 // R_BSP

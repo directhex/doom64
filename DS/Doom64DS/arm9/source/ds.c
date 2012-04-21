@@ -173,11 +173,11 @@ void I_Init(void)
     REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_B | POWER_SWAP_LCDS;
     REG_DISPCNT     = MODE_0_3D;
     REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG1_ACTIVE;
-    VRAM_A_CR       = VRAM_ENABLE;
-    VRAM_B_CR       = VRAM_ENABLE;
-    VRAM_C_CR       = VRAM_ENABLE;
-    VRAM_D_CR       = VRAM_ENABLE;
-    VRAM_E_CR       = VRAM_ENABLE;
+    VRAM_A_CR       = VRAM_ENABLE | VRAM_A_TEXTURE;
+    VRAM_B_CR       = VRAM_ENABLE | VRAM_B_TEXTURE;
+    VRAM_C_CR       = VRAM_ENABLE | VRAM_C_TEXTURE;
+    VRAM_D_CR       = VRAM_ENABLE | VRAM_D_TEXTURE;
+    VRAM_E_CR       = VRAM_ENABLE | VRAM_E_TEX_PALETTE;
     VRAM_H_CR       = VRAM_ENABLE | VRAM_H_SUB_BG;
     TIMER0_CR       = TIMER_ENABLE | TIMER_DIV_1024;
     TIMER1_CR       = TIMER_ENABLE | TIMER_CASCADE;
@@ -197,12 +197,15 @@ void I_ClearFrame(void)
     GFX_CONTROL         = GL_FOG | GL_BLEND | GL_TEXTURE_2D;
     GFX_ALPHA_TEST      = 0;
     GFX_CUTOFF_DEPTH    = GL_MAX_DEPTH;
-    GFX_CLEAR_COLOR     = 0x1F8000;
+    GFX_CLEAR_COLOR     = 0x1F0000;
     GFX_CLEAR_DEPTH     = GL_MAX_DEPTH;
     GFX_VIEWPORT        = 0xBFFF0000;
     GFX_TEX_FORMAT      = 0;
     GFX_PAL_FORMAT      = 0;
     GFX_POLY_FORMAT     = 0;
+
+    glGlob->activeTexture = -1;
+    glGlob->activePalette = -1;
 
     //
     // make sure there are no push/pops that haven't executed yet

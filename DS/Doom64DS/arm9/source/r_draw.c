@@ -5,11 +5,78 @@
 #include "w_wad.h"
 
 //
+// R_GetTextureSize
+//
+
+static int R_GetTextureSize(int size)
+{
+    if(size == 8)
+        return TEXTURE_SIZE_8;
+    if(size == 16)
+        return TEXTURE_SIZE_16;
+    if(size == 32)
+        return TEXTURE_SIZE_32;
+    if(size == 64)
+        return TEXTURE_SIZE_64;
+    if(size == 128)
+        return TEXTURE_SIZE_128;
+    if(size == 256)
+        return TEXTURE_SIZE_256;
+
+	return 0;
+}
+
+//
+// R_LoadTexture
+//
+
+static int R_LoadTexture(dtexture texture)
+{
+    short* gfx;
+    int i;
+    int w;
+    int h;
+    byte* data;
+    byte* pal;
+    uint16 paldata[16];
+    dboolean ok;
+
+    gfx = (short*)W_CacheLumpNum(t_start + texture, PU_CACHE);
+    w = gfx[0];
+    h = gfx[1];
+    data = (byte*)(gfx + 4);
+    pal = (byte*)(gfx + 4 + (((w * h) >> 1) >> 1));
+
+    for(i = 0; i < 16; i++)
+    {
+        paldata[i] = RGB8(pal[0], pal[1], pal[2]);
+        pal += 4;
+    }
+
+    glGenTextures(1, &gfxtextures[texture]);
+    glBindTexture(0, gfxtextures[texture]);
+    ok = glTexImage2D(
+        0,
+        0,
+        GL_RGB16,
+        R_GetTextureSize(w),
+        R_GetTextureSize(h),
+        0,
+        TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
+        data);
+
+    glColorTableEXT(0, 0, 16, 0, 0, paldata);
+
+    return ok;
+}
+
+//
 // R_DrawLine
 //
 
 static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
-                       dtexture texture, light_t* l1, light_t* l2)
+                       dtexture texture, light_t* l1, light_t* l2,
+                       fixed_t u1, fixed_t u2, fixed_t v1, fixed_t v2)
 {
     int x1, x2;
     int y1, y2;
@@ -17,6 +84,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     int r1, r2;
     int g1, g2;
     int b1, b2;
+    gl_texture_data *tex;
 
     r1 = l1->active_r;
     g1 = l1->active_g;
@@ -100,17 +168,42 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     z1 = F2INT(top);
     z2 = F2INT(bottom);
 
-    GFX_BEGIN = GL_TRIANGLE_STRIP;
-    GFX_COLOR = RGB15(r1, g1, b1);
-    GFX_VERTEX16 = VERTEX_PACK(x2, z1);
-    GFX_VERTEX16 = VERTEX_PACK(y2, 0);
-    GFX_VERTEX16 = VERTEX_PACK(x1, z1);
-    GFX_VERTEX16 = VERTEX_PACK(y1, 0);
-    GFX_COLOR = RGB15(r2, g2, b2);
-    GFX_VERTEX16 = VERTEX_PACK(x2, z2);
-    GFX_VERTEX16 = VERTEX_PACK(y2, 0);
-    GFX_VERTEX16 = VERTEX_PACK(x1, z2);
-    GFX_VERTEX16 = VERTEX_PACK(y1, 0);
+    if(gfxtextures[texture] == -1)
+        R_LoadTexture(texture);
+    else
+        glBindTexture(0, gfxtextures[texture]);
+
+    if((tex = R_GetTexturePointer(gfxtextures[texture])))
+    {
+        if(seg->linedef->flags & ML_HMIRROR)
+            tex->texFormat |= GL_TEXTURE_FLIP_S;
+	    else
+		    tex->texFormat &= ~GL_TEXTURE_FLIP_S;
+
+        if(seg->linedef->flags & ML_VMIRROR)
+		    tex->texFormat |= GL_TEXTURE_FLIP_T;
+	    else
+		    tex->texFormat &= ~GL_TEXTURE_FLIP_T;
+    }
+
+    if(nolights)
+        r1 = r2 = g1 = g2 = b1 = b2 = 31;
+
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_COLOR       = RGB15(r1, g1, b1);
+    GFX_TEX_COORD   = COORD_PACK(F2INT(u1), F2INT(v1));
+    GFX_VERTEX16    = VERTEX_PACK(x2, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+    GFX_TEX_COORD   = COORD_PACK(F2INT(u2), F2INT(v1));
+    GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+    GFX_COLOR       = RGB15(r2, g2, b2);
+    GFX_TEX_COORD   = COORD_PACK(F2INT(u1), F2INT(v2));
+    GFX_VERTEX16    = VERTEX_PACK(x2, z2);
+    GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+    GFX_TEX_COORD   = COORD_PACK(F2INT(u2), F2INT(v2));
+    GFX_VERTEX16    = VERTEX_PACK(x1, z2);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
 }
 
 //
@@ -127,12 +220,17 @@ static void R_DrawSeg(seg_t* seg)
     fixed_t     bbottom;
     light_t*    l1;
     light_t*    l2;
+    fixed_t     col;
+    fixed_t     row;
     
     linedef = seg->linedef;
     sidedef = seg->sidedef;
 
     if(!linedef)
         return;
+
+    col = seg->length;
+    row = sidedef->rowoffset;
 
     if(linedef->flags & ML_BLENDING)
     {
@@ -162,7 +260,34 @@ static void R_DrawSeg(seg_t* seg)
         if(bottom < bbottom)
         {
             if(seg->sidedef[0].bottomtexture != 1)
-                R_DrawLine(seg, bbottom, bottom, sidedef->bottomtexture, l1, l2);
+            {
+                fixed_t v1;
+                fixed_t v2;
+
+                if(linedef->flags & ML_DONTPEGBOTTOM)
+                {
+                    v1 = row + (top - bbottom);
+					v2 = row + (top - bottom);
+                }
+                else
+                {
+                    v1 = row;
+					v2 = row + (bbottom - bottom);
+                }
+
+                R_DrawLine(
+                    seg,
+                    bbottom,
+                    bottom,
+                    sidedef->bottomtexture,
+                    l1,
+                    l2,
+                    (seg->offset + col) + sidedef->textureoffset,
+                    seg->offset + sidedef->textureoffset,
+                    v1,
+                    v2
+                    );
+            }
             
             bottom = bbottom;
         }
@@ -173,7 +298,34 @@ static void R_DrawSeg(seg_t* seg)
         if(top > btop)
         {
             if(seg->sidedef[0].toptexture != 1)
-                R_DrawLine(seg, top, btop, sidedef->toptexture, l1, l2);
+            {
+                fixed_t v1;
+                fixed_t v2;
+
+                if(linedef->flags & ML_DONTPEGTOP)
+                {
+                    v1 = row;
+					v2 = row + (top - btop);
+                }
+                else
+                {
+                    v2 = row;
+					v1 = row - (top - btop);
+                }
+
+                R_DrawLine(
+                    seg,
+                    top,
+                    btop,
+                    sidedef->toptexture,
+                    l1,
+                    l2,
+                    (seg->offset + col) + sidedef->textureoffset,
+                    seg->offset + sidedef->textureoffset,
+                    v1,
+                    v2
+                    );
+            }
             
             top = btop;
         }
@@ -191,7 +343,20 @@ static void R_DrawSeg(seg_t* seg)
         }
         
         if(!(linedef->flags & ML_SWITCHX02 && linedef->flags & ML_SWITCHX04))
-            R_DrawLine(seg, top, bottom, sidedef->midtexture, l1, l2);
+        {
+            R_DrawLine(
+            seg,
+            top,
+            bottom,
+            sidedef->midtexture,
+            l1,
+            l2,
+            (seg->offset + col) + sidedef->textureoffset,
+            seg->offset + sidedef->textureoffset,
+            row,
+            (top - bottom) + row
+            );
+        }
     }
 }
 
@@ -205,35 +370,63 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height, dtexture texture, l
     int x;
     int y;
     int z;
+    fixed_t tx;
+    fixed_t ty;
 
-    GFX_COLOR = RGB15(
-        light->active_r >> 3,
-        light->active_g >> 3,
-        light->active_b >> 3
-        );
-    GFX_BEGIN = GL_TRIANGLE_STRIP;
+    if(nolights)
+        GFX_COLOR = 0x1F7FFF;
+    else
+    {
+        GFX_COLOR = RGB15(
+            light->active_r >> 3,
+            light->active_g >> 3,
+            light->active_b >> 3
+            );
+    }
+
+    tx = (leafs[ss->leaf].vertex->x >> 6) & ~(FRACUNIT - 1);
+    ty = (leafs[ss->leaf].vertex->y >> 6) & ~(FRACUNIT - 1);
+
+    if(gfxtextures[texture] == -1)
+        R_LoadTexture(texture);
+    else
+        glBindTexture(0, gfxtextures[texture]);
+
+    GFX_BEGIN = GL_TRIANGLES;
 
     z = F2INT(height);
 
     for(i = 0; i < ss->numleafs - 2; i++)
     {
+        fixed_t tu;
+        fixed_t tv;
+
         x = F2INT(leafs[ss->leaf + 1 + i].vertex->x);
         y = F2INT(leafs[ss->leaf + 1 + i].vertex->y);
+        tu = F2INT((leafs[ss->leaf + 1 + i].vertex->x >> 6) - tx);
+        tv = -F2INT((leafs[ss->leaf + 1 + i].vertex->y >> 6) - ty);
 
-        GFX_VERTEX16 = VERTEX_PACK(x, z);
-        GFX_VERTEX16 = VERTEX_PACK(y, 0);
+        GFX_TEX_COORD   = COORD_PACK(tu, tv);
+        GFX_VERTEX16    = VERTEX_PACK(x, z);
+        GFX_VERTEX16    = VERTEX_PACK(y, 0);
 
         x = F2INT(leafs[ss->leaf + 2 + i].vertex->x);
         y = F2INT(leafs[ss->leaf + 2 + i].vertex->y);
+        tu = F2INT((leafs[ss->leaf + 2 + i].vertex->x >> 6) - tx);
+        tv = -F2INT((leafs[ss->leaf + 2 + i].vertex->y >> 6) - ty);
 
-        GFX_VERTEX16 = VERTEX_PACK(x, z);
-        GFX_VERTEX16 = VERTEX_PACK(y, 0);
+        GFX_TEX_COORD   = COORD_PACK(tu, tv);
+        GFX_VERTEX16    = VERTEX_PACK(x, z);
+        GFX_VERTEX16    = VERTEX_PACK(y, 0);
 
         x = F2INT(leafs[ss->leaf + 0].vertex->x);
         y = F2INT(leafs[ss->leaf + 0].vertex->y);
+        tu = F2INT((leafs[ss->leaf + 0 + i].vertex->x >> 6) - tx);
+        tv = -F2INT((leafs[ss->leaf + 0 + i].vertex->y >> 6) - ty);
 
-        GFX_VERTEX16 = VERTEX_PACK(x, z);
-        GFX_VERTEX16 = VERTEX_PACK(y, 0);
+        GFX_TEX_COORD   = COORD_PACK(tu, tv);
+        GFX_VERTEX16    = VERTEX_PACK(x, z);
+        GFX_VERTEX16    = VERTEX_PACK(y, 0);
     }
 }
 
