@@ -277,7 +277,7 @@ void I_StartTic(void)
 
 int I_GetTimeTicks(void)
 {
-    return ((TIMER1_DATA * FRACUNIT) + TIMER0_DATA) / 32;
+    return (TIMER0_DATA >> 5) + (TIMER1_DATA << 11);
 }
 
 //

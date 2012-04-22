@@ -244,7 +244,7 @@ angle_t R_FrustumAngle(void)
     float range;
     float floatangle;
 
-    tilt = ANG45 - D_abs((int)viewpitch);
+    tilt = ANG45 - D_abs((int)(viewpitch - ANG90));
 
     if(tilt > ANG90)
         return ANG270 - ANG90;

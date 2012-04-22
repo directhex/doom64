@@ -45,7 +45,7 @@ static inline uint32_t I_Swap32(x)
 #define SHORT(x) x
 #define LONG(x) x
 
-#define gcmdOrtho(znear)                                                                    \
+#define GFXORTHO(znear)                                                                     \
     MATRIX_CONTROL      = GL_PROJECTION;                                                    \
     MATRIX_IDENTITY     = 0;                                                                \
     MATRIX_CONTROL      = GL_MODELVIEW;                                                     \

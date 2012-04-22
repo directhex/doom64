@@ -4,70 +4,77 @@
 #include "z_zone.h"
 #include "w_wad.h"
 
+int         skypicnum = -1;
+int         skybackdropnum = -1;
+int         skyflatnum = -1;
+skydef_t*   sky;
+int         thunderCounter = 0;
+int         lightningCounter = 0;
+int         thundertic = 1;
+dboolean    skyfadeback = false;
+
 //
-// R_GetTextureSize
+// R_DrawSimpleSky
 //
 
-static int R_GetTextureSize(int size)
+static dtexture gfxskypic = -1;
+
+void R_DrawSimpleSky(void)
 {
-    if(size == 8)
-        return TEXTURE_SIZE_8;
-    if(size == 16)
-        return TEXTURE_SIZE_16;
-    if(size == 32)
-        return TEXTURE_SIZE_32;
-    if(size == 64)
-        return TEXTURE_SIZE_64;
-    if(size == 128)
-        return TEXTURE_SIZE_128;
-    if(size == 256)
-        return TEXTURE_SIZE_256;
-
-	return 0;
-}
-
-//
-// R_LoadTexture
-//
-
-static int R_LoadTexture(dtexture texture)
-{
-    short* gfx;
-    int i;
-    int w;
-    int h;
-    byte* data;
-    byte* pal;
-    uint16 paldata[16];
-    dboolean ok;
-
-    gfx = (short*)W_CacheLumpNum(t_start + texture, PU_CACHE);
-    w = gfx[0];
-    h = gfx[1];
-    data = (byte*)(gfx + 4);
-    pal = (byte*)(gfx + 4 + (((w * h) >> 1) >> 1));
-
-    for(i = 0; i < 16; i++)
+    if(gfxskypic == -1)
     {
-        paldata[i] = RGB8(pal[0], pal[1], pal[2]);
-        pal += 4;
+        short* gfx;
+        int i;
+        int w;
+        int h;
+        byte* data;
+        byte* pal;
+        uint16 paldata[256];
+
+        gfx = (short*)W_CacheLumpNum(skypicnum, PU_CACHE);
+        w = gfx[0];
+        h = gfx[1];
+        data = (byte*)(gfx + 4);
+        pal = (byte*)(gfx + 4 + ((w * h) >> 1));
+
+        for(i = 0; i < 256; i++)
+        {
+            paldata[i] = RGB8(pal[0], pal[1], pal[2]);
+            pal += 3;
+        }
+
+        glGenTextures(1, &gfxskypic);
+        glBindTexture(0, gfxskypic);
+        glTexImage2D(
+            0,
+            0,
+            GL_RGB256,
+            R_GetTextureSize(w),
+            R_GetTextureSize(h),
+            0,
+            TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
+            data);
+
+        glColorTableEXT(0, 0, 256, 0, 0, paldata);
     }
+    else
+        glBindTexture(0, gfxskypic);
 
-    glGenTextures(1, &gfxtextures[texture]);
-    glBindTexture(0, gfxtextures[texture]);
-    ok = glTexImage2D(
-        0,
-        0,
-        GL_RGB16,
-        R_GetTextureSize(w),
-        R_GetTextureSize(h),
-        0,
-        TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
-        data);
-
-    glColorTableEXT(0, 0, 16, 0, 0, paldata);
-
-    return ok;
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_COLOR       = RGB15(31, 31, 31);
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_TEX_COORD   = COORD_PACK(256, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0x7FFF, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, -128);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0x5FFF);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_TEX_COORD   = COORD_PACK(256, -128);
+    GFX_VERTEX16    = VERTEX_PACK(0x7FFF, 0x5FFF);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
 }
 
 //
@@ -76,7 +83,8 @@ static int R_LoadTexture(dtexture texture)
 
 static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
                        dtexture texture, light_t* l1, light_t* l2,
-                       fixed_t u1, fixed_t u2, fixed_t v1, fixed_t v2)
+                       fixed_t u1, fixed_t u2, fixed_t v1, fixed_t v2,
+                       dboolean midsided)
 {
     int x1, x2;
     int y1, y2;
@@ -154,13 +162,6 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
         }
     }
 
-    r1 >>= 3;
-    g1 >>= 3;
-    b1 >>= 3;
-    r2 >>= 3;
-    g2 >>= 3;
-    b2 >>= 3;
-
     x1 = F2INT(seg->v1->x);
     x2 = F2INT(seg->v2->x);
     y1 = F2INT(seg->v1->y);
@@ -171,33 +172,57 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     if(gfxtextures[texture] == -1)
         R_LoadTexture(texture);
     else
-        glBindTexture(0, gfxtextures[texture]);
-
-    if((tex = R_GetTexturePointer(gfxtextures[texture])))
     {
-        if(seg->linedef->flags & ML_HMIRROR)
-            tex->texFormat |= GL_TEXTURE_FLIP_S;
-	    else
-		    tex->texFormat &= ~GL_TEXTURE_FLIP_S;
+        if((tex = R_GetTexturePointer(gfxtextures[texture])))
+        {
+            if(glGlob->activeTexture != gfxtextures[texture])
+            {
+                if(seg->linedef->flags & ML_HMIRROR)
+                    tex->texFormat |= GL_TEXTURE_FLIP_S;
+	            else
+		            tex->texFormat &= ~GL_TEXTURE_FLIP_S;
 
-        if(seg->linedef->flags & ML_VMIRROR)
-		    tex->texFormat |= GL_TEXTURE_FLIP_T;
-	    else
-		    tex->texFormat &= ~GL_TEXTURE_FLIP_T;
+                if(seg->linedef->flags & ML_VMIRROR)
+		            tex->texFormat |= GL_TEXTURE_FLIP_T;
+	            else
+		            tex->texFormat &= ~GL_TEXTURE_FLIP_T;
+
+                if(seg->linedef->flags & ML_DRAWMIDTEXTURE && midsided)
+                    tex->texFormat |= GL_TEXTURE_COLOR0_TRANSPARENT;
+                else
+                    tex->texFormat &= ~GL_TEXTURE_COLOR0_TRANSPARENT;
+
+                GFX_TEX_FORMAT = tex->texFormat;
+                glGlob->activeTexture = gfxtextures[texture];
+
+                if(tex->palIndex)
+                {
+                    gl_palette_data *pal =
+                        (gl_palette_data*)DynamicArrayGet(&glGlob->palettePtrs, tex->palIndex);
+
+                    GFX_PAL_FORMAT = pal->addr;
+                    glGlob->activePalette = tex->palIndex;
+                }
+                else
+                    GFX_PAL_FORMAT = glGlob->activePalette = 0;
+            }
+        }
+        else
+            GFX_TEX_FORMAT = GFX_PAL_FORMAT = glGlob->activePalette = glGlob->activeTexture = 0;
     }
 
     if(nolights)
-        r1 = r2 = g1 = g2 = b1 = b2 = 31;
+        r1 = r2 = g1 = g2 = b1 = b2 = 255;
 
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
-    GFX_COLOR       = RGB15(r1, g1, b1);
+    GFX_COLOR       = RGB8(r1, g1, b1);
     GFX_TEX_COORD   = COORD_PACK(F2INT(u1), F2INT(v1));
     GFX_VERTEX16    = VERTEX_PACK(x2, z1);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
     GFX_TEX_COORD   = COORD_PACK(F2INT(u2), F2INT(v1));
     GFX_VERTEX16    = VERTEX_PACK(x1, z1);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-    GFX_COLOR       = RGB15(r2, g2, b2);
+    GFX_COLOR       = RGB8(r2, g2, b2);
     GFX_TEX_COORD   = COORD_PACK(F2INT(u1), F2INT(v2));
     GFX_VERTEX16    = VERTEX_PACK(x2, z2);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
@@ -285,7 +310,8 @@ static void R_DrawSeg(seg_t* seg)
                     (seg->offset + col) + sidedef->textureoffset,
                     seg->offset + sidedef->textureoffset,
                     v1,
-                    v2
+                    v2,
+                    false
                     );
             }
             
@@ -323,7 +349,8 @@ static void R_DrawSeg(seg_t* seg)
                     (seg->offset + col) + sidedef->textureoffset,
                     seg->offset + sidedef->textureoffset,
                     v1,
-                    v2
+                    v2,
+                    false
                     );
             }
             
@@ -340,6 +367,18 @@ static void R_DrawSeg(seg_t* seg)
         {
             if(!(linedef->flags & ML_DRAWMIDTEXTURE))
                 return;
+
+            btop = seg->backsector->ceilingheight;
+            bbottom = seg->backsector->floorheight;
+
+            if((frontsector->ceilingpic == skyflatnum) && (seg->backsector->ceilingpic == skyflatnum))
+                btop = top;
+        
+            if(bottom < bbottom)
+                bottom = bbottom;
+        
+            if(top > btop)
+                top = btop;
         }
         
         if(!(linedef->flags & ML_SWITCHX02 && linedef->flags & ML_SWITCHX04))
@@ -354,7 +393,8 @@ static void R_DrawSeg(seg_t* seg)
             (seg->offset + col) + sidedef->textureoffset,
             seg->offset + sidedef->textureoffset,
             row,
-            (top - bottom) + row
+            (top - bottom) + row,
+            seg->linedef->flags & ML_TWOSIDED ? true : false
             );
         }
     }
@@ -370,64 +410,62 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height, dtexture texture, l
     int x;
     int y;
     int z;
-    fixed_t tx;
-    fixed_t ty;
+    int tx;
+    int ty;
+    fixed_t tsx;
+    fixed_t tsy;
+    int mapx;
+    int mapy;
+    int length;
 
     if(nolights)
         GFX_COLOR = 0x1F7FFF;
     else
-    {
-        GFX_COLOR = RGB15(
-            light->active_r >> 3,
-            light->active_g >> 3,
-            light->active_b >> 3
-            );
-    }
+        GFX_COLOR = RGB8(light->active_r, light->active_g, light->active_b);
 
-    tx = (leafs[ss->leaf].vertex->x >> 6) & ~(FRACUNIT - 1);
-    ty = (leafs[ss->leaf].vertex->y >> 6) & ~(FRACUNIT - 1);
+    tx      = F2INT(leafs[ss->leaf].vertex->x) & 0x3F;
+    ty      = F2INT(leafs[ss->leaf].vertex->y) & 0x3F;
+    tsx     = leafs[ss->leaf].vertex->x;
+    tsy     = leafs[ss->leaf].vertex->y;
+    mapx    = 0;
+    mapy    = 0;
+    z       = F2INT(height);
 
     if(gfxtextures[texture] == -1)
         R_LoadTexture(texture);
     else
         glBindTexture(0, gfxtextures[texture]);
 
-    GFX_BEGIN = GL_TRIANGLES;
+#define DRAWSSECT(index)                    \
+    v = leafs[index].vertex;                \
+    length = F2INT(tsx - v->x) + mapx;      \
+    tu = length - tx;                       \
+    mapx = length;                          \
+    tsx = v->x;                             \
+    length = F2INT(tsy - v->y) + mapy;      \
+    tv = length - ty;                       \
+    mapy = length;                          \
+    tsy = v->y;                             \
+    x = F2INT(v->x);                        \
+    y = F2INT(v->y);                        \
+    GFX_TEX_COORD   = COORD_PACK(tu, tv);   \
+    GFX_VERTEX16    = VERTEX_PACK(x, z);    \
+    GFX_VERTEX16    = VERTEX_PACK(y, 0)
 
-    z = F2INT(height);
+    GFX_BEGIN = GL_TRIANGLES;
 
     for(i = 0; i < ss->numleafs - 2; i++)
     {
         fixed_t tu;
         fixed_t tv;
+        vertex_t* v;
 
-        x = F2INT(leafs[ss->leaf + 1 + i].vertex->x);
-        y = F2INT(leafs[ss->leaf + 1 + i].vertex->y);
-        tu = F2INT((leafs[ss->leaf + 1 + i].vertex->x >> 6) - tx);
-        tv = -F2INT((leafs[ss->leaf + 1 + i].vertex->y >> 6) - ty);
-
-        GFX_TEX_COORD   = COORD_PACK(tu, tv);
-        GFX_VERTEX16    = VERTEX_PACK(x, z);
-        GFX_VERTEX16    = VERTEX_PACK(y, 0);
-
-        x = F2INT(leafs[ss->leaf + 2 + i].vertex->x);
-        y = F2INT(leafs[ss->leaf + 2 + i].vertex->y);
-        tu = F2INT((leafs[ss->leaf + 2 + i].vertex->x >> 6) - tx);
-        tv = -F2INT((leafs[ss->leaf + 2 + i].vertex->y >> 6) - ty);
-
-        GFX_TEX_COORD   = COORD_PACK(tu, tv);
-        GFX_VERTEX16    = VERTEX_PACK(x, z);
-        GFX_VERTEX16    = VERTEX_PACK(y, 0);
-
-        x = F2INT(leafs[ss->leaf + 0].vertex->x);
-        y = F2INT(leafs[ss->leaf + 0].vertex->y);
-        tu = F2INT((leafs[ss->leaf + 0 + i].vertex->x >> 6) - tx);
-        tv = -F2INT((leafs[ss->leaf + 0 + i].vertex->y >> 6) - ty);
-
-        GFX_TEX_COORD   = COORD_PACK(tu, tv);
-        GFX_VERTEX16    = VERTEX_PACK(x, z);
-        GFX_VERTEX16    = VERTEX_PACK(y, 0);
+        DRAWSSECT(ss->leaf + 1 + i);
+        DRAWSSECT(ss->leaf + 2 + i);
+        DRAWSSECT(ss->leaf + 0);
     }
+
+#undef DRAWSSECT
 }
 
 //
@@ -452,7 +490,7 @@ static void R_DrawLeafs(subsector_t* subsector)
 
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
 
-    if(viewz <= frontsector->ceilingheight)
+    if(viewz <= frontsector->ceilingheight && frontsector->ceilingpic != skyflatnum)
     {
         l = &lights[frontsector->colors[LIGHT_CEILING]];
         R_DrawSubsector(subsector, frontsector->ceilingheight, frontsector->ceilingpic, l);
@@ -460,7 +498,7 @@ static void R_DrawLeafs(subsector_t* subsector)
 
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_FRONT | POLY_MODULATION | POLY_FOG;
 
-    if(viewz >= frontsector->floorheight)
+    if(viewz >= frontsector->floorheight && frontsector->floorpic != skyflatnum)
     {
         l = &lights[frontsector->colors[LIGHT_FLOOR]];
         R_DrawSubsector(subsector, frontsector->floorheight, frontsector->floorpic, l);
@@ -483,3 +521,4 @@ void R_DrawScene(void)
         R_DrawLeafs(sub);
     }
 }
+

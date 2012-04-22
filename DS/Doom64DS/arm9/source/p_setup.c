@@ -306,7 +306,7 @@ void P_LoadLights(int lump)
         l->tag = 0;
         
         if(i < 256)
-            l->r = l->g = l->b = (i >> 3);
+            l->r = l->g = l->b = i;
         else
         {
             l->r = ml->r;
@@ -917,7 +917,7 @@ void P_GroupLines (void)
     
 }
 
-/*
+
 //
 // P_SetupSky
 //
@@ -926,7 +926,7 @@ void P_SetupSky(void)
 {
     int skyindex;
     
-    thunderCounter      = 180;
+    //thunderCounter      = 180;
     skypicnum           = -1;
     skybackdropnum      = -1;
     skyfadeback         = false;
@@ -945,10 +945,11 @@ void P_SetupSky(void)
     if(sky->backdrop[0])
         skybackdropnum = W_GetNumForName(sky->backdrop);
 
-    if(sky->flags & SKF_FIRE)
-        R_InitFire();
+    //if(sky->flags & SKF_FIRE)
+        //R_InitFire();
 }
 
+/*
 //
 // P_SetupPlanes
 //
@@ -1042,20 +1043,23 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
     // TODO
     /*
     memset(taglist, 0, sizeof(int) * MAXQUEUELIST);
-    taglistidx = 0;
+    taglistidx = 0;*/
     
     // set up world state
-    P_SpawnSpecials();
+    //P_SpawnSpecials();
     P_SetupSky();
-    P_SetupPlanes();
+    //P_SetupPlanes();
     
     // preload graphics
     R_PrecacheLevel();
-    R_SetupLevel();*/
+    //R_SetupLevel();
 
     Z_CheckHeap();
     
-    I_Printf("P_SetupLevel: Used memory: %d kb\n", Z_FreeMemory() >> 10);
+    I_Printf("Used memory: %d kb\n", Z_FreeMemory() >> 10);
+    I_Printf("Used static memory: %d kb\n", Z_TagUsage(PU_STATIC) >> 10);
+    I_Printf("Used cached memory: %d kb\n", Z_TagUsage(PU_CACHE) >> 10);
+    I_Printf("Used level memory: %d kb\n", Z_TagUsage(PU_LEVEL) >> 10);
 }
 
 

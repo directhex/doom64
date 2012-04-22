@@ -37,10 +37,6 @@ extern light_t      *lights;
 extern int          numlights;
 extern macroinfo_t  macros;
 
-// Needed to store the number of the dummy sky flat.
-// Used for rendering, as well as tracking projectiles etc.
-extern int          skyflatnum;
-
 //
 // TEXTURE DATA
 //
@@ -69,10 +65,17 @@ subsector_t*    R_PointInSubsector(fixed_t x, fixed_t y);
 angle_t         R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 angle_t         _R_PointToAngle(fixed_t x, fixed_t y);
 angle_t         R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist);
-int             _R_PointOnSide(fixed_t x, fixed_t y, node_t* node);
+int             R_PointOnSide(fixed_t x, fixed_t y, node_t* node);
 void            R_Init(void);
 void            R_DrawFrame(void);
-gl_texture_data *R_GetTexturePointer(dtexture texture);
+void            R_PrecacheLevel(void);
+int             R_GetTextureSize(int size);
+int             R_LoadTexture(dtexture texture);
+
+static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
+{
+    return (gl_texture_data*)DynamicArrayGet(&glGlob->texturePtrs, texture);
+}
 
 //
 // R_BSP
@@ -88,7 +91,16 @@ void            R_RenderBSPNode(int bspnum);
 //
 // R_DRAW
 //
+// Needed to store the number of the dummy sky flat.
+// Used for rendering, as well as tracking projectiles etc.
+extern int          skyflatnum;
+extern skydef_t*    sky;
+extern int          skypicnum;
+extern int          skybackdropnum;
+extern dboolean     skyfadeback;
+
 void            R_DrawScene(void);
+void            R_DrawSimpleSky(void);
 
 //
 // R_COLORS

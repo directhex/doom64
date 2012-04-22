@@ -149,7 +149,7 @@ void R_RenderBSPNode(int bspnum)
         bsp = &nodes[bspnum];
         
         // Decide which side the view point is on.
-        side = _R_PointOnSide(viewx, viewy, bsp);
+        side = R_PointOnSide(viewx, viewy, bsp);
         
         // check the front space
         if(R_CheckBBox(bsp->bbox[side]))

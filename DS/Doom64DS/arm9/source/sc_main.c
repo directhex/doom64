@@ -142,12 +142,12 @@ int SC_SetData(byte* data, const scdatatable_t* table)
             case 'c':
                 SC_Compare("="); // expect a '='
                 SC_Find(false);
-                rgb[0] = dhtoi(sc_parser.token);
+                rgb[0] = dhtoi(sc_parser.token) >> 3;
                 SC_Find(false);
-                rgb[1] = dhtoi(sc_parser.token);
+                rgb[1] = dhtoi(sc_parser.token) >> 3;
                 SC_Find(false);
-                rgb[2] = dhtoi(sc_parser.token);
-                *(rcolor*)pointer = D_RGBA(rgb[0], rgb[1], rgb[2], 0xFF);
+                rgb[2] = dhtoi(sc_parser.token) >> 3;
+                *(rcolor*)pointer = ARGB16(0xff, rgb[0], rgb[1], rgb[2]);
                 break;
             }
 

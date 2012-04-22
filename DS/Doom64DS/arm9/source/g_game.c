@@ -90,16 +90,16 @@ void G_BuildTiccmd(ticcmd_t* cmd)
             cmd->angleturn += angleturn[turnheld + (speed ? SLOWTURNTICS : 0)] << 2;
     
     if(buttons & KEY_UP)
-        forward += forwardmove[speed];
-    
-    if(buttons & KEY_DOWN)
         forward -= forwardmove[speed];
     
+    if(buttons & KEY_DOWN)
+        forward += forwardmove[speed];
+    
     if(buttons & KEY_R)
-        side += sidemove[speed];
+        side -= sidemove[speed];
     
     if(buttons & KEY_L)
-        side -= sidemove[speed];
+        side += sidemove[speed];
     
     if(buttons & KEY_B)
         cmd->buttons |= BT_ATTACK;
