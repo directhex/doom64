@@ -7,6 +7,7 @@
 #include "r_local.h"
 #include "d_main.h"
 #include "p_spec.h"
+#include "s_sound.h"
 
 mapthing_t* spawnlist;
 int         numspawnlist;
@@ -105,9 +106,8 @@ void P_ExplodeMissile (mobj_t* mo)
     
     if(mo->info->deathsound)
     {
-        // TODO
-        //S_StopSound(mo, 0);
-        //S_StartSound(mo, mo->info->deathsound);
+        S_StopSound(mo, 0);
+        S_StartSound(mo, mo->info->deathsound);
     }
 }
 
@@ -140,8 +140,7 @@ void P_MissileHit(mobj_t* mo)
             P_SpawnBlood(mo->x, mo->y, mo->z, damage);
         else
         {
-            // TODO
-            //S_StartSound(mo, sfx_darthit);
+            S_StartSound(mo, sfx_darthit);
             P_SpawnPuff(mo->x, mo->y, mo->z);
         }
     }
@@ -432,8 +431,7 @@ void P_NightmareRespawn(mobj_t* mobj)
         mo->alpha = 0x30;
     
     // initiate spawn sound
-    // TODO
-    //S_StartSound(mo, sfx_spawn);
+    S_StartSound(mo, sfx_spawn);
     
     if(mthing->options & MTF_AMBUSH)
         mo->flags |= MF_AMBUSH;
@@ -461,8 +459,7 @@ void P_RespawnSpecials(mobj_t* special)
     special->mobjfunc = NULL;
 
     P_FadeMobj(special, 8, 0xff, (special->flags | MF_SPECIAL));
-    // TODO
-    //S_StartSound(special, sfx_spawn);
+    S_StartSound(special, sfx_spawn);
 }
 
 //
@@ -673,8 +670,7 @@ void P_RemoveMobj(mobj_t* mobj)
     P_SetTarget(&mobj->target, NULL);
     P_SetTarget(&mobj->tracer, NULL);
     
-    // TODO
-    //S_RemoveOrigin(mobj);       // unlink from sound channels
+    S_RemoveOrigin(mobj);       // unlink from sound channels
     P_UnsetThingPosition(mobj); // unlink from sector and block lists
 
     // [kex] set callback to remove mobj
@@ -886,8 +882,7 @@ int EV_SpawnMobjTemplate(line_t* line)
         
         mobj->reactiontime = 18;
         
-        // TODO
-        //S_StartSound(mobj, sfx_spawn);
+        S_StartSound(mobj, sfx_spawn);
         
         if(mobj->type != MT_DEMON2)
         {
@@ -1200,9 +1195,8 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
     
     th = P_SpawnMobj(x, y, z, type);
     
-    // TODO
-    //if(th->info->seesound)
-        //S_StartSound (th, th->info->seesound);
+    if(th->info->seesound)
+        S_StartSound (th, th->info->seesound);
     
     P_SetTarget(&th->target, source);
     th->angle = an;
@@ -1244,9 +1238,8 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
     
     th = P_SpawnMobj(x, y, z, type);
     
-    // TODO
-    //if(th->info->seesound)
-        //S_StartSound(th, th->info->seesound);
+    if(th->info->seesound)
+        S_StartSound(th, th->info->seesound);
     
     P_SetTarget(&th->target, source);        // where it came from
     if(aim && dest)

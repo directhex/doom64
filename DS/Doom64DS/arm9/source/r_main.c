@@ -8,27 +8,41 @@
 #include "p_local.h"
 #include "d_main.h"
 
-fixed_t viewx;
-fixed_t viewy;
-fixed_t viewz;
-angle_t viewangle;
-angle_t viewpitch;
-fixed_t quakeviewx;
-fixed_t quakeviewy;
-angle_t viewangleoffset;
-rcolor  flashcolor;
-fixed_t viewsin[2];
-fixed_t viewcos[2];
+// render view globals
+fixed_t         viewx;
+fixed_t         viewy;
+fixed_t         viewz;
+angle_t         viewangle;
+angle_t         viewpitch;
+fixed_t         quakeviewx;
+fixed_t         quakeviewy;
+angle_t         viewangleoffset;
+rcolor          flashcolor;
+fixed_t         viewsin[2];
+fixed_t         viewcos[2];
 
-dtexture *gfxtextures;
-int t_start;
-int t_end;
-int numtextures;
+// sprite info globals
+spritedef_t     *spriteinfo;
+int             numsprites;
+spriteframe_t   sprtemp[29];
+int             maxframe;
+char*           spritename;
 
-dtexture *gfxsprites;
-int s_start;
-int s_end;
-int numsprites;
+// gfx texture globals
+dtexture        *gfxtextures;
+int             t_start;
+int             t_end;
+int             numtextures;
+
+// gfx sprite globals
+dtexture        *gfxsprites;
+int             s_start;
+int             s_end;
+int             numsprites;
+short           *spriteoffset;
+short           *spritetopoffset;
+short           *spritewidth;
+short           *spriteheight;
 
 //
 // R_PointToAngle2
@@ -151,17 +165,168 @@ static void R_InitTextures(void)
 }
 
 //
+// R_InstallSpriteLump
+// Local function for R_InitSprites.
+//
+
+static void R_InstallSpriteLump(int lump, unsigned frame, unsigned rotation, dboolean flipped)
+{
+    int	r;
+    
+    if(frame >= 29 || rotation > 8)
+        I_Error("R_InstallSpriteLump: Bad frame characters in lump %i", lump);
+    
+    if((int)frame > maxframe)
+        maxframe = frame;
+    
+    if(rotation == 0)
+    {
+        // the lump should be used for all rotations
+        if((sprtemp[frame].rotate == false))
+            I_Error("R_InitSprites: Sprite %s frame %c has multiple rot=0 lump", spritename, 'A'+frame);
+        
+        if(sprtemp[frame].rotate == true)
+            I_Error("R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump", spritename, 'A'+frame);
+        
+        sprtemp[frame].rotate = false;
+        for(r = 0; r < 8; r++)
+        {
+            sprtemp[frame].lump[r] = lump - s_start;
+            sprtemp[frame].flip[r] = (byte)flipped;
+        }
+        return;
+    }
+    
+    // the lump is only used for one rotation
+    if(sprtemp[frame].rotate == false)
+        I_Error("R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump", spritename, 'A'+frame);
+    
+    sprtemp[frame].rotate = true;
+    
+    // make 0 based
+    rotation--;
+    if((sprtemp[frame].lump[rotation] != -1))
+        I_Error ("R_InitSprites: Sprite %s : %c : %c has two lumps mapped to it",
+        spritename, 'A'+frame, '1'+rotation);
+    
+    sprtemp[frame].lump[rotation] = lump - s_start;
+    sprtemp[frame].flip[rotation] = (byte)flipped;
+}
+
+//
 // R_InitSprites
 //
 
 static void R_InitSprites(void)
 {
-    s_start     = W_GetNumForName("S_START") + 1;
-    s_end       = W_GetNumForName("S_END") - 1;
-    numsprites  = (s_end - s_start) + 1;
-    gfxsprites  = (dtexture*)Z_Malloc(sizeof(dtexture) * numsprites, PU_STATIC, NULL);
+    char**  check;
+    int     i;
+    int     l;
+    int     frame;
+    int     rotation;
+    int     start;
+    int     end;
+    int     patched;
+
+    s_start         = W_GetNumForName("S_START") + 1;
+    s_end           = W_GetNumForName("S_END") - 1;
+    numsprites      = (s_end - s_start) + 1;
+    gfxsprites      = (dtexture*)Z_Malloc(sizeof(dtexture) * numsprites, PU_STATIC, NULL);
+    spritewidth     = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
+    spriteheight    = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
+    spriteoffset    = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
+    spritetopoffset = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
 
     memset(gfxsprites, -1, sizeof(dtexture) * numsprites);
+
+    // count the number of sprite names
+    check = sprnames;
+    while(*check != NULL)
+        check++;
+    
+    numsprites = check-sprnames;
+    
+    if(!numsprites)
+        return;
+    
+    spriteinfo = Z_Malloc(numsprites * sizeof(*spriteinfo), PU_STATIC, NULL);
+    
+    start = s_start - 1;
+    end = s_end + 1;
+    
+    // scan all the lump names for each of the names,
+    //  noting the highest frame letter.
+    // Just compare 4 characters as ints
+    
+    for(i = 0; i < numsprites; i++)
+    {
+        spritename = sprnames[i];
+        memset(sprtemp,-1, sizeof(sprtemp));
+        
+        maxframe = -1;
+        
+        // scan the lumps,
+        //  filling in the frames for whatever is found
+        
+        for(l = start + 1; l < end; l++)
+        {
+            // 20120422 villsa - gcc is such a crybaby sometimes...
+            if(!strncmp(lumpinfo[l].name, sprnames[i], 4))
+            {
+                frame = lumpinfo[l].name[4] - 'A';
+                rotation = lumpinfo[l].name[5] - '0';
+                
+                patched = l;
+                
+                R_InstallSpriteLump(patched, frame, rotation, false);
+                
+                if(lumpinfo[l].name[6])
+                {
+                    frame = lumpinfo[l].name[6] - 'A';
+                    rotation = lumpinfo[l].name[7] - '0';
+                    R_InstallSpriteLump (l, frame, rotation, true);
+                }
+            }
+        }
+        
+        // check the frames that were found for completeness
+        if (maxframe == -1)
+        {
+            spriteinfo[i].numframes = 0;
+            continue;
+        }
+        
+        maxframe++;
+        
+        for(frame = 0; frame < maxframe; frame++)
+        {
+            switch((int)sprtemp[frame].rotate)
+            {
+            case -1:
+                // no rotations were found for that frame at all
+                I_Error ("R_InitSprites: No patches found for %s frame %c", sprnames[i], frame+'A');
+                break;
+                
+            case 0:
+                // only the first rotation is needed
+                break;
+                
+            case 1:
+                // must have all 8 frames
+                for(rotation = 0; rotation < 8; rotation++)
+                    if (sprtemp[frame].lump[rotation] == -1)
+                        I_Error ("R_InitSprites: Sprite %s frame %c is missing rotations",
+                        sprnames[i], frame+'A');
+                    break;
+            }
+        }
+        
+        // allocate space for the frames present and copy sprtemp to it
+        spriteinfo[i].numframes = maxframe;
+        spriteinfo[i].spriteframes =
+            Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
+        memcpy(spriteinfo[i].spriteframes, sprtemp, maxframe*sizeof(spriteframe_t));
+    }
 }
 
 //
@@ -184,6 +349,27 @@ int R_GetTextureSize(int size)
         return TEXTURE_SIZE_256;
 
 	return 0;
+}
+
+//
+// R_PadTextureDims
+//
+
+#define MAXTEXSIZE	256
+#define MINTEXSIZE	8
+
+int R_PadTextureDims(int n)
+{
+    int mask = MINTEXSIZE;
+    
+    while(mask < MAXTEXSIZE)
+    {
+        if(n == mask || (n & (mask-1)) == n)
+            return mask;
+        
+        mask <<= 1;
+    }
+    return n;
 }
 
 //
@@ -226,6 +412,71 @@ int R_LoadTexture(dtexture texture)
         data);
 
     glColorTableEXT(0, 0, 16, 0, 0, paldata);
+
+    return ok;
+}
+
+//
+// R_LoadSprite
+//
+
+int R_LoadSprite(dtexture texture)
+{
+    short* gfx;
+    int i;
+    int w;
+    int h;
+    byte* data;
+    byte* pal;
+    uint16 paldata[256];
+    dboolean ext;
+    int numpal;
+    dboolean ok;
+
+    gfx = (short*)W_CacheLumpNum(s_start + texture, PU_CACHE);
+    w = gfx[0];
+    h = gfx[1];
+    spritewidth[texture] = w;
+    spriteheight[texture] = h;
+    spriteoffset[texture] = gfx[2];
+    spritetopoffset[texture] = gfx[3];
+    ext = gfx[4];
+    data = (byte*)(gfx + 5);
+    numpal = 16;
+
+    if(!ext)
+    {
+        pal = (byte*)(gfx + 5 + (((w * h) >> 1) >> 1));
+        numpal = 16;
+    }
+    else
+    {
+        pal = (byte*)(gfx + 5 + ((w * h) >> 1));
+        numpal = 256;
+    }
+
+    for(i = 0; i < numpal; i++)
+    {
+        paldata[i] = RGB8(pal[0], pal[1], pal[2]);
+        pal += 4;
+    }
+
+    w = R_PadTextureDims(w);
+    h = R_PadTextureDims(h);
+
+    glGenTextures(1, &gfxsprites[texture]);
+    glBindTexture(0, gfxsprites[texture]);
+    ok = glTexImage2D(
+        0,
+        0,
+        ext ? GL_RGB256 : GL_RGB16,
+        R_GetTextureSize(w),
+        R_GetTextureSize(h),
+        0,
+        TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T|GL_TEXTURE_COLOR0_TRANSPARENT,
+        data);
+
+    glColorTableEXT(0, 0, numpal, 0, 0, paldata);
 
     return ok;
 }

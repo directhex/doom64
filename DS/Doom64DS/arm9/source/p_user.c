@@ -8,6 +8,7 @@
 #include "sounds.h"
 #include "r_local.h"
 #include "d_main.h"
+#include "s_sound.h"
 
 //
 // Movement.
@@ -434,8 +435,7 @@ void P_PlayerZMovement(mobj_t* mo)
                 // after hitting the ground (hard),
                 // and utter appropriate sound.
                 mo->player->deltaviewheight = mo->momz>>3;
-                // TODO
-                //S_StartSound(mo, sfx_oof);
+                S_StartSound(mo, sfx_oof);
             }
             mo->momz = 0;
         }

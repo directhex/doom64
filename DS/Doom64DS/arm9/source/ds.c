@@ -182,7 +182,7 @@ void I_Init(void)
     TIMER0_CR       = TIMER_ENABLE | TIMER_DIV_1024;
     TIMER1_CR       = TIMER_ENABLE | TIMER_CASCADE;
 
-    consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
+    consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
     consoleClear();
 }
 

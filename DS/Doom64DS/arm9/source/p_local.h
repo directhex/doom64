@@ -214,6 +214,11 @@ mobj_t*     P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
                            fixed_t xoffs, fixed_t yoffs, fixed_t heightoffs, dboolean aim);
 
 //
+// P_ENEMY
+//
+void P_NoiseAlert(mobj_t* target, mobj_t* emmiter);
+
+//
 // P_PSPR
 //
 struct laser_s;

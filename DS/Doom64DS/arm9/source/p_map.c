@@ -6,6 +6,7 @@
 #include "r_local.h"
 #include "tables.h"
 #include "d_main.h"
+#include "s_sound.h"
 
 
 fixed_t         tmbbox[4];
@@ -1368,13 +1369,7 @@ dboolean PTR_UseTraverse(intercept_t* in)
         
         if(openrange <= 0)
         {
-            //
-            // [kex] don't spam oof sound if usecontext is on
-            //
-            // TODO
-            //if(!usecontext)
-                //S_StartSound(usething, sfx_noway);
-
+            S_StartSound(usething, sfx_noway);
             return false;	// can't use through a wall
         }
         
@@ -1539,7 +1534,7 @@ dboolean PIT_ChangeSector(mobj_t* thing)
         if(thing->state != &states[S_498])
         {
             P_SetMobjState(thing, S_498);
-            //S_StartSound(thing, sfx_slop); // TODO
+            S_StartSound(thing, sfx_slop);
         }
         
         // keep checking

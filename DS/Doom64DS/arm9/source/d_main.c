@@ -6,6 +6,7 @@
 #include "w_wad.h"
 #include "p_local.h"
 #include "g_game.h"
+#include "s_sound.h"
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -604,8 +605,7 @@ int D_MiniLoop(void(*start)(void), void(*stop)(void),
 
 drawframe:
 
-        // TODO
-        //S_UpdateSounds();
+        S_UpdateSounds();
         
         // Update display, next frame, with current state.
 
@@ -686,7 +686,10 @@ void D_DoomMain(void)
     {
         nomonsters = true;
         nolights = true;
-        gamemap = 1;
+        gamemap = 4;
+        players[0].readyweapon = players[0].pendingweapon = wp_pistol;
+        players[0].weaponowned[wp_fist] = true;
+        players[0].weaponowned[wp_pistol] = true;
         G_DoLoadLevel();
         I_Printf("%s\n", P_GetMapInfo(gamemap)->mapname);
         D_MiniLoop(P_Start, P_Stop, TestDrawer, TestTicker);

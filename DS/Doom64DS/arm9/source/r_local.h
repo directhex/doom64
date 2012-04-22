@@ -4,6 +4,8 @@
 #include "doomdata.h"
 #include "t_bsp.h"
 #include "tables.h"
+#include "p_pspr.h"
+#include "d_player.h"
 
 extern fixed_t      viewx;
 extern fixed_t      viewy;
@@ -61,6 +63,14 @@ angle_t         R_FrustumAngle(void);
 //
 // R_MAIN
 //
+
+extern spritedef_t	*spriteinfo;
+extern int			numsprites;
+extern short        *spritewidth;
+extern short        *spriteheight;
+extern short        *spriteoffset;
+extern short        *spritetopoffset;
+
 subsector_t*    R_PointInSubsector(fixed_t x, fixed_t y);
 angle_t         R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 angle_t         _R_PointToAngle(fixed_t x, fixed_t y);
@@ -71,6 +81,7 @@ void            R_DrawFrame(void);
 void            R_PrecacheLevel(void);
 int             R_GetTextureSize(int size);
 int             R_LoadTexture(dtexture texture);
+int             R_LoadSprite(dtexture texture);
 
 static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
 {
@@ -101,6 +112,7 @@ extern dboolean     skyfadeback;
 
 void            R_DrawScene(void);
 void            R_DrawSimpleSky(void);
+void            R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player);
 
 //
 // R_COLORS

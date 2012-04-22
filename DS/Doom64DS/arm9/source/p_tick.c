@@ -2,6 +2,7 @@
 #include "z_zone.h"
 #include "p_local.h"
 #include "d_main.h"
+#include "s_sound.h"
 
 void G_PlayerFinishLevel(int player);
 void G_DoReborn(int playernum);
@@ -182,8 +183,8 @@ void P_Start(void)
     // enable menu and set gamestate
     //allowmenu = true; // TODO
     gamestate = GS_LEVEL;
-
-    //S_StartMusic(map->music); // TODO
+    
+    S_StartMusic(map->music);
 }
 
 //
@@ -198,7 +199,7 @@ void P_Stop(void)
     //
     // [d64] stop plasma buzz
     //
-    //S_StopSound(NULL, sfx_electric); // TODO
+    S_StopSound(NULL, sfx_electric);
 
     for(i = 0; i < MAXPLAYERS; i++)
     {
@@ -220,10 +221,9 @@ void P_Stop(void)
     /*if(automapactive)
         AM_Stop();*/
 
-    // TODO
     // music continues on exit if defined
-    /*if(!P_GetMapInfo(gamemap)->contmusexit)
-        S_StopMusic();*/
+    if(!P_GetMapInfo(gamemap)->contmusexit)
+        S_StopMusic();
 
     if(demoplayback)
         demoplayback = false;
@@ -240,9 +240,9 @@ void P_Stop(void)
             S_StopMusic();
             WIPE_FadeScreen(8);
         }
-    }
+    }*/
 
-    S_ResetSound();*/
+    S_ResetSound();
 
     gameaction = action;
 }
@@ -278,7 +278,6 @@ int P_Ticker(void)
     if(paused)
         return 0;
     
-    // TODO
     // pause if in menu and at least one tic has been run
     if(!netgame /*&& menuactive*/ &&
         !demoplayback && players[consoleplayer].viewz != 1)

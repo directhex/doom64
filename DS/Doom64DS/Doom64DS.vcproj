@@ -126,6 +126,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\p_enemy.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\p_inter.c"
 					>
 				</File>
@@ -179,6 +183,10 @@
 				</File>
 				<File
 					RelativePath=".\arm9\source\r_main.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\s_sound.c"
 					>
 				</File>
 				<File
@@ -271,6 +279,10 @@
 				</File>
 				<File
 					RelativePath=".\arm9\source\r_local.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\s_sound.h"
 					>
 				</File>
 				<File

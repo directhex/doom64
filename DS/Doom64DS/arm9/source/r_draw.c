@@ -522,3 +522,80 @@ void R_DrawScene(void)
     }
 }
 
+//
+// R_DrawPSprite
+//
+
+void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
+{
+    /*spritedef_t     *sprdef;
+    spriteframe_t   *sprframe;
+    int             spritenum;
+    rcolor          color;
+    byte            alpha;
+    fixed_t         x;
+    fixed_t         y;
+    int             width;
+    int             height;
+
+    alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3) << 15;
+
+    // get sprite frame/defs
+    sprdef = &spriteinfo[psp->state->sprite];
+    sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
+    spritenum = sprframe->lump[0];
+
+    if(gfxsprites[spritenum] == -1)
+        R_LoadSprite(spritenum);
+    else
+        glBindTexture(0, gfxsprites[spritenum]);
+
+    x = psp->sx - spriteoffset[spritenum];
+    y = psp->sy - spritetopoffset[spritenum];
+
+    if(player->onground)
+    {
+        x += (quakeviewx >> 24);
+        y += (quakeviewy >> 16);
+    }
+
+    width = spritewidth[spritenum];
+    height = spriteheight[spritenum];
+
+    x >>= FRACBITS;
+    y >>= FRACBITS;
+    
+    if(psp->state->frame & FF_FULLBRIGHT || nolights)
+        color = alpha | RGB15(31, 31, 31);
+    else
+    {
+        light_t *light;
+
+        light = &lights[sector->colors[LIGHT_THING]];
+        color = alpha | RGB8(light->active_r, light->active_g, light->active_b);
+    }
+
+    MATRIX_CONTROL  = GL_PROJECTION;
+    MATRIX_IDENTITY = 0;
+    MATRIX_CONTROL  = GL_MODELVIEW;
+    MATRIX_IDENTITY = 0;
+    GFXORTHO(0);
+    //GFX_TEX_FORMAT  = 0;
+    //GFX_PAL_FORMAT  = 0;
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_COLOR       = color;
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_TEX_COORD   = COORD_PACK(width, 0);
+    GFX_VERTEX16    = VERTEX_PACK(width, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, -height);
+    GFX_VERTEX16    = VERTEX_PACK(0, height);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_TEX_COORD   = COORD_PACK(width, -height);
+    GFX_VERTEX16    = VERTEX_PACK(width, height);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);*/
+}
+

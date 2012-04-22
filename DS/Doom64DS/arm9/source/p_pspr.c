@@ -7,6 +7,7 @@
 #include "r_local.h"
 #include "sounds.h"
 #include "d_main.h"
+#include "s_sound.h"
 
 
 #define LOWERSPEED      FRACUNIT*7
@@ -83,8 +84,7 @@ static void P_SetPsprite(player_t *player, int position, statenum_t stnum)
 // Uses player
 //
 
-// TODO
-//static dboolean pls_buzzing = false;    // [kex] for keeping track when the buzzing is playing
+static dboolean pls_buzzing = false;    // [kex] for keeping track when the buzzing is playing
 
 void P_BringUpWeapon(player_t* player)
 {
@@ -93,26 +93,24 @@ void P_BringUpWeapon(player_t* player)
     if(player->pendingweapon == wp_nochange)
         player->pendingweapon = player->readyweapon;
     
-    // TODO
-    /*if(player->pendingweapon == wp_chainsaw)
+    if(player->pendingweapon == wp_chainsaw)
         S_StartSound(player->mo, sfx_sawup);
     else if(player->pendingweapon == wp_plasma)
     {
         pls_buzzing = true;
         S_StartSound(player->mo, sfx_electric);
-    }*/
+    }
     
     //
     // [kex] hack for making sure the buzzing sound is stopped
     // when plasma rifle is not equipped
     //
-    // TODO
-    /*
+
     if(pls_buzzing && player->pendingweapon != wp_plasma)
     {
         pls_buzzing = false;
         S_StopSound(NULL, sfx_electric);
-    }*/
+    }
     
     newstate = weaponinfo[player->pendingweapon].upstate;
     
@@ -245,8 +243,7 @@ void P_FireWeapon(player_t* player)
     if(player->refire && player->readyweapon == wp_pistol)
         newstate++;
     P_SetPsprite (player, ps_weapon, newstate);
-    // TODO
-    //P_NoiseAlert (player->mo, player->mo);
+    P_NoiseAlert (player->mo, player->mo);
     psp->sx = FRACUNIT;		//villsa
     psp->sy = WEAPONTOP;
 }
@@ -366,12 +363,11 @@ void A_Lower(player_t* player, pspdef_t* psp)
     //
     // [d64] stop plasma buzz
     //
-    // TODO
-    /*if(player->readyweapon == wp_plasma)
+    if(player->readyweapon == wp_plasma)
     {
         pls_buzzing = false;
         S_StopSound(NULL, sfx_electric);
-    }*/
+    }
     
     // The old weapon has been lowered off the screen,
     // so change the weapon and start raising it
@@ -456,8 +452,7 @@ void A_Punch(player_t* player, pspdef_t* psp)
     // turn to face target
     if(linetarget)
     {
-        // TODO
-        //S_StartSound(player->mo, sfx_punch);
+        S_StartSound(player->mo, sfx_punch);
         player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y,
             linetarget->x, linetarget->y);
     }
@@ -485,13 +480,11 @@ void A_Saw(player_t* player, pspdef_t* psp)
     
     if(!linetarget)
     {
-        // TODO
-        //S_StartSound (player->mo, sfx_saw1);
+        S_StartSound (player->mo, sfx_saw1);
         return;
     }
 
-    // TODO
-    //S_StartSound (player->mo, sfx_saw2);
+    S_StartSound (player->mo, sfx_saw2);
     
     // turn to face target
     angle = R_PointToAngle2(player->mo->x, player->mo->y, linetarget->x, linetarget->y);
@@ -520,8 +513,7 @@ void A_Saw(player_t* player, pspdef_t* psp)
 
 void A_ChainSawReady(player_t* player, pspdef_t* psp)
 {
-    // TODO
-    //S_StartSound (player->mo, sfx_sawidle);
+    S_StartSound (player->mo, sfx_sawidle);
     A_WeaponReady(player, psp);
 }
 
@@ -634,8 +626,7 @@ void P_GunShot(mobj_t* mo, dboolean accurate)
 //
 void A_FirePistol(player_t* player, pspdef_t* psp)
 {
-    // TODO
-    //S_StartSound(player->mo, sfx_pistol);
+    S_StartSound(player->mo, sfx_pistol);
     
     P_SetMobjState(player->mo, S_007);
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -656,8 +647,7 @@ void A_FireShotgun(player_t* player, pspdef_t* psp)
 {
     int i;
     
-    // TODO
-    //S_StartSound(player->mo, sfx_shotgun);
+    S_StartSound(player->mo, sfx_shotgun);
     P_SetMobjState (player->mo, S_007);
     
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -686,8 +676,7 @@ void A_FireShotgun2(player_t* player, pspdef_t* psp)
     angle_t 	angle;
     int 		damage;
     
-    // TODO
-    //S_StartSound(player->mo, sfx_sht2fire);
+    S_StartSound(player->mo, sfx_sht2fire);
     P_SetMobjState(player->mo, S_007);
     player->ammo[weaponinfo[player->readyweapon].ammo] -= 2;
     
@@ -720,8 +709,7 @@ void A_FireCGun(player_t* player, pspdef_t* psp)
     if(!ammo)
         return;
     
-    // TODO
-    //S_StartSound(player->mo, sfx_pistol);
+    S_StartSound(player->mo, sfx_pistol);
     
     P_SetMobjState (player->mo, S_007);
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -800,8 +788,7 @@ void A_BFGSpray(mobj_t* mo)
         P_DamageMobj(linetarget, mo->target, mo->target, damage);
     }
     
-    // TODO
-    //A_FadeAlpha(mo);
+    A_FadeAlpha(mo);
 }
 
 
@@ -811,8 +798,7 @@ void A_BFGSpray(mobj_t* mo)
 
 void A_BFGsound(player_t* player, pspdef_t* psp)
 {
-    // TODO
-    //S_StartSound(player->mo, sfx_bfg);
+    S_StartSound(player->mo, sfx_bfg);
 }
 
 //
@@ -821,8 +807,7 @@ void A_BFGsound(player_t* player, pspdef_t* psp)
 
 void A_LoadShotgun2(player_t* player, pspdef_t* psp)
 {
-    // TODO
-    //S_StartSound(player->mo, sfx_sht2load1);
+    S_StartSound(player->mo, sfx_sht2load1);
 }
 
 //
@@ -831,8 +816,7 @@ void A_LoadShotgun2(player_t* player, pspdef_t* psp)
 
 void A_CloseShotgun2(player_t* player, pspdef_t* psp)
 {
-    // TODO
-    //S_StartSound(player->mo, sfx_sht2load2);
+    S_StartSound(player->mo, sfx_sht2load2);
 }
 
 //
@@ -1130,8 +1114,7 @@ void A_FireLaser(player_t *player, pspdef_t *psp)
             angleoffs += spread;
     }
     
-    // TODO
-    //S_StartSound(player->mo, sfx_laser);
+    S_StartSound(player->mo, sfx_laser);
     P_SetMobjState(player->mo, S_007);
     P_SetPsprite(player, ps_flash, weaponinfo[player->readyweapon].flashstate);
 }

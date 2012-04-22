@@ -11,6 +11,7 @@
 #include "tables.h"
 #include "info.h"
 #include "r_local.h"
+#include "s_sound.h"
 
 #define DEMOMARKER      0x80
 #define MAXPLMOVE       (forwardmove[1])
@@ -155,6 +156,9 @@ void G_BuildTiccmd(ticcmd_t* cmd)
         players[0].cheats |= CF_NOCLIP;
     else
         players[0].cheats &= ~CF_NOCLIP;
+
+    if(buttons & KEY_START)
+        nolights ^= 1;
     
 }
 
@@ -335,11 +339,11 @@ void G_Ticker(void)
                 if((players[i].cmd.buttons & BT_SPECIALMASK) == BTS_PAUSE)
                 {
                     paused ^= 1;
-                    // TODO
-                    /*if(paused)
+
+                    if(paused)
                         S_PauseSound();
                     else
-                        S_ResumeSound();*/
+                        S_ResumeSound();
                 }
             }
         }
@@ -489,9 +493,8 @@ dboolean G_CheckSpot(int playernum, mapthing_t* mthing)
         MT_TELEPORTFOG
         );
     
-    // TODO
-    //if(players[playernum].viewz != 1)
-        //S_StartSound(mo, sfx_telept);	// don't start sound on first frame
+    if(players[playernum].viewz != 1)
+        S_StartSound(mo, sfx_telept);   // don't start sound on first frame
     
     return true;
 }

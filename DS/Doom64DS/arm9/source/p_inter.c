@@ -8,12 +8,13 @@
 #include "sounds.h"
 #include "d_main.h"
 #include "d_englsh.h"
+#include "s_sound.h"
 
 
 // a weapon is found with two clip loads,
 // a big item has five clip loads
-int     maxammo[NUMAMMO] = {200, 50, 300, 50};
-int     clipammo[NUMAMMO] = {10, 4, 20, 1};
+int maxammo[NUMAMMO] = {200, 50, 300, 50};
+int clipammo[NUMAMMO] = {10, 4, 20, 1};
 
 int infraredFactor = 0;
 
@@ -250,6 +251,8 @@ static dboolean P_GiveCard(player_t* player, mobj_t *item, card_t card)
 			player->message = GOTREDSKULL;
             player->messagepic = 30;
 			break;
+        default:
+            break;
 	}
 
 	if(netgame)
@@ -703,9 +706,8 @@ void P_TouchSpecialThing(mobj_t* special, mobj_t* toucher)
 		P_RemoveMobj(special);
 		player->bonuscount += BONUSADD;
 		
-        // TODO
-		//if(player == &players[consoleplayer])
-			//S_StartSound (NULL, sound);
+		if(player == &players[consoleplayer])
+			S_StartSound (NULL, sound);
 	}
 }
 
