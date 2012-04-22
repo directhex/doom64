@@ -633,14 +633,7 @@ drawframe:
 
 void P_Start(void);
 void P_Stop(void);
-
-int TestTicker(void)
-{
-    P_PlayerThink(&players[0]);
-    leveltime++;
-
-    return 0;
-}
+int P_Ticker(void);
 
 void TestDrawer(void)
 {
@@ -686,13 +679,17 @@ void D_DoomMain(void)
     {
         nomonsters = true;
         nolights = true;
-        gamemap = 4;
+        gamemap = 1;
+        players[0].playerstate = PST_REBORN;
+        players[0].health = 100;
         players[0].readyweapon = players[0].pendingweapon = wp_pistol;
         players[0].weaponowned[wp_fist] = true;
         players[0].weaponowned[wp_pistol] = true;
+        players[0].ammo[am_clip] = 200;
+        players[0].maxammo[am_clip] = 200;
         G_DoLoadLevel();
         I_Printf("%s\n", P_GetMapInfo(gamemap)->mapname);
-        D_MiniLoop(P_Start, P_Stop, TestDrawer, TestTicker);
+        D_MiniLoop(P_Start, P_Stop, TestDrawer, P_Ticker);
     }
 }
 

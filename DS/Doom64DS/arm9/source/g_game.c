@@ -85,22 +85,41 @@ void G_BuildTiccmd(ticcmd_t* cmd)
         turnheld = SLOWTURNTICS-1;
     
     if(buttons & KEY_RIGHT)
-            cmd->angleturn -= angleturn[turnheld + (speed ? SLOWTURNTICS : 0)] << 2;
+        cmd->angleturn -= angleturn[turnheld + (speed ? SLOWTURNTICS : 0)] << 2;
 
-        if(buttons & KEY_LEFT)
-            cmd->angleturn += angleturn[turnheld + (speed ? SLOWTURNTICS : 0)] << 2;
+    if(buttons & KEY_LEFT)
+        cmd->angleturn += angleturn[turnheld + (speed ? SLOWTURNTICS : 0)] << 2;
     
-    if(buttons & KEY_UP)
-        forward -= forwardmove[speed];
-    
-    if(buttons & KEY_DOWN)
-        forward += forwardmove[speed];
-    
-    if(buttons & KEY_R)
-        side -= sidemove[speed];
-    
-    if(buttons & KEY_L)
-        side += sidemove[speed];
+    if(((buttons & KEY_L) && (buttons & KEY_R)) &&
+        buttons & (KEY_UP|KEY_DOWN))
+    {
+        cmd->buttons |= BT_CHANGE;
+
+        if(buttons & KEY_UP)
+        {
+            cmd->buttons |= BT_NEXTWEAP;
+            buttons &= ~KEY_UP;
+        }
+        else if(buttons & KEY_DOWN)
+        {
+            cmd->buttons |= BT_PREVWEAP;
+            buttons &= ~KEY_DOWN;
+        }
+    }
+    else
+    {
+        if(buttons & KEY_R)
+            side -= sidemove[speed];
+        
+        if(buttons & KEY_L)
+            side += sidemove[speed];
+
+        if(buttons & KEY_UP)
+            forward -= forwardmove[speed];
+        
+        if(buttons & KEY_DOWN)
+            forward += forwardmove[speed];
+    }
     
     if(buttons & KEY_B)
         cmd->buttons |= BT_ATTACK;
@@ -116,25 +135,6 @@ void G_BuildTiccmd(ticcmd_t* cmd)
             if(pc->key[PCKEY_JUMP])
                 cmd->buttons2 |= BT2_JUMP;
         }
-    }*/
-    
-    /*if(pc->flags & PCF_NEXTWEAPON)
-    {
-        cmd->buttons |= BT_CHANGE;
-        cmd->buttons2 |= BT2_NEXTWEAP;
-        pc->flags &= ~PCF_NEXTWEAPON;
-    }
-    else if(pc->flags & PCF_PREVWEAPON)
-    {
-        cmd->buttons |= BT_CHANGE;
-        cmd->buttons2 |= BT2_PREVWEAP;
-        pc->flags &= ~PCF_PREVWEAPON;
-    }
-    else if(pc->nextweapon != wp_nochange)
-    {
-        cmd->buttons |= BT_CHANGE;
-        cmd->buttons |= pc->nextweapon << BT_WEAPONSHIFT;
-        pc->nextweapon = wp_nochange;
     }*/
     
     

@@ -506,6 +506,85 @@ static void R_DrawLeafs(subsector_t* subsector)
 }
 
 //
+// R_DrawSprite
+//
+
+static void R_DrawSprite(mobj_t* thing)
+{
+    spriteframe_t*  sprframe;
+    angle_t ang;
+    int rot;
+    fixed_t flip;
+    short alpha;
+    rcolor color;
+    int offx;
+    int offy;
+    int width;
+    int height;
+    fixed_t x1, x2;
+    fixed_t y1, y2;
+    fixed_t z1, z2;
+
+    alpha = thing->alpha >> 3;
+    sprframe = &spriteinfo[thing->sprite].spriteframes[thing->frame & FF_FRAMEMASK];
+    
+    if(sprframe->rotate)
+    {
+        // choose a different rotation based on player view
+        ang = R_PointToAngle2(viewx, viewy, thing->x, thing->y);
+        rot = (ang-thing->angle + (unsigned)(ANG45 / 2) * 9) >> 29;
+    }
+    else
+        // use single rotation for all views
+        rot = 0;
+
+    R_LoadSprite(thing->sprite, thing->frame & FF_FRAMEMASK, rot,
+        &offx, &offy, &width, &height);
+
+    if(thing->frame & FF_FULLBRIGHT || nolights)
+        color = RGB15(31, 31, 31);
+    else
+    {
+        light_t *light;
+
+        light = &lights[thing->subsector->sector->colors[LIGHT_THING]];
+        color = RGB8(light->active_r, light->active_g, light->active_b);
+    }
+
+    if(sprframe->flip[rot])
+        flip = offx - width;
+    else
+        flip = width - offx;
+
+    GFX_POLY_FORMAT = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
+    GFX_COLOR       = color;
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+
+    x1 = F2INT(thing->x) - FixedMul(viewcos[0], flip);
+    y1 = F2INT(thing->y) - FixedMul(viewsin[0], flip);
+    x2 = F2INT(thing->x) + FixedMul(viewcos[0], width - flip);
+    y2 = F2INT(thing->y) + FixedMul(viewsin[0], width - flip);
+    z1 = F2INT(thing->z) + offy - height;
+    z2 = F2INT(thing->z) + offy;
+
+    GFX_TEX_COORD   = COORD_PACK(width, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x1, z2);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+
+    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x2, z2);
+    GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+
+    GFX_TEX_COORD   = COORD_PACK(width, height);
+    GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+
+    GFX_TEX_COORD   = COORD_PACK(0, height);
+    GFX_VERTEX16    = VERTEX_PACK(x2, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+}
+
+//
 // R_DrawScene
 //
 
@@ -520,6 +599,14 @@ void R_DrawScene(void)
 
         R_DrawLeafs(sub);
     }
+
+    for(vissprite = vissprite - 1; vissprite >= visspritelist; vissprite--)
+    {
+        mobj_t* mobj;
+
+        mobj = *vissprite;
+        R_DrawSprite(mobj);
+    }
 }
 
 //
@@ -528,11 +615,8 @@ void R_DrawScene(void)
 
 void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 {
-    /*spritedef_t     *sprdef;
-    spriteframe_t   *sprframe;
-    int             spritenum;
     rcolor          color;
-    byte            alpha;
+    short           alpha;
     fixed_t         x;
     fixed_t         y;
     int             width;
@@ -540,30 +624,16 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3) << 15;
 
-    // get sprite frame/defs
-    sprdef = &spriteinfo[psp->state->sprite];
-    sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
-    spritenum = sprframe->lump[0];
+    R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, &x, &y, &width, &height);
 
-    if(gfxsprites[spritenum] == -1)
-        R_LoadSprite(spritenum);
-    else
-        glBindTexture(0, gfxsprites[spritenum]);
-
-    x = psp->sx - spriteoffset[spritenum];
-    y = psp->sy - spritetopoffset[spritenum];
+    x = F2INT(psp->sx) - x - 32;
+    y = F2INT(psp->sy) - y - 48;
 
     if(player->onground)
     {
         x += (quakeviewx >> 24);
         y += (quakeviewy >> 16);
     }
-
-    width = spritewidth[spritenum];
-    height = spriteheight[spritenum];
-
-    x >>= FRACBITS;
-    y >>= FRACBITS;
     
     if(psp->state->frame & FF_FULLBRIGHT || nolights)
         color = alpha | RGB15(31, 31, 31);
@@ -580,22 +650,20 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     MATRIX_CONTROL  = GL_MODELVIEW;
     MATRIX_IDENTITY = 0;
     GFXORTHO(0);
-    //GFX_TEX_FORMAT  = 0;
-    //GFX_PAL_FORMAT  = 0;
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
     GFX_COLOR       = color;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_TEX_COORD   = COORD_PACK(0, 0);
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x, y);
     GFX_VERTEX16    = VERTEX_PACK(0, 0);
     GFX_TEX_COORD   = COORD_PACK(width, 0);
-    GFX_VERTEX16    = VERTEX_PACK(width, 0);
+    GFX_VERTEX16    = VERTEX_PACK(width + x, y);
     GFX_VERTEX16    = VERTEX_PACK(0, 0);
-    GFX_TEX_COORD   = COORD_PACK(0, -height);
-    GFX_VERTEX16    = VERTEX_PACK(0, height);
+    GFX_TEX_COORD   = COORD_PACK(0, height);
+    GFX_VERTEX16    = VERTEX_PACK(x, height + y);
     GFX_VERTEX16    = VERTEX_PACK(0, 0);
-    GFX_TEX_COORD   = COORD_PACK(width, -height);
-    GFX_VERTEX16    = VERTEX_PACK(width, height);
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);*/
+    GFX_TEX_COORD   = COORD_PACK(width, height);
+    GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
 }
 

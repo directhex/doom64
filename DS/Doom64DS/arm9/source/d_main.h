@@ -47,20 +47,17 @@ typedef struct
 typedef enum
 {
     // Press "Fire".
-    BT_ATTACK		= 1,
+    BT_ATTACK		= (1 << 0),
     // Use button, to open doors, activate switches.
-    BT_USE			= 2,
-        
-    // Flag: game events, not really buttons.
-    BT_SPECIAL		= 0x80,
-    BT_SPECIALMASK	= 3,
-        
+    BT_USE			= (1 << 1),
     // Flag, weapon change pending.
     // If true, the next 3 bits hold weapon num.
-    BT_CHANGE		= 4,
-    // The 3bit weapon mask and shift, convenience.
-    BT_WEAPONMASK	= 0x78,
-    BT_WEAPONSHIFT	= 3,
+    BT_CHANGE		= (1 << 2),
+    BT_NEXTWEAP     = (1 << 3),
+    BT_PREVWEAP     = (1 << 4),
+    // Flag: game events, not really buttons.
+    BT_SPECIAL		= (1 << 7),
+    BT_SPECIALMASK	= 3,
 
     // Pause the game.
     BTS_PAUSE		= 1

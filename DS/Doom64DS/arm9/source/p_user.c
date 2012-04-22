@@ -512,7 +512,7 @@ void P_PlayerTic(mobj_t* mo)
 void P_PlayerThink(player_t* player)
 {
     ticcmd_t*       cmd;
-    //weapontype_t    newweapon;
+    weapontype_t    newweapon;
 
     P_PlayerTic(player->mo);
     
@@ -571,31 +571,7 @@ void P_PlayerThink(player_t* player)
     
     if (cmd->buttons & BT_CHANGE)
     {
-        // TODO
-        /*if(!(cmd->buttons2 & (BT2_NEXTWEAP|BT2_PREVWEAP)))
-        {
-            newweapon = (cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT;
-        
-            if(newweapon == wp_fist
-                && player->weaponowned[wp_chainsaw]
-                && (player->readyweapon != wp_chainsaw))
-            {
-                newweapon = wp_chainsaw;
-            }
-        
-            if (newweapon == wp_shotgun
-                && player->weaponowned[wp_supershotgun]
-                && player->readyweapon != wp_supershotgun)
-            {
-                newweapon = wp_supershotgun;
-            }
-        
-            if (player->weaponowned[newweapon] && newweapon != player->readyweapon)
-            {
-                player->pendingweapon = newweapon;
-            }
-        }
-        else    // 20120211 villsa - new weapon cycle logic
+        if(cmd->buttons & (BT_NEXTWEAP|BT_PREVWEAP))
         {
             dboolean direction;
             int weapon;
@@ -605,7 +581,7 @@ void P_PlayerThink(player_t* player)
             if(newweapon == wp_nochange)
                 newweapon = player->readyweapon;
 
-            direction = (cmd->buttons2 & BT2_NEXTWEAP) ? true : false;
+            direction = (cmd->buttons & BT_NEXTWEAP) ? true : false;
             weapon = newweapon;
 
             while(1)
@@ -629,7 +605,7 @@ void P_PlayerThink(player_t* player)
 
             // TODO
             //ST_DisplayPendingWeapon();
-        }*/
+        }
     }
     
     // check for use

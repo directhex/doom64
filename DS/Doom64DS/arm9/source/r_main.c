@@ -43,6 +43,7 @@ short           *spriteoffset;
 short           *spritetopoffset;
 short           *spritewidth;
 short           *spriteheight;
+short           *spritepalindex;
 
 //
 // R_PointToAngle2
@@ -141,6 +142,7 @@ static void R_RenderView(void)
     angle_t an;
 
     nextssect = ssectlist;
+    vissprite = visspritelist;
 
     an = (ANG180 + ANG45);//R_FrustumAngle();
 
@@ -236,6 +238,7 @@ static void R_InitSprites(void)
     spriteheight    = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
     spriteoffset    = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
     spritetopoffset = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
+    spritepalindex  = (short*)Z_Calloc(sizeof(short) * NUMSPRITES, PU_STATIC, NULL);
 
     memset(gfxsprites, -1, sizeof(dtexture) * numsprites);
 
@@ -373,10 +376,57 @@ int R_PadTextureDims(int n)
 }
 
 //
+// R_PadTexture
+//
+
+static byte* R_PadTexture(byte* in, int width, int height,
+                          int newwidth, int newheight, dboolean rgb256)
+{
+    byte* out = NULL;
+    int row;
+    unsigned int size;
+    unsigned int colsize;
+
+    size = (newwidth * height);
+    colsize = width;
+
+    if(!rgb256)
+    {
+        size >>= 1;
+        colsize >>= 1;
+    }
+
+    out = (byte*)Z_Calloc(size, PU_STATIC, 0);
+
+    for(row = 0; row < height; row++)
+    {
+        byte* d1;
+        byte* d2;
+        unsigned int stride1;
+        unsigned int stride2;
+
+        stride1 = (row * newwidth);
+        stride2 = (row * width);
+
+        if(!rgb256)
+        {
+            stride1 >>= 1;
+            stride2 >>= 1;
+        }
+
+        d1 = out + stride1;
+        d2 = in + stride2;
+        memcpy(d1, d2, colsize);
+    }
+
+    return out;
+}
+
+//
 // R_LoadTexture
 //
 
-int R_LoadTexture(dtexture texture)
+void R_LoadTexture(dtexture texture)
 {
     short* gfx;
     int i;
@@ -385,7 +435,6 @@ int R_LoadTexture(dtexture texture)
     byte* data;
     byte* pal;
     uint16 paldata[16];
-    dboolean ok;
 
     gfx = (short*)W_CacheLumpNum(t_start + texture, PU_CACHE);
     w = gfx[0];
@@ -401,7 +450,7 @@ int R_LoadTexture(dtexture texture)
 
     glGenTextures(1, &gfxtextures[texture]);
     glBindTexture(0, gfxtextures[texture]);
-    ok = glTexImage2D(
+    if(!glTexImage2D(
         0,
         0,
         GL_RGB16,
@@ -409,76 +458,122 @@ int R_LoadTexture(dtexture texture)
         R_GetTextureSize(h),
         0,
         TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
-        data);
+        data))
+    {
+        I_Error("R_LoadTexture: Texture lump foulup - %i", t_start + texture);
+    }
 
     glColorTableEXT(0, 0, 16, 0, 0, paldata);
-
-    return ok;
 }
 
 //
 // R_LoadSprite
 //
 
-int R_LoadSprite(dtexture texture)
+void R_LoadSprite(int sprite, int frame, int rotation,
+                  int *x, int *y, int *w, int *h)
 {
-    short* gfx;
-    int i;
-    int w;
-    int h;
-    byte* data;
-    byte* pal;
-    uint16 paldata[256];
-    dboolean ext;
-    int numpal;
-    dboolean ok;
+    spritedef_t *sprdef;
+    spriteframe_t *sprframe;
+    int spritenum;
 
-    gfx = (short*)W_CacheLumpNum(s_start + texture, PU_CACHE);
-    w = gfx[0];
-    h = gfx[1];
-    spritewidth[texture] = w;
-    spriteheight[texture] = h;
-    spriteoffset[texture] = gfx[2];
-    spritetopoffset[texture] = gfx[3];
-    ext = gfx[4];
-    data = (byte*)(gfx + 5);
-    numpal = 16;
+    sprdef      = &spriteinfo[sprite];
+    sprframe    = &sprdef->spriteframes[frame];
+    spritenum   = sprframe->lump[rotation];
 
-    if(!ext)
+    if(gfxsprites[spritenum] == -1)
     {
-        pal = (byte*)(gfx + 5 + (((w * h) >> 1) >> 1));
-        numpal = 16;
+        short* gfx;
+        int i;
+        int width;
+        int height;
+        int pw;
+        int ph;
+        byte* data;
+        byte* pal = NULL;
+        uint16 paldata[256];
+        dboolean ext;
+        int numpal;
+        byte* out = NULL;
+
+        gfx                         = (short*)W_CacheLumpNum(s_start + spritenum, PU_CACHE);
+        width                       = gfx[0];
+        height                      = gfx[1];
+        pw                          = R_PadTextureDims(width);
+        ph                          = R_PadTextureDims(height);
+        spritewidth[spritenum]      = width;
+        spriteheight[spritenum]     = height;
+        spriteoffset[spritenum]     = gfx[2];
+        spritetopoffset[spritenum]  = gfx[3];
+        ext                         = gfx[4];
+        data                        = (byte*)(gfx + 5);
+        numpal                      = 16;
+
+        // TODO - TEMP
+        if(ext == 1)
+            return;
+
+        out = (byte*)R_PadTexture(data, width, height, pw, ph, ext);
+
+        if(!ext)
+        {
+            pal = (byte*)(gfx + 5 + (((width * height) >> 1) >> 1));
+            numpal = 16;
+        }
+        else if(ext == 2)
+        {
+            pal = (byte*)(gfx + 5 + ((width * height) >> 1));
+            numpal = 256;
+        }
+
+        for(i = 0; i < numpal; i++)
+        {
+            paldata[i] = RGB8(pal[0], pal[1], pal[2]);
+            pal += 4;
+        }
+
+        glGenTextures(1, &gfxsprites[spritenum]);
+        glBindTexture(0, gfxsprites[spritenum]);
+        if(!glTexImage2D(
+            0,
+            0,
+            ext ? GL_RGB256 : GL_RGB16,
+            R_GetTextureSize(pw),
+            R_GetTextureSize(ph),
+            0,
+            TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
+            out))
+        {
+            I_Error("R_LoadSprite: Sprite lump foulup - %i", s_start + spritenum);
+        }
+
+        if(!spritepalindex[sprite])
+        {
+            glColorTableEXT(0, 0, numpal, 0, 0, paldata);
+
+            if(ext)
+                spritepalindex[sprite] = spritenum;
+        }
+        else
+            glAssignColorTable(0, gfxsprites[spritepalindex[sprite]]);
+
+        if(out)
+            Z_Free(out);
+
+        if(x) *x = spriteoffset[spritenum];
+        if(y) *y = spritetopoffset[spritenum];
+        if(w) *w = spritewidth[spritenum];
+        if(h) *h = spriteheight[spritenum];
+
+        return;
     }
-    else
-    {
-        pal = (byte*)(gfx + 5 + ((w * h) >> 1));
-        numpal = 256;
-    }
+    
+    glBindTexture(0, gfxsprites[spritenum]);
 
-    for(i = 0; i < numpal; i++)
-    {
-        paldata[i] = RGB8(pal[0], pal[1], pal[2]);
-        pal += 4;
-    }
-
-    w = R_PadTextureDims(w);
-    h = R_PadTextureDims(h);
-
-    glGenTextures(1, &gfxsprites[texture]);
-    glBindTexture(0, gfxsprites[texture]);
-    ok = glTexImage2D(
-        0,
-        0,
-        ext ? GL_RGB256 : GL_RGB16,
-        R_GetTextureSize(w),
-        R_GetTextureSize(h),
-        0,
-        TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T|GL_TEXTURE_COLOR0_TRANSPARENT,
-        data);
-
-    glColorTableEXT(0, 0, numpal, 0, 0, paldata);
-
-    return ok;
+    if(x) *x = spriteoffset[spritenum];
+    if(y) *y = spritetopoffset[spritenum];
+    if(w) *w = spritewidth[spritenum];
+    if(h) *h = spriteheight[spritenum];
 }
 
 //
@@ -555,6 +650,7 @@ void R_DrawFrame(void)
     fixed_t cam_z;
     mobj_t* viewcamera;
     player_t* player;
+    pspdef_t* psp;
     int i;
     int f;
 
@@ -576,19 +672,27 @@ void R_DrawFrame(void)
     viewy = viewcamera->y;
     viewz = cam_z;
 
-    viewsin[0]  = dsin(viewangle);
+    viewsin[0]  = dsin(viewangle + ANG90);
     viewsin[1]  = dsin(viewpitch - ANG90);
-    viewcos[0]  = dcos(viewangle);
+    viewcos[0]  = dcos(viewangle + ANG90);
     viewcos[1]  = dcos(viewpitch - ANG90);
 
     MATRIX_CONTROL      = GL_PROJECTION;
     MATRIX_IDENTITY     = 0;
-
-    gluPerspective(74, 256.0f / 192.0f, 0.002f, 1000);
-
     MATRIX_CONTROL      = GL_MODELVIEW;
     MATRIX_IDENTITY     = 0;
 
+    glPushMatrix();
+
+    MATRIX_TRANSLATE    = -(16 << 4);
+    MATRIX_TRANSLATE    = -0;
+    MATRIX_TRANSLATE    = -0;
+
+    glPushMatrix();
+
+    gluPerspective(74, 256.0f / 192.0f, 0.002f, 1000);
+
+    glRotatef(-TRUEANGLES(viewpitch) + 90, 1.0f, 0.0f, 0.0f);
     glRotatef(-TRUEANGLES(viewangle) + 90, 0.0f, 1.0f, 0.0f);
 
     MATRIX_SCALE        =  0x1000;
@@ -616,5 +720,14 @@ void R_DrawFrame(void)
     GFX_FOG_OFFSET = 0x7777;
 
     R_DrawScene();
+
+    psp = &player->psprites[ps_weapon];
+    for(psp = player->psprites; psp < &player->psprites[NUMPSPRITES]; psp++)
+    {
+        if(psp->state)
+            R_DrawPSprite(psp, player->mo->subsector->sector, player);
+    }
+
+    glPopMatrix(2);
 }
 

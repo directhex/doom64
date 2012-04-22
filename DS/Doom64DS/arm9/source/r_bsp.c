@@ -10,6 +10,8 @@ sector_t* frontsector;
 
 subsector_t *ssectlist[MAXSUBSECTORS];
 subsector_t **nextssect = NULL;
+mobj_t *visspritelist[MAXSPRITES];
+mobj_t **vissprite = NULL;
 
 int	checkcoord[12][4] =
 {
@@ -117,6 +119,7 @@ static void R_AddClipLine(seg_t* line)
 void R_Subsector(int num)
 {
     subsector_t	*sub;
+    mobj_t* thing;
     int i;
 
     if(num >= numsubsectors)
@@ -133,6 +136,36 @@ void R_Subsector(int num)
 
     for(i = 0; i < sub->numlines; i++)
         R_AddClipLine(&segs[sub->firstline + i]);
+
+    // Handle all things in sector.
+    for(thing = sub->sector->thinglist; thing; thing = thing->snext)
+    {
+        int x       = F2INT(thing->x - viewx);
+        int y       = F2INT(thing->y - viewy);
+        int dir1    = F2INT((x * viewsin[0]) - (y * viewcos[0]));
+        int dir2    = F2INT((x * viewcos[0]) + (y * viewsin[0]));
+
+        if((-dir2 - 16) > dir1)
+            continue;
+
+        if((dir2 - 16) > dir1)
+            continue;
+
+        if(thing->subsector != sub) // don't add sprite if it doesn't belong in this subsector
+            continue;
+
+        if(thing->flags & MF_NOSECTOR)
+            continue;
+
+        if(thing->type == MT_PLAYER && thing == players[consoleplayer].cameratarget)
+            continue;
+        
+        if(vissprite - visspritelist >= MAXSPRITES)
+            return;
+
+        *vissprite = thing;
+        vissprite++;
+    }
 }
 
 //

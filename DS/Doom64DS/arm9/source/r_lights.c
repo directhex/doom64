@@ -198,7 +198,7 @@ void R_SetLightFactor(float lightfactor)
 void R_RefreshBrightness(void)
 {
     float factor;
-    float brightness = 0;
+    float brightness = 100;
 
     factor = (((infraredFactor > brightness) ? infraredFactor : brightness) + 100.0f);
     R_SetLightFactor(factor);

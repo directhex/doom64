@@ -80,8 +80,8 @@ void            R_Init(void);
 void            R_DrawFrame(void);
 void            R_PrecacheLevel(void);
 int             R_GetTextureSize(int size);
-int             R_LoadTexture(dtexture texture);
-int             R_LoadSprite(dtexture texture);
+void            R_LoadTexture(dtexture texture);
+void            R_LoadSprite(int sprite, int frame, int rotation, int *x, int *y, int *w, int *h);
 
 static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
 {
@@ -92,9 +92,12 @@ static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
 // R_BSP
 //
 #define MAXSUBSECTORS   1024
+#define MAXSPRITES      1024
 
 extern subsector_t  *ssectlist[MAXSUBSECTORS];
 extern subsector_t  **nextssect;
+extern mobj_t       *visspritelist[MAXSPRITES];
+extern mobj_t       **vissprite;
 extern sector_t     *frontsector;
 
 void            R_RenderBSPNode(int bspnum);
