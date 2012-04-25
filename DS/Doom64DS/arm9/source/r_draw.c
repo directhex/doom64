@@ -211,6 +211,8 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
             GFX_TEX_FORMAT = GFX_PAL_FORMAT = glGlob->activePalette = glGlob->activeTexture = 0;
     }
 
+    gfx_tex_prevtic[texture] = gametic;
+
     if(nolights)
         r1 = r2 = g1 = g2 = b1 = b2 = 255;
 
@@ -436,6 +438,8 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height, dtexture texture, l
     else
         glBindTexture(0, gfxtextures[texture]);
 
+    gfx_tex_prevtic[texture] = gametic;
+
 #define DRAWSSECT(index)                    \
     v = leafs[index].vertex;                \
     length = F2INT(tsx - v->x) + mapx;      \
@@ -514,7 +518,11 @@ static void R_DrawSprite(mobj_t* thing)
     spriteframe_t*  sprframe;
     angle_t ang;
     int rot;
-    fixed_t flip;
+    int flipoffs;
+    int tu1;
+    int tu2;
+    int tx1;
+    int tx2;
     short alpha;
     rcolor color;
     int offx;
@@ -552,34 +560,42 @@ static void R_DrawSprite(mobj_t* thing)
     }
 
     if(sprframe->flip[rot])
-        flip = offx - width;
+    {
+        flipoffs = width - offx;
+        tu1 = 0;
+        tu2 = width;
+        tx1 = width - flipoffs;
+        tx2 = flipoffs;
+    }
     else
-        flip = width - offx;
+    {
+        flipoffs = width - offx;
+        tu1 = width;
+        tu2 = 0;
+        tx1 = flipoffs;
+        tx2 = width - flipoffs;
+    }
+
+    x1 = F2INT(thing->x) - FixedMul(viewcos[0], tx1);
+    y1 = F2INT(thing->y) - FixedMul(viewsin[0], tx1);
+    x2 = F2INT(thing->x) + FixedMul(viewcos[0], tx2);
+    y2 = F2INT(thing->y) + FixedMul(viewsin[0], tx2);
+    z1 = F2INT(thing->z) + offy - height;
+    z2 = F2INT(thing->z) + offy;
 
     GFX_POLY_FORMAT = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
     GFX_COLOR       = color;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
-
-    x1 = F2INT(thing->x) - FixedMul(viewcos[0], flip);
-    y1 = F2INT(thing->y) - FixedMul(viewsin[0], flip);
-    x2 = F2INT(thing->x) + FixedMul(viewcos[0], width - flip);
-    y2 = F2INT(thing->y) + FixedMul(viewsin[0], width - flip);
-    z1 = F2INT(thing->z) + offy - height;
-    z2 = F2INT(thing->z) + offy;
-
-    GFX_TEX_COORD   = COORD_PACK(width, 0);
+    GFX_TEX_COORD   = COORD_PACK(tu1, 0);
     GFX_VERTEX16    = VERTEX_PACK(x1, z2);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-
-    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_TEX_COORD   = COORD_PACK(tu2, 0);
     GFX_VERTEX16    = VERTEX_PACK(x2, z2);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-
-    GFX_TEX_COORD   = COORD_PACK(width, height);
+    GFX_TEX_COORD   = COORD_PACK(tu1, height);
     GFX_VERTEX16    = VERTEX_PACK(x1, z1);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-
-    GFX_TEX_COORD   = COORD_PACK(0, height);
+    GFX_TEX_COORD   = COORD_PACK(tu2, height);
     GFX_VERTEX16    = VERTEX_PACK(x2, z1);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
 }

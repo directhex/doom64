@@ -47,10 +47,13 @@ extern dtexture*    gfxtextures;
 extern int          t_start;
 extern int          t_end;
 extern int          numtextures;
+extern int*         gfx_tex_prevtic;
 extern dtexture*    gfxsprites;
 extern int          s_start;
 extern int          s_end;
-extern int          numsprites;
+extern int          numgfxsprites;
+extern int*         gfx_spr_prevtic;
+extern int*         spritepalindex;
 
 //
 // R_CLIPPER
@@ -65,7 +68,6 @@ angle_t         R_FrustumAngle(void);
 //
 
 extern spritedef_t	*spriteinfo;
-extern int			numsprites;
 extern short        *spritewidth;
 extern short        *spriteheight;
 extern short        *spriteoffset;

@@ -192,6 +192,9 @@ void I_Init(void)
 
 void I_ClearFrame(void)
 {
+    int i;
+    int f;
+
     while(GFX_BUSY);
 
     GFX_CONTROL         = GL_FOG | GL_BLEND | GL_TEXTURE_2D;
@@ -237,6 +240,18 @@ void I_ClearFrame(void)
     MATRIX_IDENTITY     = 0;
     MATRIX_CONTROL      = GL_TEXTURE;
     MATRIX_IDENTITY     = 0;
+
+    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x500;
+    GFX_FOG_COLOR = sky ? sky->fogcolor : RGB15(0, 0, 0);
+
+    for(i = 0; i < 16; i++)
+        GFX_FOG_TABLE[i] = 0;
+
+    for(i = 16, f = 0; i < 32; i++)
+        GFX_FOG_TABLE[i] = f++;
+
+    GFX_FOG_TABLE[31] = 0x7F;
+    GFX_FOG_OFFSET = 0x7BFE;
 }
 //
 // I_StartTic
@@ -334,6 +349,6 @@ int main(void)
 {
     defaultExceptionHandler();
     D_DoomMain();
-	return 0;
+    return 0;
 }
 

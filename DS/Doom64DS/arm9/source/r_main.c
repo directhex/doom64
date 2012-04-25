@@ -23,7 +23,6 @@ fixed_t         viewcos[2];
 
 // sprite info globals
 spritedef_t     *spriteinfo;
-int             numsprites;
 spriteframe_t   sprtemp[29];
 int             maxframe;
 char*           spritename;
@@ -33,17 +32,19 @@ dtexture        *gfxtextures;
 int             t_start;
 int             t_end;
 int             numtextures;
+int             *gfx_tex_prevtic;
 
 // gfx sprite globals
 dtexture        *gfxsprites;
 int             s_start;
 int             s_end;
-int             numsprites;
+int             numgfxsprites;
+int             *gfx_spr_prevtic;
+int             *spritepalindex;
 short           *spriteoffset;
 short           *spritetopoffset;
 short           *spritewidth;
 short           *spriteheight;
-short           *spritepalindex;
 
 //
 // R_PointToAngle2
@@ -149,7 +150,6 @@ static void R_RenderView(void)
     R_Clipper_Clear();
     R_Clipper_SafeAddClipRange(viewangle + an, viewangle - an);
     R_RenderBSPNode(numnodes - 1);
-    // TODO - clip sprites
 }
 
 //
@@ -158,10 +158,11 @@ static void R_RenderView(void)
 
 static void R_InitTextures(void)
 {
-    t_start     = W_GetNumForName("T_START") + 1;
-    t_end       = W_GetNumForName("T_END") - 1;
-    numtextures = (t_end - t_start) + 1;
-    gfxtextures = (dtexture*)Z_Malloc(sizeof(dtexture) * numtextures, PU_STATIC, NULL);
+    t_start         = W_GetNumForName("T_START") + 1;
+    t_end           = W_GetNumForName("T_END") - 1;
+    numtextures     = (t_end - t_start) + 1;
+    gfxtextures     = (dtexture*)Z_Malloc(sizeof(dtexture) * numtextures, PU_STATIC, NULL);
+    gfx_tex_prevtic = (int*)Z_Calloc(sizeof(int) * numtextures, PU_STATIC, NULL);
 
     memset(gfxtextures, -1, sizeof(dtexture) * numtextures);
 }
@@ -229,30 +230,32 @@ static void R_InitSprites(void)
     int     start;
     int     end;
     int     patched;
+    int     sprnum;
 
     s_start         = W_GetNumForName("S_START") + 1;
     s_end           = W_GetNumForName("S_END") - 1;
-    numsprites      = (s_end - s_start) + 1;
-    gfxsprites      = (dtexture*)Z_Malloc(sizeof(dtexture) * numsprites, PU_STATIC, NULL);
-    spritewidth     = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
-    spriteheight    = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
-    spriteoffset    = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
-    spritetopoffset = (short*)Z_Calloc(sizeof(short) * numsprites, PU_STATIC, NULL);
-    spritepalindex  = (short*)Z_Calloc(sizeof(short) * NUMSPRITES, PU_STATIC, NULL);
+    numgfxsprites   = (s_end - s_start) + 1;
+    gfxsprites      = (dtexture*)Z_Malloc(sizeof(dtexture) * numgfxsprites, PU_STATIC, NULL);
+    gfx_spr_prevtic = (int*)Z_Calloc(sizeof(int) * numgfxsprites, PU_STATIC, NULL);
+    spritewidth     = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
+    spriteheight    = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
+    spriteoffset    = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
+    spritetopoffset = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
+    spritepalindex  = (int*)Z_Calloc(sizeof(int) * NUMSPRITES, PU_STATIC, NULL);
 
-    memset(gfxsprites, -1, sizeof(dtexture) * numsprites);
+    memset(gfxsprites, -1, sizeof(dtexture) * numgfxsprites);
 
     // count the number of sprite names
     check = sprnames;
     while(*check != NULL)
         check++;
     
-    numsprites = check-sprnames;
+    sprnum = check-sprnames;
     
-    if(!numsprites)
+    if(!sprnum)
         return;
     
-    spriteinfo = Z_Malloc(numsprites * sizeof(*spriteinfo), PU_STATIC, NULL);
+    spriteinfo = Z_Malloc(sprnum * sizeof(*spriteinfo), PU_STATIC, NULL);
     
     start = s_start - 1;
     end = s_end + 1;
@@ -261,7 +264,7 @@ static void R_InitSprites(void)
     //  noting the highest frame letter.
     // Just compare 4 characters as ints
     
-    for(i = 0; i < numsprites; i++)
+    for(i = 0; i < sprnum; i++)
     {
         spritename = sprnames[i];
         memset(sprtemp,-1, sizeof(sprtemp));
@@ -460,7 +463,7 @@ void R_LoadTexture(dtexture texture)
         TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
         data))
     {
-        I_Error("R_LoadTexture: Texture lump foulup - %i", t_start + texture);
+        I_Error("R_LoadTexture: Texture lump cache overflow - %i", t_start + texture);
     }
 
     glColorTableEXT(0, 0, 16, 0, 0, paldata);
@@ -509,10 +512,6 @@ void R_LoadSprite(int sprite, int frame, int rotation,
         data                        = (byte*)(gfx + 5);
         numpal                      = 16;
 
-        // TODO - TEMP
-        if(ext == 1)
-            return;
-
         out = (byte*)R_PadTexture(data, width, height, pw, ph, ext);
 
         if(!ext)
@@ -525,11 +524,19 @@ void R_LoadSprite(int sprite, int frame, int rotation,
             pal = (byte*)(gfx + 5 + ((width * height) >> 1));
             numpal = 256;
         }
+        else
+        {
+            char palname[9];
+
+            sprintf(palname, "PAL%s0", sprnames[sprite]);
+            pal = (byte*)W_CacheLumpName(palname, PU_CACHE);
+            numpal = 256;
+        }
 
         for(i = 0; i < numpal; i++)
         {
             paldata[i] = RGB8(pal[0], pal[1], pal[2]);
-            pal += 4;
+            pal += (ext == 1) ? 3 : 4;
         }
 
         glGenTextures(1, &gfxsprites[spritenum]);
@@ -544,28 +551,21 @@ void R_LoadSprite(int sprite, int frame, int rotation,
             TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
             out))
         {
-            I_Error("R_LoadSprite: Sprite lump foulup - %i", s_start + spritenum);
+            I_Error("R_LoadSprite: Sprite lump cache overflow - %i", s_start + spritenum);
         }
 
-        if(!spritepalindex[sprite])
+        //if(!spritepalindex[sprite])
         {
             glColorTableEXT(0, 0, numpal, 0, 0, paldata);
 
-            if(ext)
-                spritepalindex[sprite] = spritenum;
+            //if(ext)
+                //glGetColorTableParameterEXT(0, GL_COLOR_TABLE_FORMAT_EXT, &spritepalindex[sprite]);
         }
-        else
-            glAssignColorTable(0, gfxsprites[spritepalindex[sprite]]);
+        //else
+            //GFX_PAL_FORMAT = spritepalindex[sprite];
 
         if(out)
             Z_Free(out);
-
-        if(x) *x = spriteoffset[spritenum];
-        if(y) *y = spritetopoffset[spritenum];
-        if(w) *w = spritewidth[spritenum];
-        if(h) *h = spriteheight[spritenum];
-
-        return;
     }
     
     glBindTexture(0, gfxsprites[spritenum]);
@@ -574,6 +574,8 @@ void R_LoadSprite(int sprite, int frame, int rotation,
     if(y) *y = spritetopoffset[spritenum];
     if(w) *w = spritewidth[spritenum];
     if(h) *h = spriteheight[spritenum];
+
+    gfx_spr_prevtic[spritenum] = gametic;
 }
 
 //
@@ -583,34 +585,56 @@ void R_LoadSprite(int sprite, int frame, int rotation,
 
 void R_PrecacheLevel(void)
 {
-    char *texturepresent;
-    int	i;;
-    
+    int	i;
+
     glResetTextures();
 
-    texturepresent = (char*)Z_Alloca(numtextures);
-    
+    memset(gfx_tex_prevtic, 0, sizeof(int) * numtextures);
+    memset(gfx_spr_prevtic, 0, sizeof(int) * numgfxsprites);
+
     for(i = 0; i < numsides; i++)
     {
-        texturepresent[sides[i].toptexture] = 1;
-        texturepresent[sides[i].midtexture] = 1;
-        texturepresent[sides[i].bottomtexture] = 1;
+        W_CacheLumpNum(t_start + sides[i].toptexture, PU_CACHE);
+        W_CacheLumpNum(t_start + sides[i].bottomtexture, PU_CACHE);
+        W_CacheLumpNum(t_start + sides[i].midtexture, PU_CACHE);
     }
-    
+
     for(i = 0; i < numsectors; i++)
     {
-        texturepresent[sectors[i].ceilingpic] = 1;
-        texturepresent[sectors[i].floorpic] = 1;
-
-        if(sectors[i].flags & MS_LIQUIDFLOOR)
-            texturepresent[sectors[i].floorpic + 1] = 1;
+        W_CacheLumpNum(t_start + sectors[i].ceilingpic, PU_CACHE);
+        W_CacheLumpNum(t_start + sectors[i].floorpic, PU_CACHE);
     }
-    
+}
+
+//
+// R_FlushTextures
+//
+
+void R_FlushTextures(void)
+{
+    int i;
+
     for(i = 0; i < numtextures; i++)
     {
-        if(texturepresent[i])
+        if(gfxtextures[i] == -1)
+            continue;
+
+        if((gametic - gfx_tex_prevtic[i]) >= (TICRATE << 2))
         {
-            R_LoadTexture(i);
+            glDeleteTextures(1, &gfxtextures[i]);
+            gfxtextures[i] = -1;
+        }
+    }
+
+    for(i = 0; i < numgfxsprites; i++)
+    {
+        if(gfxsprites[i] == -1)
+            continue;
+
+        if((gametic - gfx_spr_prevtic[i]) >= TICRATE)
+        {
+            glDeleteTextures(1, &gfxsprites[i]);
+            gfxsprites[i] = -1;
         }
     }
 }
@@ -651,8 +675,6 @@ void R_DrawFrame(void)
     mobj_t* viewcamera;
     player_t* player;
     pspdef_t* psp;
-    int i;
-    int f;
 
     //
     // setup view rotation/position
@@ -695,9 +717,9 @@ void R_DrawFrame(void)
     glRotatef(-TRUEANGLES(viewpitch) + 90, 1.0f, 0.0f, 0.0f);
     glRotatef(-TRUEANGLES(viewangle) + 90, 0.0f, 1.0f, 0.0f);
 
-    MATRIX_SCALE        =  0x1000;
-    MATRIX_SCALE        =  0x1000;
-    MATRIX_SCALE        = -0x1000;
+    MATRIX_SCALE        =  0x10000;
+    MATRIX_SCALE        =  0x10000;
+    MATRIX_SCALE        = -0x10000;
     MATRIX_TRANSLATE    = -F2INT(viewx);
     MATRIX_TRANSLATE    = -F2INT(viewz);
     MATRIX_TRANSLATE    = -F2INT(viewy);
@@ -706,19 +728,6 @@ void R_DrawFrame(void)
     D_UpdateTiccmd();
 
     R_RenderView();
-
-    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x400;
-    GFX_FOG_COLOR = sky->fogcolor;
-
-    for(i = 0; i < 16; i++)
-        GFX_FOG_TABLE[i] = 0;
-
-    for(i = 16, f = 0; i < 32; i++)
-        GFX_FOG_TABLE[i] = f++ * 6;
-
-    GFX_FOG_TABLE[31] = 0x7F;
-    GFX_FOG_OFFSET = 0x7777;
-
     R_DrawScene();
 
     psp = &player->psprites[ps_weapon];

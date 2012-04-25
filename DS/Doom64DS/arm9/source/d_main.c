@@ -635,12 +635,15 @@ void P_Start(void);
 void P_Stop(void);
 int P_Ticker(void);
 
+void R_FlushTextures(void);
+
 void TestDrawer(void)
 {
     I_ClearFrame();
     R_DrawFrame();
     GFX_FLUSH = 0;
-	swiWaitForVBlank();
+    swiWaitForVBlank();
+    R_FlushTextures();
 }
 
 //
@@ -677,7 +680,7 @@ void D_DoomMain(void)
 
     // temp
     {
-        nomonsters = true;
+        nomonsters = false;
         nolights = true;
         gamemap = 1;
         players[0].playerstate = PST_REBORN;
@@ -688,6 +691,7 @@ void D_DoomMain(void)
         players[0].ammo[am_clip] = 200;
         players[0].maxammo[am_clip] = 200;
         G_DoLoadLevel();
+        players[0].cheats |= CF_GODMODE;
         I_Printf("%s\n", P_GetMapInfo(gamemap)->mapname);
         D_MiniLoop(P_Start, P_Stop, TestDrawer, P_Ticker);
     }
