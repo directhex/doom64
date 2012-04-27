@@ -546,8 +546,9 @@ static void R_DrawSprite(mobj_t* thing)
         // use single rotation for all views
         rot = 0;
 
-    R_LoadSprite(thing->sprite, thing->frame & FF_FRAMEMASK, rot,
-        &offx, &offy, &width, &height);
+    if(!R_LoadSprite(thing->sprite, thing->frame & FF_FRAMEMASK, rot,
+        &offx, &offy, &width, &height))
+        return;
 
     if(thing->frame & FF_FULLBRIGHT || nolights)
         color = RGB15(31, 31, 31);
@@ -640,7 +641,8 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3) << 15;
 
-    R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, &x, &y, &width, &height);
+    if(!R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, &x, &y, &width, &height))
+        return;
 
     x = F2INT(psp->sx) - x - 32;
     y = F2INT(psp->sy) - y - 48;

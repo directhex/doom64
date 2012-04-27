@@ -167,7 +167,7 @@ void I_Init(void)
     glInit();
     fatInitDefault();
     irqInit();
-    irqEnable(IRQ_VBLANK);
+    irqEnable(IRQ_VBLANK | IRQ_HBLANK | IRQ_VCOUNT);
     irqSet(IRQ_VBLANK, 0);
 
     REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_B | POWER_SWAP_LCDS;

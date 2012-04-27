@@ -83,7 +83,7 @@ void            R_DrawFrame(void);
 void            R_PrecacheLevel(void);
 int             R_GetTextureSize(int size);
 void            R_LoadTexture(dtexture texture);
-void            R_LoadSprite(int sprite, int frame, int rotation, int *x, int *y, int *w, int *h);
+dboolean        R_LoadSprite(int sprite, int frame, int rotation, int *x, int *y, int *w, int *h);
 
 static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
 {

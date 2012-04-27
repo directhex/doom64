@@ -382,6 +382,7 @@ int R_PadTextureDims(int n)
 // R_PadTexture
 //
 
+static byte gfx_padbuffer[256 * 256];
 static byte* R_PadTexture(byte* in, int width, int height,
                           int newwidth, int newheight, dboolean rgb256)
 {
@@ -399,7 +400,7 @@ static byte* R_PadTexture(byte* in, int width, int height,
         colsize >>= 1;
     }
 
-    out = (byte*)Z_Calloc(size, PU_STATIC, 0);
+    out = (byte*)gfx_padbuffer;
 
     for(row = 0; row < height; row++)
     {
@@ -419,6 +420,7 @@ static byte* R_PadTexture(byte* in, int width, int height,
 
         d1 = out + stride1;
         d2 = in + stride2;
+        memset(d1, 0, newwidth);
         memcpy(d1, d2, colsize);
     }
 
@@ -453,6 +455,9 @@ void R_LoadTexture(dtexture texture)
 
     glGenTextures(1, &gfxtextures[texture]);
     glBindTexture(0, gfxtextures[texture]);
+
+    //swiWaitForVBlank();
+
     if(!glTexImage2D(
         0,
         0,
@@ -473,7 +478,7 @@ void R_LoadTexture(dtexture texture)
 // R_LoadSprite
 //
 
-void R_LoadSprite(int sprite, int frame, int rotation,
+dboolean R_LoadSprite(int sprite, int frame, int rotation,
                   int *x, int *y, int *w, int *h)
 {
     spritedef_t *sprdef;
@@ -541,6 +546,9 @@ void R_LoadSprite(int sprite, int frame, int rotation,
 
         glGenTextures(1, &gfxsprites[spritenum]);
         glBindTexture(0, gfxsprites[spritenum]);
+
+        //swiWaitForVBlank();
+
         if(!glTexImage2D(
             0,
             0,
@@ -551,7 +559,8 @@ void R_LoadSprite(int sprite, int frame, int rotation,
             TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
             out))
         {
-            I_Error("R_LoadSprite: Sprite lump cache overflow - %i", s_start + spritenum);
+            //I_Error("R_LoadSprite: Sprite lump cache overflow - %i", s_start + spritenum);
+            return false;
         }
 
         //if(!spritepalindex[sprite])
@@ -563,9 +572,6 @@ void R_LoadSprite(int sprite, int frame, int rotation,
         }
         //else
             //GFX_PAL_FORMAT = spritepalindex[sprite];
-
-        if(out)
-            Z_Free(out);
     }
     
     glBindTexture(0, gfxsprites[spritenum]);
@@ -576,6 +582,8 @@ void R_LoadSprite(int sprite, int frame, int rotation,
     if(h) *h = spriteheight[spritenum];
 
     gfx_spr_prevtic[spritenum] = gametic;
+
+    return true;
 }
 
 //
@@ -586,6 +594,7 @@ void R_LoadSprite(int sprite, int frame, int rotation,
 void R_PrecacheLevel(void)
 {
     int	i;
+    mobj_t* mo;
 
     glResetTextures();
 
@@ -603,6 +612,32 @@ void R_PrecacheLevel(void)
     {
         W_CacheLumpNum(t_start + sectors[i].ceilingpic, PU_CACHE);
         W_CacheLumpNum(t_start + sectors[i].floorpic, PU_CACHE);
+    }
+
+    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
+    {
+        int j;
+
+        if(!mo->sprite)
+            continue;
+
+        spritedef_t	*sprdef;
+        sprdef = &spriteinfo[mo->sprite];
+
+        for(j = 0; j < sprdef->numframes; j++)
+        {
+            spriteframe_t *sprframe;
+            int p;
+
+            sprframe = &sprdef->spriteframes[j];
+            if(sprframe->rotate)
+            {
+                for(p = 0; p < 8; p++)
+                    W_CacheLumpNum(s_start + sprframe->lump[p], PU_CACHE);
+            }
+            else
+                W_CacheLumpNum(s_start + sprframe->lump[0], PU_CACHE);
+        }
     }
 }
 

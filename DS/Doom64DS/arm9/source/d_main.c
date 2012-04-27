@@ -642,8 +642,8 @@ void TestDrawer(void)
     I_ClearFrame();
     R_DrawFrame();
     GFX_FLUSH = 0;
-    swiWaitForVBlank();
     R_FlushTextures();
+    swiWaitForVBlank();
 }
 
 //
