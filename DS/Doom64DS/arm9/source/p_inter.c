@@ -9,6 +9,7 @@
 #include "d_main.h"
 #include "d_englsh.h"
 #include "s_sound.h"
+#include "p_spec.h"
 
 
 // a weapon is found with two clip loads,
@@ -690,9 +691,8 @@ void P_TouchSpecialThing(mobj_t* special, mobj_t* toucher)
 	
 	if(special->flags & MF_TRIGTOUCH || special->type == MT_FAKEITEM)
 	{
-        // TODO
-		//if(special->tid)
-			//P_QueueSpecial(special);
+		if(special->tid)
+			P_QueueSpecial(special);
 	}
 
 	if(special->type != MT_FAKEITEM)

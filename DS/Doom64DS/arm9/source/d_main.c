@@ -641,9 +641,6 @@ void TestDrawer(void)
 {
     I_ClearFrame();
     R_DrawFrame();
-    GFX_FLUSH = 0;
-    R_FlushTextures();
-    swiWaitForVBlank();
 }
 
 //
@@ -682,7 +679,7 @@ void D_DoomMain(void)
     {
         nomonsters = false;
         nolights = true;
-        gamemap = 1;
+        gamemap = 28;
         players[0].playerstate = PST_REBORN;
         players[0].health = 100;
         players[0].readyweapon = players[0].pendingweapon = wp_pistol;

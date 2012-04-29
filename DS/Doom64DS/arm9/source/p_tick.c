@@ -3,6 +3,7 @@
 #include "p_local.h"
 #include "d_main.h"
 #include "s_sound.h"
+#include "p_spec.h"
 
 void G_PlayerFinishLevel(int player);
 void G_DoReborn(int playernum);
@@ -69,8 +70,7 @@ static void P_UnlinkThinker(thinker_t* thinker)
 void P_RemoveThinker(thinker_t* thinker)
 {
     thinker->function.acp1 = (actionf_p1)P_UnlinkThinker;
-    // TODO
-    //P_MacroDetachThinker(thinker);
+    P_MacroDetachThinker(thinker);
 }
 
 //
@@ -178,7 +178,7 @@ void P_Start(void)
     //P_FadeInBrightness(); // TODO
 
     // autoactivate line specials
-    //P_ActivateLineByTag(999, players[0].mo); // TODO
+    P_ActivateLineByTag(999, players[0].mo);
 
     // enable menu and set gamestate
     //allowmenu = true; // TODO
@@ -299,10 +299,10 @@ int P_Ticker(void)
     P_RunThinkers();
     P_ScanSights();
     P_RunMobjs();
-    /*P_UpdateSpecials();
+    P_UpdateSpecials();
     P_RunMacros();
     
-    ST_Ticker();
+    /*ST_Ticker();
     AM_Ticker();*/
     
     // for par times

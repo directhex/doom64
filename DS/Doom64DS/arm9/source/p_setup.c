@@ -12,6 +12,7 @@
 #include "d_main.h"
 #include "p_local.h"
 #include "r_local.h"
+#include "p_spec.h"
 
 void P_SpawnMapThing(mapthing_t *mthing);
 
@@ -328,7 +329,7 @@ void P_LoadLights(int lump)
 
 void P_LoadMacros(int lump)
 {
-    /*short* data;
+    short* data;
     short count;
     int size = 0;
     int i = 0;
@@ -369,7 +370,7 @@ void P_LoadMacros(int lump)
         }
     }
     
-    P_InitMacroVars();*/
+    P_InitMacroVars();
 }
 
 
@@ -1040,12 +1041,11 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
             P_SpawnPlayer(&playerstarts[i]);
     }
     
-    // TODO
-    /*
     memset(taglist, 0, sizeof(int) * MAXQUEUELIST);
-    taglistidx = 0;*/
+    taglistidx = 0;
     
     // set up world state
+    // TODO
     //P_SpawnSpecials();
     P_SetupSky();
     //P_SetupPlanes();

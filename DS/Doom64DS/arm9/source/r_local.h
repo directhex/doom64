@@ -94,7 +94,7 @@ static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
 // R_BSP
 //
 #define MAXSUBSECTORS   1024
-#define MAXSPRITES      1024
+#define MAXSPRITES      128
 
 extern subsector_t  *ssectlist[MAXSUBSECTORS];
 extern subsector_t  **nextssect;
@@ -114,6 +114,7 @@ extern skydef_t*    sky;
 extern int          skypicnum;
 extern int          skybackdropnum;
 extern dboolean     skyfadeback;
+extern fixed_t      scrollfrac;
 
 void            R_DrawScene(void);
 void            R_DrawSimpleSky(void);

@@ -124,7 +124,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
     if(buttons & KEY_B)
         cmd->buttons |= BT_ATTACK;
     
-    if(buttons & KEY_X)
+    if(buttons & KEY_A)
         cmd->buttons |= BT_USE;
     
     // TODO

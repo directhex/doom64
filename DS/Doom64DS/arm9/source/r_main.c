@@ -428,6 +428,27 @@ static byte* R_PadTexture(byte* in, int width, int height,
 }
 
 //
+// R_FlushTextures
+//
+
+void R_FlushTextures(void)
+{
+    int i;
+
+    for(i = 0; i < numtextures; i++)
+    {
+        if(gfxtextures[i] == -1)
+            continue;
+
+        if((gametic - gfx_tex_prevtic[i]) >= 8)
+        {
+            glDeleteTextures(1, &gfxtextures[i]);
+            gfxtextures[i] = -1;
+        }
+    }
+}
+
+//
 // R_LoadTexture
 //
 
@@ -440,6 +461,7 @@ void R_LoadTexture(dtexture texture)
     byte* data;
     byte* pal;
     uint16 paldata[16];
+    dboolean ok;
 
     gfx = (short*)W_CacheLumpNum(t_start + texture, PU_CACHE);
     w = gfx[0];
@@ -453,10 +475,13 @@ void R_LoadTexture(dtexture texture)
         pal += 4;
     }
 
-    glGenTextures(1, &gfxtextures[texture]);
+    ok = glGenTextures(1, &gfxtextures[texture]);
     glBindTexture(0, gfxtextures[texture]);
 
-    //swiWaitForVBlank();
+    if(!ok)
+        I_Printf("%i missed\n", texture);
+
+    swiWaitForVBlank();
 
     if(!glTexImage2D(
         0,
@@ -468,15 +493,86 @@ void R_LoadTexture(dtexture texture)
         TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
         data))
     {
-        I_Error("R_LoadTexture: Texture lump cache overflow - %i", t_start + texture);
+        I_Printf("making room for %i\n", texture);
+        R_FlushTextures();
+
+        if(!glTexImage2D(
+            0,
+            0,
+            GL_RGB16,
+            R_GetTextureSize(w),
+            R_GetTextureSize(h),
+            0,
+            TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
+            data))
+        {
+            gfxtextures[texture] = -1;
+
+            //I_Error("R_LoadTexture: Texture lump cache overflow - %i", t_start + texture);
+            //GFX_TEX_FORMAT = 0;
+            //GFX_PAL_FORMAT = 0;
+            return;
+        }
     }
 
     glColorTableEXT(0, 0, 16, 0, 0, paldata);
 }
 
 //
+// R_FlushSprites
+//
+
+static void R_FlushSprites(void)
+{
+    int i;
+
+    for(i = 0; i < numgfxsprites; i++)
+    {
+        if(gfxsprites[i] == -1)
+            continue;
+
+        if((gametic - gfx_spr_prevtic[i]) >= 2)
+        {
+            glDeleteTextures(1, &gfxsprites[i]);
+            gfxsprites[i] = -1;
+        }
+    }
+}
+
+//
+// R_FreeSprite
+//
+
+static void R_FreeSprite(int size)
+{
+    int i;
+    gl_texture_data* tex;
+
+    for(i = 0; i < numgfxsprites; i++)
+    {
+        if(gfxsprites[i] == -1)
+            continue;
+
+        tex = R_GetTexturePointer(gfxsprites[i]);
+
+        if(size < tex->texSize)
+            continue;
+
+        if(gfx_spr_prevtic[i] < gametic)
+        {
+            glDeleteTextures(1, &gfxsprites[i]);
+            gfxsprites[i] = -1;
+
+            return;
+        }
+    }
+}
+
+//
 // R_LoadSprite
 //
+
+dboolean flushsprites = false;
 
 dboolean R_LoadSprite(int sprite, int frame, int rotation,
                   int *x, int *y, int *w, int *h)
@@ -547,7 +643,7 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation,
         glGenTextures(1, &gfxsprites[spritenum]);
         glBindTexture(0, gfxsprites[spritenum]);
 
-        //swiWaitForVBlank();
+        swiWaitForVBlank();
 
         if(!glTexImage2D(
             0,
@@ -559,22 +655,41 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation,
             TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
             out))
         {
+            R_FreeSprite(pw * ph);
             //I_Error("R_LoadSprite: Sprite lump cache overflow - %i", s_start + spritenum);
-            return false;
+            if(!glTexImage2D(
+                0,
+                0,
+                ext ? GL_RGB256 : GL_RGB16,
+                R_GetTextureSize(pw),
+                R_GetTextureSize(ph),
+                0,
+                TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
+                out))
+            {
+                flushsprites = true;
+                return false;
+            }
         }
 
-        //if(!spritepalindex[sprite])
+        /*if(ext)
         {
-            glColorTableEXT(0, 0, numpal, 0, 0, paldata);
-
-            //if(ext)
-                //glGetColorTableParameterEXT(0, GL_COLOR_TABLE_FORMAT_EXT, &spritepalindex[sprite]);
+            if(!spritepalindex[sprite])
+            {
+                glColorTableEXT(0, 0, numpal, 0, 0, paldata);
+                glGetColorTableParameterEXT(0, GL_COLOR_TABLE_FORMAT_EXT, &spritepalindex[sprite]);
+            }
+            else
+                GFX_PAL_FORMAT = spritepalindex[sprite];
         }
-        //else
-            //GFX_PAL_FORMAT = spritepalindex[sprite];
+        else*/
+            glColorTableEXT(0, 0, numpal, 0, 0, paldata);
     }
     
     glBindTexture(0, gfxsprites[spritenum]);
+
+    if(spritepalindex[sprite])
+        GFX_PAL_FORMAT = spritepalindex[sprite];
 
     if(x) *x = spriteoffset[spritenum];
     if(y) *y = spritetopoffset[spritenum];
@@ -637,39 +752,6 @@ void R_PrecacheLevel(void)
             }
             else
                 W_CacheLumpNum(s_start + sprframe->lump[0], PU_CACHE);
-        }
-    }
-}
-
-//
-// R_FlushTextures
-//
-
-void R_FlushTextures(void)
-{
-    int i;
-
-    for(i = 0; i < numtextures; i++)
-    {
-        if(gfxtextures[i] == -1)
-            continue;
-
-        if((gametic - gfx_tex_prevtic[i]) >= (TICRATE << 2))
-        {
-            glDeleteTextures(1, &gfxtextures[i]);
-            gfxtextures[i] = -1;
-        }
-    }
-
-    for(i = 0; i < numgfxsprites; i++)
-    {
-        if(gfxsprites[i] == -1)
-            continue;
-
-        if((gametic - gfx_spr_prevtic[i]) >= TICRATE)
-        {
-            glDeleteTextures(1, &gfxsprites[i]);
-            gfxsprites[i] = -1;
         }
     }
 }
@@ -762,6 +844,8 @@ void R_DrawFrame(void)
     D_IncValidCount();
     D_UpdateTiccmd();
 
+    flushsprites = false;
+
     R_RenderView();
     R_DrawScene();
 
@@ -773,5 +857,11 @@ void R_DrawFrame(void)
     }
 
     glPopMatrix(2);
+
+    swiWaitForVBlank();
+    GFX_FLUSH = 0;
+
+    if(flushsprites)
+        R_FlushSprites();
 }
 

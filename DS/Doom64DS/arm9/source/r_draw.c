@@ -12,6 +12,7 @@ int         thunderCounter = 0;
 int         lightningCounter = 0;
 int         thundertic = 1;
 dboolean    skyfadeback = false;
+fixed_t     scrollfrac;
 
 //
 // R_DrawSimpleSky
@@ -294,12 +295,12 @@ static void R_DrawSeg(seg_t* seg)
                 if(linedef->flags & ML_DONTPEGBOTTOM)
                 {
                     v1 = row + (top - bbottom);
-					v2 = row + (top - bottom);
+                    v2 = row + (top - bottom);
                 }
                 else
                 {
                     v1 = row;
-					v2 = row + (bbottom - bottom);
+                    v2 = row + (bbottom - bottom);
                 }
 
                 R_DrawLine(
@@ -333,12 +334,12 @@ static void R_DrawSeg(seg_t* seg)
                 if(linedef->flags & ML_DONTPEGTOP)
                 {
                     v1 = row;
-					v2 = row + (top - btop);
+                    v2 = row + (top - btop);
                 }
                 else
                 {
                     v2 = row;
-					v1 = row - (top - btop);
+                    v1 = row - (top - btop);
                 }
 
                 R_DrawLine(

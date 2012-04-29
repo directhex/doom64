@@ -383,9 +383,8 @@ dboolean P_Move(mobj_t* actor)
             // if the special is not a door
             // that can be opened,
             // return false
-            // TODO
-            //if(P_UseSpecialLine(actor, ld, 0) && ld->special & MLU_USE)
-                //good = true;
+            if(P_UseSpecialLine(actor, ld, 0) && ld->special & MLU_USE)
+                good = true;
         }
         return good;
     }
@@ -897,8 +896,7 @@ void A_OnDeathTrigger(mobj_t* actor)
             return;
     }
     
-    // TODO
-    //P_QueueSpecial(actor);
+    P_QueueSpecial(actor);
 }
 
 

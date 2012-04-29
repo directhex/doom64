@@ -7,6 +7,7 @@
 #include "tables.h"
 #include "d_main.h"
 #include "s_sound.h"
+#include "p_spec.h"
 
 
 fixed_t         tmbbox[4];
@@ -462,9 +463,8 @@ dboolean P_TryMove(mobj_t* thing, fixed_t x, fixed_t y)
             oldside = P_PointOnLineSide (oldx, oldy, ld);
             if (side != oldside)
             {
-                // TODO
-                //if (ld->special & MLU_CROSS)
-                    //P_UseSpecialLine(thing, ld, oldside);
+                if(ld->special & MLU_CROSS)
+                    P_UseSpecialLine(thing, ld, oldside);
             }
         }
     }
@@ -1114,9 +1114,8 @@ dboolean PTR_ShootTraverse(intercept_t* in)
             z = shootz + FixedMul(aimslope, FixedMul(frac, attackrange));
         }
 
-        // TODO
-        //if(!hitplane && li->special & MLU_SHOOT)
-            //P_UseSpecialLine(shootthing, li, lineside);
+        if(!hitplane && li->special & MLU_SHOOT)
+            P_UseSpecialLine(shootthing, li, lineside);
         
         //don't shoot blank textures
         if(sides[li->sidenum[0]].midtexture == 1
@@ -1380,9 +1379,8 @@ dboolean PTR_UseTraverse(intercept_t* in)
     if(!(in->d.line->special & MLU_USE) || !P_CheckUseHeight(in->d.line, usething))
         return false;
     
-    // TODO
-    //P_UseSpecialLine(usething, in->d.line,
-        //(P_PointOnLineSide(usething->x, usething->y, in->d.line) == 1));
+    P_UseSpecialLine(usething, in->d.line,
+        (P_PointOnLineSide(usething->x, usething->y, in->d.line) == 1));
     
     // can't use for than one special line in a row
     return false;

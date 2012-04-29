@@ -9,6 +9,7 @@
 #include "r_local.h"
 #include "d_main.h"
 #include "s_sound.h"
+#include "p_spec.h"
 
 //
 // Movement.
@@ -559,8 +560,7 @@ void P_PlayerThink(player_t* player)
         MS_DAMAGEX20 |
         MS_SCROLLFLOOR))
     {
-        // TODO
-        //P_PlayerInSpecialSector(player);
+        P_PlayerInSpecialSector(player);
     }
     
     // Check for weapon change.

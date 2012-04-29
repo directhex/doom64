@@ -151,40 +151,6 @@ void        P_DoSectorLightChange(line_t* line, short tag);
 void        P_FadeInBrightness(void);
 
 
-typedef enum
-{
-    top,
-    middle,
-    bottom
-} bwhere_e;
-
-
-typedef struct
-{
-    line_t*     line;
-    bwhere_e    where;
-    int         btexture;
-    int         btimer;
-    mobj_t*     soundorg;
-} button_t;
-
-
-
-
-// max # of wall switches in a level
-#define MAXSWITCHES		11
-
-// 4 players, 4 buttons each at once, max.
-#define MAXBUTTONS		16
-
-// 1 second, in ticks.
-#define BUTTONTIME      15
-
-extern button_t	buttonlist[MAXBUTTONS];
-
-void P_ChangeSwitchTexture(line_t* line, int useAgain);
-
-
 //
 // P_PLATS
 //
@@ -515,5 +481,32 @@ void T_MovingCamera(movecamera_t* camera);
 void T_MobjFadeThinker(mobjfade_t* mobjfade);
 void T_Quake(quake_t* quake);
 void T_TraceDrawer(tracedrawer_t* tdrawer);
+
+//
+// P_MACRO
+//
+
+#define MAXQUEUELIST    16
+
+extern int taglist[MAXQUEUELIST];
+extern int taglistidx;
+
+void P_QueueSpecial(mobj_t* mobj);
+
+extern thinker_t    *macrothinker;
+extern macrodef_t   *macro;
+extern macrodata_t  *nextmacro;
+extern mobj_t       *mobjmacro;
+extern short        macrocounter;
+extern short        macroid;
+
+void P_InitMacroVars(void);
+void P_ToggleMacros(int tag, dboolean toggleon);
+void P_MacroDetachThinker(thinker_t *thinker);
+void P_RunMacros(void);
+
+int P_StartMacro(mobj_t *thing, line_t *line);
+int P_SuspendMacro(int tag);
+int P_InitMacroCounter(int counts);
 
 #endif
