@@ -126,11 +126,31 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\p_ceilng.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\p_doors.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\p_enemy.c"
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\p_floor.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\p_inter.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\p_lights.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\p_macros.c"
 					>
 				</File>
 				<File
@@ -146,6 +166,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\p_plats.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\p_pspr.c"
 					>
 				</File>
@@ -155,6 +179,14 @@
 				</File>
 				<File
 					RelativePath=".\arm9\source\p_sight.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\p_spec.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\p_telept.c"
 					>
 				</File>
 				<File
@@ -302,6 +334,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\tonc_asminc.h"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\w_file.h"
 					>
 				</File>
@@ -344,6 +380,14 @@
 			>
 			<File
 				RelativePath=".\arm9\source\d_base.s"
+				>
+			</File>
+			<File
+				RelativePath=".\arm9\source\tonc_memcpy.s"
+				>
+			</File>
+			<File
+				RelativePath=".\arm9\source\tonc_memset.s"
 				>
 			</File>
 		</Filter>

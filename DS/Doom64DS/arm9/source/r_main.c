@@ -449,6 +449,27 @@ void R_FlushTextures(void)
 }
 
 //
+// R_FlushSprites
+//
+
+static void R_FlushSprites(void)
+{
+    int i;
+
+    for(i = 0; i < numgfxsprites; i++)
+    {
+        if(gfxsprites[i] == -1)
+            continue;
+
+        if((gametic - gfx_spr_prevtic[i]) >= 2)
+        {
+            glDeleteTextures(1, &gfxsprites[i]);
+            gfxsprites[i] = -1;
+        }
+    }
+}
+
+//
 // R_LoadTexture
 //
 
@@ -495,6 +516,7 @@ void R_LoadTexture(dtexture texture)
     {
         I_Printf("making room for %i\n", texture);
         R_FlushTextures();
+        R_FlushSprites();
 
         if(!glTexImage2D(
             0,
@@ -516,27 +538,6 @@ void R_LoadTexture(dtexture texture)
     }
 
     glColorTableEXT(0, 0, 16, 0, 0, paldata);
-}
-
-//
-// R_FlushSprites
-//
-
-static void R_FlushSprites(void)
-{
-    int i;
-
-    for(i = 0; i < numgfxsprites; i++)
-    {
-        if(gfxsprites[i] == -1)
-            continue;
-
-        if((gametic - gfx_spr_prevtic[i]) >= 2)
-        {
-            glDeleteTextures(1, &gfxsprites[i]);
-            gfxsprites[i] = -1;
-        }
-    }
 }
 
 //
@@ -572,8 +573,6 @@ static void R_FreeSprite(int size)
 // R_LoadSprite
 //
 
-dboolean flushsprites = false;
-
 dboolean R_LoadSprite(int sprite, int frame, int rotation,
                   int *x, int *y, int *w, int *h)
 {
@@ -588,14 +587,13 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation,
     if(gfxsprites[spritenum] == -1)
     {
         short* gfx;
-        int i;
         int width;
         int height;
         int pw;
         int ph;
         byte* data;
         byte* pal = NULL;
-        uint16 paldata[256];
+        uint16* paldata;
         dboolean ext;
         int numpal;
         byte* out = NULL;
@@ -634,16 +632,12 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation,
             numpal = 256;
         }
 
-        for(i = 0; i < numpal; i++)
-        {
-            paldata[i] = RGB8(pal[0], pal[1], pal[2]);
-            pal += (ext == 1) ? 3 : 4;
-        }
+        paldata = (uint16*)pal;
 
         glGenTextures(1, &gfxsprites[spritenum]);
         glBindTexture(0, gfxsprites[spritenum]);
 
-        swiWaitForVBlank();
+        //swiWaitForVBlank();
 
         if(!glTexImage2D(
             0,
@@ -655,7 +649,8 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation,
             TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
             out))
         {
-            R_FreeSprite(pw * ph);
+            //R_FreeSprite(pw * ph);
+            R_FlushSprites();
             //I_Error("R_LoadSprite: Sprite lump cache overflow - %i", s_start + spritenum);
             if(!glTexImage2D(
                 0,
@@ -667,7 +662,6 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation,
                 TEXGEN_OFF|GL_TEXTURE_COLOR0_TRANSPARENT,
                 out))
             {
-                flushsprites = true;
                 return false;
             }
         }
@@ -844,8 +838,6 @@ void R_DrawFrame(void)
     D_IncValidCount();
     D_UpdateTiccmd();
 
-    flushsprites = false;
-
     R_RenderView();
     R_DrawScene();
 
@@ -860,8 +852,5 @@ void R_DrawFrame(void)
 
     swiWaitForVBlank();
     GFX_FLUSH = 0;
-
-    if(flushsprites)
-        R_FlushSprites();
 }
 

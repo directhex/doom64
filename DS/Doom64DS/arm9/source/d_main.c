@@ -677,9 +677,38 @@ void D_DoomMain(void)
 
     // temp
     {
+        int keys = 0;
+
+        while(!(keys & KEY_START))
+        {
+            scanKeys();
+            keys = keysDown();
+
+            if(keys & KEY_UP)
+            {
+                keys &= ~KEY_UP;
+                gamemap++;
+                if(gamemap > 33)
+                    gamemap = 33;
+
+                I_Printf("map: %i\n", gamemap);
+            }
+            if(keys & KEY_DOWN)
+            {
+                keys &= ~KEY_DOWN;
+                gamemap--;
+                if(gamemap < 1)
+                    gamemap = 1;
+
+                I_Printf("map: %i\n", gamemap);
+            }
+
+            swiWaitForVBlank();
+        }
+
         nomonsters = false;
         nolights = true;
-        gamemap = 28;
+        //gamemap = 1;
         players[0].playerstate = PST_REBORN;
         players[0].health = 100;
         players[0].readyweapon = players[0].pendingweapon = wp_pistol;
