@@ -42,6 +42,8 @@ static inline uint32_t I_Swap32(x)
     return((x<<24)|((x<<8)&0x00FF0000)|((x>>8)&0x0000FF00)|(x>>24));
 }
 
+void memcpy32(void *dst, const void *src, uint wdcount) ITCM_CODE;
+
 #define SHORT(x) x
 #define LONG(x) x
 

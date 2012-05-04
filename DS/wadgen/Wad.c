@@ -395,14 +395,22 @@ void Wad_AddOutputSprite(d64ExSpriteLump_t* sprite)
 	int size;
 	char name[8];
 	int pos = 0;
+    int tilesize = 0;
 
 	size = (sizeof(d64ExSprite_t) + sprite->size);
 	if(!sprite->sprite.useExtPal)
 		size += (sizeof(short)*CMPPALCOUNT);
-    else if(sprite->sprite.useExtPal && sprite->lumpRef > Wad_GetLumpNum("RECTO0"))
+    else
     {
-        sprite->sprite.useExtPal = 2;
-        size += (sizeof(short)*256);
+        if(sprite->lumpRef > Wad_GetLumpNum("RECTO0"))
+        {
+            sprite->sprite.useExtPal = 2;
+            size += (sizeof(short)*256);
+        }
+
+        tilesize = sizeof(d64ExSpriteTile_t) * sprite->numtiles;
+        size += tilesize;
+        size += 2;
     }
 
 	strncpy(name, romWadFile.lump[sprite->lumpRef].name, 8);
@@ -411,6 +419,14 @@ void Wad_AddOutputSprite(d64ExSpriteLump_t* sprite)
 
 	memcpy(data, &sprite->sprite, sizeof(d64ExSprite_t));
 	pos += sizeof(d64ExSprite_t);
+
+    if(sprite->sprite.useExtPal)
+    {
+        memcpy((data+pos), &sprite->numtiles, sizeof(short));
+        pos += 2;
+        memcpy((data+pos), sprite->tiles, tilesize);
+        pos += tilesize;
+    }
 
 	memcpy((data+pos), sprite->data, sprite->size);
 	pos += sprite->size;

@@ -635,8 +635,6 @@ void P_Start(void);
 void P_Stop(void);
 int P_Ticker(void);
 
-void R_FlushTextures(void);
-
 void TestDrawer(void)
 {
     I_ClearFrame();
@@ -702,11 +700,20 @@ void D_DoomMain(void)
 
                 I_Printf("map: %i\n", gamemap);
             }
+            if(keys & KEY_A)
+            {
+                nomonsters ^= 1;
+                I_Printf("nomonsters ");
+                if(nomonsters)
+                    I_Printf("on\n");
+                else
+                    I_Printf("off\n");
+            }
 
             swiWaitForVBlank();
         }
 
-        nomonsters = false;
+        //nomonsters = false;
         nolights = true;
         //gamemap = 1;
         players[0].playerstate = PST_REBORN;

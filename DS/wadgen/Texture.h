@@ -26,10 +26,9 @@ typedef struct
 
 typedef struct
 {
-	word width;
-	word height;
-	word numpal;
-	word compressed;
+	byte dsw;
+    byte dsh;
+	short numpal;
 } d64ExTextureHeader_t;
 
 typedef struct

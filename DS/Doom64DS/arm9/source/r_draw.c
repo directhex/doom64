@@ -84,8 +84,7 @@ void R_DrawSimpleSky(void)
 
 static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
                        dtexture texture, light_t* l1, light_t* l2,
-                       fixed_t u1, fixed_t u2, fixed_t v1, fixed_t v2,
-                       dboolean midsided)
+                       fixed_t u1, fixed_t u2, fixed_t v1, fixed_t v2)
 {
     int x1, x2;
     int y1, y2;
@@ -93,7 +92,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     int r1, r2;
     int g1, g2;
     int b1, b2;
-    gl_texture_data *tex;
+    //gl_texture_data *tex;
 
     r1 = l1->active_r;
     g1 = l1->active_g;
@@ -170,49 +169,9 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     z1 = F2INT(top);
     z2 = F2INT(bottom);
 
-    if(gfxtextures[texture] == -1)
-        R_LoadTexture(texture);
-    else
-    {
-        if((tex = R_GetTexturePointer(gfxtextures[texture])))
-        {
-            if(glGlob->activeTexture != gfxtextures[texture])
-            {
-                if(seg->linedef->flags & ML_HMIRROR)
-                    tex->texFormat |= GL_TEXTURE_FLIP_S;
-	            else
-		            tex->texFormat &= ~GL_TEXTURE_FLIP_S;
-
-                if(seg->linedef->flags & ML_VMIRROR)
-		            tex->texFormat |= GL_TEXTURE_FLIP_T;
-	            else
-		            tex->texFormat &= ~GL_TEXTURE_FLIP_T;
-
-                if(seg->linedef->flags & ML_DRAWMIDTEXTURE && midsided)
-                    tex->texFormat |= GL_TEXTURE_COLOR0_TRANSPARENT;
-                else
-                    tex->texFormat &= ~GL_TEXTURE_COLOR0_TRANSPARENT;
-
-                GFX_TEX_FORMAT = tex->texFormat;
-                glGlob->activeTexture = gfxtextures[texture];
-
-                if(tex->palIndex)
-                {
-                    gl_palette_data *pal =
-                        (gl_palette_data*)DynamicArrayGet(&glGlob->palettePtrs, tex->palIndex);
-
-                    GFX_PAL_FORMAT = pal->addr;
-                    glGlob->activePalette = tex->palIndex;
-                }
-                else
-                    GFX_PAL_FORMAT = glGlob->activePalette = 0;
-            }
-        }
-        else
-            GFX_TEX_FORMAT = GFX_PAL_FORMAT = glGlob->activePalette = glGlob->activeTexture = 0;
-    }
-
-    gfx_tex_prevtic[texture] = gametic;
+    R_LoadTexture(texture,
+        (seg->linedef->flags & ML_HMIRROR),
+        (seg->linedef->flags & ML_VMIRROR));
 
     if(nolights)
         r1 = r2 = g1 = g2 = b1 = b2 = 255;
@@ -313,8 +272,7 @@ static void R_DrawSeg(seg_t* seg)
                     (seg->offset + col) + sidedef->textureoffset,
                     seg->offset + sidedef->textureoffset,
                     v1,
-                    v2,
-                    false
+                    v2
                     );
             }
             
@@ -352,8 +310,7 @@ static void R_DrawSeg(seg_t* seg)
                     (seg->offset + col) + sidedef->textureoffset,
                     seg->offset + sidedef->textureoffset,
                     v1,
-                    v2,
-                    false
+                    v2
                     );
             }
             
@@ -396,8 +353,7 @@ static void R_DrawSeg(seg_t* seg)
             (seg->offset + col) + sidedef->textureoffset,
             seg->offset + sidedef->textureoffset,
             row,
-            (top - bottom) + row,
-            seg->linedef->flags & ML_TWOSIDED ? true : false
+            (top - bottom) + row
             );
         }
     }
@@ -434,12 +390,7 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height, dtexture texture, l
     mapy    = 0;
     z       = F2INT(height);
 
-    if(gfxtextures[texture] == -1)
-        R_LoadTexture(texture);
-    else
-        glBindTexture(0, gfxtextures[texture]);
-
-    gfx_tex_prevtic[texture] = gametic;
+    R_LoadTexture(texture, false, false);
 
 #define DRAWSSECT(index)                    \
     v = leafs[index].vertex;                \
@@ -547,7 +498,7 @@ static void R_DrawSprite(mobj_t* thing)
         // use single rotation for all views
         rot = 0;
 
-    if(!R_LoadSprite(thing->sprite, thing->frame & FF_FRAMEMASK, rot,
+    if(!R_LoadSprite(thing->sprite, thing->frame & FF_FRAMEMASK, rot, thing->info->palette,
         &offx, &offy, &width, &height))
         return;
 
@@ -642,7 +593,7 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3) << 15;
 
-    if(!R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, &x, &y, &width, &height))
+    if(!R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, 0, &x, &y, &width, &height))
         return;
 
     x = F2INT(psp->sx) - x - 32;

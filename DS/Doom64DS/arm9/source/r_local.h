@@ -40,22 +40,6 @@ extern int          numlights;
 extern macroinfo_t  macros;
 
 //
-// TEXTURE DATA
-//
-
-extern dtexture*    gfxtextures;
-extern int          t_start;
-extern int          t_end;
-extern int          numtextures;
-extern int*         gfx_tex_prevtic;
-extern dtexture*    gfxsprites;
-extern int          s_start;
-extern int          s_end;
-extern int          numgfxsprites;
-extern int*         gfx_spr_prevtic;
-extern int*         spritepalindex;
-
-//
 // R_CLIPPER
 //
 dboolean        R_Clipper_SafeCheckRange(angle_t startAngle, angle_t endAngle);
@@ -72,6 +56,15 @@ extern short        *spritewidth;
 extern short        *spriteheight;
 extern short        *spriteoffset;
 extern short        *spritetopoffset;
+extern byte         *spritetiles;
+
+typedef struct
+{
+    word dw;
+    word dh;
+} spritetile_t;
+
+extern spritetile_t **tileinfo;
 
 subsector_t*    R_PointInSubsector(fixed_t x, fixed_t y);
 angle_t         R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
@@ -80,15 +73,27 @@ angle_t         R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist);
 int             R_PointOnSide(fixed_t x, fixed_t y, node_t* node);
 void            R_Init(void);
 void            R_DrawFrame(void);
+
+//
+// R_DATA
+//
+
+extern int          t_start;
+extern int          t_end;
+extern int          numtextures;
+extern int          s_start;
+extern int          s_end;
+extern int          numgfxsprites;
+extern uint32*      gfx_base;
+extern int          gfx_tex_stride;
+extern byte         gfx_tex_buffer[0x40000];
+
 void            R_PrecacheLevel(void);
 int             R_GetTextureSize(int size);
-void            R_LoadTexture(dtexture texture);
-dboolean        R_LoadSprite(int sprite, int frame, int rotation, int *x, int *y, int *w, int *h);
-
-static inline gl_texture_data *R_GetTexturePointer(dtexture texture)
-{
-    return (gl_texture_data*)DynamicArrayGet(&glGlob->texturePtrs, texture);
-}
+void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t);
+dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
+void            R_FlushTextures(void);
+void            R_InitData(void);
 
 //
 // R_BSP
@@ -109,6 +114,7 @@ void            R_RenderBSPNode(int bspnum);
 //
 // Needed to store the number of the dummy sky flat.
 // Used for rendering, as well as tracking projectiles etc.
+//
 extern int          skyflatnum;
 extern skydef_t*    sky;
 extern int          skypicnum;

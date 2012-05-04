@@ -77,6 +77,7 @@ void WGen_Complain(char *fmt, ...);
 void WGen_UpdateProgress(char *fmt, ...);
 void WGen_ConvertN64Pal(dPalette_t* palette, word* data, int indexes);
 void WGen_AddDigest(char* name, int lump, int size);
+int WGen_GetSizeDS(int size);
 
 #define TOTALSTEPS	3500
 

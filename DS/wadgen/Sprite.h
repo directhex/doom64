@@ -35,12 +35,20 @@ typedef struct
 
 typedef struct
 {
-    d64ExSprite_t sprite;
-    cache data;
-    dPalette_t palette[256];
-    short dspalette[256];
-    int size;
-    int lumpRef;
+    word dsw;
+    word dsh;
+} d64ExSpriteTile_t;
+
+typedef struct
+{
+    d64ExSprite_t       sprite;
+    cache               data;
+    dPalette_t          palette[256];
+    short               dspalette[256];
+    word                numtiles;
+    d64ExSpriteTile_t*  tiles;
+    int                 size;
+    int                 lumpRef;
 } d64ExSpriteLump_t;
 
 extern d64ExSpriteLump_t exSpriteLump[MAX_SPRITES];

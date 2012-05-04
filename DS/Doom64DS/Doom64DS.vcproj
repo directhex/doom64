@@ -206,6 +206,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\r_data.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\r_draw.c"
 					>
 				</File>
