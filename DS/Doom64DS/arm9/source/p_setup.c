@@ -509,10 +509,6 @@ void P_LoadThings(int lump)
 
     for(i = 0, j = 1; i < numthings; i++)
     {
-        // TODO
-        if(mt->type != 1)
-            continue;
-
         if(SHORT(mt[i].options) & MTF_SPAWN)
             j++;
 
@@ -987,6 +983,7 @@ void P_SetupPlanes(void)
 void P_SetupLevel(int map, int playermask, skill_t skill)
 {
     int i;
+    int free;
     
     // [kex] 12/26/11 - don't reset total stats when loading a savegame
     if(gameaction != ga_loadgame)
@@ -1056,7 +1053,12 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
 
     Z_CheckHeap();
     
-    I_Printf("Used memory: %d kb\n", Z_FreeMemory() >> 10);
+    free = Z_FreeMemory();
+
+    if(free < 4096)
+        I_Error("P_SetupLevel: not enough free memory %d", free);
+
+    I_Printf("Used memory: %d kb\n", free >> 10);
     I_Printf("Used static memory: %d kb\n", Z_TagUsage(PU_STATIC) >> 10);
     I_Printf("Used cached memory: %d kb\n", Z_TagUsage(PU_CACHE) >> 10);
     I_Printf("Used level memory: %d kb\n", Z_TagUsage(PU_LEVEL) >> 10);

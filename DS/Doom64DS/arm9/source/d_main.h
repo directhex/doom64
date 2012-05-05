@@ -85,6 +85,7 @@ extern int          totalkills;
 extern int          totalitems;
 extern int          totalsecret;
 extern dboolean     nomonsters;
+extern dboolean     lockmonsters;
 extern dboolean     respawnmonsters;
 extern dboolean     respawnspecials;
 extern dboolean     fastparm;

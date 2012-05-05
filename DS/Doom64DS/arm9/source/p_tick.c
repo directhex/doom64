@@ -122,6 +122,9 @@ void P_RunMobjs(void)
                 if(currentmobj->mobjfunc != P_RespawnSpecials)
                     currentmobj->mobjfunc = NULL;
 
+                if(lockmonsters && currentmobj->flags & MF_COUNTKILL)
+                    continue;
+
                 P_MobjThinker(currentmobj);
             }
 

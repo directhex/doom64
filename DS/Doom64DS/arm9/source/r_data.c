@@ -495,6 +495,13 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
 
     if(gfx_tex_params[texture] == 0)
     {
+        if(gfx_tex_stride >= 0x30000)
+        {
+            GFX_TEX_FORMAT = 0;
+            GFX_PAL_FORMAT = 0;
+            return;
+        }
+
         if(gfx_tex_cache[texture] == NULL)
             gfx_tex_cache[texture] = (byte*)W_CacheLumpNum(t_start + texture, PU_CACHE);
 
@@ -507,13 +514,6 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
         data = gfx + 4;
         size = ((w * h) >> 1);
         pal = (gfx + 4 + size);
-
-        if(gfx_tex_stride + size >= 0x40000)
-        {
-            GFX_TEX_FORMAT = 0;
-            GFX_PAL_FORMAT = 0;
-            return;
-        }
 
         if(gfx_tex_params[texture] == 0)
         {
@@ -558,6 +558,9 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     int spritenum;
     short* gfx;
 
+    if(sprite == SPR_SPOT)
+        return false;
+
     sprdef      = &spriteinfo[sprite];
     sprframe    = &sprdef->spriteframes[frame];
     spritenum   = sprframe->lump[rotation];
@@ -572,6 +575,9 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
         dboolean ext;
         int size;
         byte* out = NULL;
+
+        if(gfx_tex_stride >= 0x30000)
+            return false;
 
         if(gfx_spr_cache[spritenum] == NULL)
             gfx_spr_cache[spritenum] = (byte*)W_CacheLumpNum(s_start + spritenum, PU_CACHE);
@@ -603,13 +609,6 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
         {
             if(!ext)
                 size >>= 1;
-
-            if(gfx_tex_stride + size >= 0x40000)
-            {
-                GFX_TEX_FORMAT = 0;
-                GFX_PAL_FORMAT = 0;
-                return false;
-            }
 
             memcpy32(gfx_tex_buffer + gfx_tex_stride, out, size);
 

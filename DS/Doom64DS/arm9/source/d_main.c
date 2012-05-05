@@ -22,6 +22,7 @@ int             consoleplayer   = 0;
 int             leveltime       = 0;
 int             compatflags     = 0;
 dboolean        nomonsters      = false;
+dboolean        lockmonsters    = false;
 dboolean        netgame         = false;
 dboolean        respawnmonsters = false;
 dboolean        respawnspecials = false;
@@ -705,6 +706,15 @@ void D_DoomMain(void)
                 nomonsters ^= 1;
                 I_Printf("nomonsters ");
                 if(nomonsters)
+                    I_Printf("on\n");
+                else
+                    I_Printf("off\n");
+            }
+            if(keys & KEY_B)
+            {
+                lockmonsters ^= 1;
+                I_Printf("lockmonsters ");
+                if(lockmonsters)
                     I_Printf("on\n");
                 else
                     I_Printf("off\n");
