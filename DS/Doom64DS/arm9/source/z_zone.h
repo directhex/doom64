@@ -11,6 +11,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "doomtype.h"
+
 // ZONE MEMORY
 
 // PU - purge tags.
@@ -27,6 +29,7 @@ enum
 };
 
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */
+#define PU_FREE -1
 
 void*   (Z_Malloc)(int size, int tag, void *user, const char *, int);
 void    (Z_Free)(void *ptr, const char *, int);
@@ -62,4 +65,36 @@ void    (Z_Touch)(void *ptr, const char *, int);
 int Z_TagUsage(int tag);
 int Z_FreeMemory(void);
 
+typedef struct vramblock_s vramblock_t;
+
+struct vramblock_s
+{
+    int size;
+    short id;
+    short tag;
+    int prevtic;
+    void **gfx;
+    byte *block;
+    vramblock_t *prev;
+    vramblock_t *next;
+};
+
+typedef struct
+{
+    int size;               // total bytes malloced, including header
+    int free;
+    vramblock_t blocklist;  // start / end cap for linked list
+    vramblock_t* rover;
+} vramzone_t;
+
+extern vramzone_t* vramzone;
+
+void Z_VFree(vramzone_t* vram, vramblock_t* block);
+vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx);
+void Z_SetVallocBase(vramzone_t* vram);
+void Z_VTouch(vramzone_t* vram, vramblock_t *block);
+int Z_FreeVMemory(vramzone_t* vram);
+
 #endif
+
+

@@ -26,6 +26,7 @@ void I_StartTic(void);
 int I_GetTime(void);
 int I_GetTimeMS(void);
 void I_Sleep(uint32 ms);
+int I_GetTimeTicks(void);
 
 const char* I_FilePath(const char* file);
 int I_ReadFile(char const* name, byte** buffer);
@@ -43,6 +44,7 @@ static inline uint32_t I_Swap32(x)
 }
 
 void memcpy32(void *dst, const void *src, uint wdcount) ITCM_CODE;
+void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
 
 #define SHORT(x) x
 #define LONG(x) x

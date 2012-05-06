@@ -20,6 +20,7 @@ angle_t         viewangleoffset;
 rcolor          flashcolor;
 fixed_t         viewsin[2];
 fixed_t         viewcos[2];
+int             frametic = 0;
 
 // sprite info globals
 spritedef_t     *spriteinfo;
@@ -245,8 +246,9 @@ void R_DrawFrame(void)
             R_DrawPSprite(psp, player->mo->subsector->sector, player);
     }
 
-    if(gfx_tex_stride > 0)
+    //if(gfx_tex_stride > 0)
     {
+        int free = Z_FreeVMemory(vramzone);
         swiWaitForVBlank();
 
         DC_FlushAll();
@@ -255,7 +257,7 @@ void R_DrawFrame(void)
         {
             vramSetBankA(VRAM_A_LCD);
             vramSetBankB(VRAM_B_LCD);
-            dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)gfx_base, gfx_tex_stride);
+            dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)gfx_base, free);
             vramSetBankA(VRAM_A_TEXTURE);
             vramSetBankB(VRAM_B_TEXTURE);
         }
@@ -263,20 +265,19 @@ void R_DrawFrame(void)
         {
             vramSetBankC(VRAM_C_LCD);
             vramSetBankD(VRAM_D_LCD);
-            dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)gfx_base, gfx_tex_stride);
+            dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)gfx_base, free);
             vramSetBankC(VRAM_C_TEXTURE);
             vramSetBankD(VRAM_D_TEXTURE);
         }
     }
 
     gfx_base = rframe == 0 ? (uint32*)VRAM_C : (uint32*)VRAM_A;
-    gfx_tex_stride = 0;
     rframe ^= 1;
 
-    R_FlushTextures();
+    glPopMatrix(2);
+
+    frametic++;
 
     GFX_FLUSH = 1;
-
-    glPopMatrix(2);
 }
 

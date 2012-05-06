@@ -18,6 +18,7 @@ extern angle_t      viewangleoffset;
 extern rcolor       flashcolor;
 extern fixed_t      viewsin[2];
 extern fixed_t      viewcos[2];
+extern int          frametic;
 
 extern int          numvertexes;
 extern vertex_t     *vertexes;
@@ -85,7 +86,6 @@ extern int          s_start;
 extern int          s_end;
 extern int          numgfxsprites;
 extern uint32*      gfx_base;
-extern int          gfx_tex_stride;
 extern byte         gfx_tex_buffer[0x40000];
 
 void            R_PrecacheLevel(void);

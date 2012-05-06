@@ -1,9 +1,13 @@
 #include <stdlib.h>
 #include "ds.h"
 #include "doomtype.h"
+#include "d_main.h"
 #include "z_zone.h"
+#include "r_local.h"
 
 #define ZONEID	0x1d4a11
+#define ZONEID2 0x1d4a
+
 //#define ZONEFILE
 
 typedef struct memblock_s memblock_t;
@@ -17,6 +21,10 @@ struct memblock_s
     memblock_t *prev;
     memblock_t *next;
 };
+
+#define VBLOCK_ALIGN    31
+
+vramzone_t* vramzone;
 
 #ifdef ZONEFILE
 
@@ -98,12 +106,45 @@ static void Z_RemoveBlock(memblock_t *block)
 }
 
 //
+// Z_InitVram
+//
+
+static void Z_InitVram(byte* base_start, uint32 size)
+{
+    vramblock_t* vblock;
+
+    vramzone = (vramzone_t*)Z_Calloc(sizeof(vramzone_t), PU_STATIC, NULL);
+    vramzone->size = size;
+    vramzone->free = 0;
+
+    // set the entire zone to one free block
+    vramzone->blocklist.block = base_start;
+    vramzone->blocklist.next =
+    vramzone->blocklist.prev =
+    vblock = (vramblock_t*)Z_Calloc(sizeof(vramblock_t), PU_STATIC, NULL);
+
+    vramzone->blocklist.gfx = (void*)vramzone;
+    vramzone->blocklist.tag = PU_STATIC;
+    vramzone->rover = vblock;
+	
+    vblock->prev = vblock->next = &vramzone->blocklist;
+
+    // free block
+    vblock->tag = PU_FREE;
+    vblock->block = vramzone->blocklist.block;
+    vblock->size = vramzone->size;
+    vblock->prevtic = frametic;
+}
+
+//
 // Z_Init
 //
 
 void Z_Init(void)
 {
     memset(allocated_blocks, 0, sizeof(allocated_blocks));
+
+    Z_InitVram(gfx_tex_buffer, 0x40000);
 
 #ifdef ZONEFILE
     atexit(Z_CloseLogFile); // exit handler
@@ -570,4 +611,193 @@ int Z_FreeMemory(void)
 
     return bytes;
 }
+
+//
+// Z_VFree
+//
+
+void Z_VFree(vramzone_t* vram, vramblock_t* block)
+{
+    vramblock_t* other;
+
+    if(block->id != ZONEID2)
+        I_Error("Z_VFree: freed a block without ZONEID (%x)", vram->free);
+
+    if(block->tag != PU_FREE && block->gfx != NULL)
+        *block->gfx = 0;
+
+    // mark as free
+    block->tag = PU_FREE;
+    block->gfx = NULL;
+    block->prevtic = 0;
+	
+    other = block->prev;
+
+    if(other->tag == PU_FREE)
+    {
+        // merge with previous free block
+        other->size += block->size;
+        other->next = block->next;
+        other->next->prev = other;
+
+        if(block == vram->rover)
+            vram->rover = other;
+
+        Z_Free(block);
+
+        block = other;
+    }
+	
+    other = block->next;
+
+    if(other->tag == PU_FREE)
+    {
+        // merge the next free block onto the end
+        block->size += other->size;
+        block->next = other->next;
+        block->next->prev = block;
+
+        if(other == vram->rover)
+            vram->rover = block;
+
+        Z_Free(other);
+    }
+}
+
+//
+// Z_Valloc
+//
+
+#define MINFRAGMENT     64
+
+vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx)
+{
+    int         extra;
+    void        *result;
+    vramblock_t *start;
+    vramblock_t *rover;
+    vramblock_t *newblock;
+    vramblock_t *base;
+
+    if(vram->free >= 0x20000 - size)
+        Z_SetVallocBase(vram);
+
+    if(size & 7)
+        I_Error("Z_Valloc: size %i must be aligned to 8 bytes", size);
+
+    // if there is a free block behind the rover,
+    //  back up over them
+    base = vram->rover;
+    
+    if(base->prev->tag == PU_FREE)
+        base = base->prev;
+	
+    rover = base;
+    start = base->prev;
+	
+    do
+    {
+        if(rover == start)
+        {
+            // scanned all the way around the list
+            //I_Error("Z_Valloc: failed on allocation of %i bytes", size);
+            return NULL;
+        }
+	
+        if(rover->tag != PU_FREE)
+        {
+            if((frametic - rover->prevtic) >= 4)
+            {
+                base = base->prev;
+                Z_VFree(vram, rover);
+                base = base->next;
+                rover = base->next;
+            }
+            else
+                base = rover = rover->next;
+        }
+        else
+        {
+            rover = rover->next;
+        }
+
+    } while(base->tag != PU_FREE || base->size < size);
+
+    // found a block big enough
+    extra = base->size - size;
+    
+    if(extra > MINFRAGMENT)
+    {
+        // there will be a free fragment after the allocated block
+        newblock = (vramblock_t*)Z_Calloc(sizeof(vramblock_t), PU_STATIC, NULL);
+        newblock->size = extra;
+        newblock->tag = PU_FREE;
+        newblock->gfx = NULL;
+        newblock->block = base->block + size;
+        newblock->prevtic = frametic;
+        newblock->prev = base;
+        newblock->next = base->next;
+        newblock->next->prev = newblock;
+
+        base->next = newblock;
+        base->size = size;
+    }
+
+    base->gfx = gfx;
+    base->tag = tag;
+    base->id = ZONEID2;
+
+    result = base;
+
+    // next allocation will start looking here
+    vram->rover = base->next;
+    base->prevtic = frametic;
+    
+    return result;
+}
+
+//
+// Z_VTouch
+//
+
+void Z_VTouch(vramzone_t* vram, vramblock_t *block)
+{
+    if(block->id != ZONEID2)
+        I_Error("Z_VTouch: touched a block without ZONEID");
+
+    block->prevtic = frametic;
+}
+
+//
+// Z_SetVallocBase
+//
+
+void Z_SetVallocBase(vramzone_t* vram)
+{
+    vram->rover = vram->blocklist.next;
+}
+
+//
+// Z_FreeVMemory
+//
+
+int Z_FreeVMemory(vramzone_t* vram)
+{
+    vramblock_t* block;
+	
+    vram->free = 0;
+    
+    for(block = vram->blocklist.next;
+        block != &vram->blocklist;
+        block = block->next)
+    {
+        int free = block->block - gfx_tex_buffer;
+
+        if(free > vram->free)
+            vram->free = free;
+    }
+    
+    return vram->free;
+}
+
 
