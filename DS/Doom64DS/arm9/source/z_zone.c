@@ -670,7 +670,7 @@ void Z_VFree(vramzone_t* vram, vramblock_t* block)
 
 #define MINFRAGMENT     64
 
-vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx)
+vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx)
 {
     int         extra;
     void        *result;
@@ -678,9 +678,6 @@ vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx)
     vramblock_t *rover;
     vramblock_t *newblock;
     vramblock_t *base;
-
-    if(vram->free >= 0x20000 - size)
-        Z_SetVallocBase(vram);
 
     if(size & 7)
         I_Error("Z_Valloc: size %i must be aligned to 8 bytes", size);
@@ -700,15 +697,16 @@ vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx)
         if(rover == start)
         {
             // scanned all the way around the list
-            //I_Error("Z_Valloc: failed on allocation of %i bytes", size);
+            //I_Error("Z_VAlloc: failed on allocation of %i bytes", size);
             return NULL;
         }
 	
         if(rover->tag != PU_FREE)
         {
-            if((frametic - rover->prevtic) >= 4)
+            if((frametic - rover->prevtic) >= 2)
             {
                 base = base->prev;
+
                 Z_VFree(vram, rover);
                 base = base->next;
                 rover = base->next;
@@ -722,6 +720,9 @@ vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx)
         }
 
     } while(base->tag != PU_FREE || base->size < size);
+
+    if((base->block + size) - gfx_tex_buffer >= 0x3B000)
+        return NULL;
 
     // found a block big enough
     extra = base->size - size;
@@ -769,10 +770,10 @@ void Z_VTouch(vramzone_t* vram, vramblock_t *block)
 }
 
 //
-// Z_SetVallocBase
+// Z_SetVAllocList
 //
 
-void Z_SetVallocBase(vramzone_t* vram)
+void Z_SetVAllocList(vramzone_t* vram)
 {
     vram->rover = vram->blocklist.next;
 }

@@ -116,8 +116,12 @@ extern ticcmd_t     netcmds[MAXPLAYERS][BACKUPTICS];
 extern	int         ticdup;
 extern	int         extratics;
 
+static inline void D_IncValidCount(void)
+{
+    validcount++;
+}
+
 void D_Printf(const char *s, ...);
-void D_IncValidCount(void);
 void D_DoomMain(void);
 void D_UpdateTiccmd(void);
 int D_MiniLoop(void(*start)(void), void(*stop)(void),

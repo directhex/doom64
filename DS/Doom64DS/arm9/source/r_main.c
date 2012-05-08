@@ -215,7 +215,7 @@ void R_DrawFrame(void)
 
     glPushMatrix();
 
-    MATRIX_TRANSLATE    = -(16 << 4);
+    MATRIX_TRANSLATE    = -INT2DSFIXED(16);
     MATRIX_TRANSLATE    = -0;
     MATRIX_TRANSLATE    = -0;
 
@@ -279,5 +279,6 @@ void R_DrawFrame(void)
     frametic++;
 
     GFX_FLUSH = 1;
+    Z_SetVAllocList(vramzone);
 }
 

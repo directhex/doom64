@@ -473,16 +473,6 @@ static byte* R_PadTexture(byte* in, int width, int height,
 }
 
 //
-// R_FlushTextures
-//
-
-void R_FlushTextures(void)
-{
-    //memset(gfx_tex_params, 0, sizeof(uint32) * numtextures);
-    //memset(gfx_spr_params, 0, sizeof(uint32) * numgfxsprites);
-}
-
-//
 // R_LoadTexture
 //
 
@@ -497,53 +487,46 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     int size;
     uint32 stride;
 
-    if(gfx_tex_params[texture] == 0)
-    {
-        if(gfx_tex_cache[texture] == NULL)
-            gfx_tex_cache[texture] = (byte*)W_CacheLumpNum(t_start + texture, PU_CACHE);
+    if(gfx_tex_cache[texture] == NULL)
+        gfx_tex_cache[texture] = (byte*)W_CacheLumpNum(t_start + texture, PU_CACHE);
 
-        gfx = gfx_tex_cache[texture];
-            
-        dw = gfx[0];
-        dh = gfx[1];
-        w = (8 << dw);
-        h = (8 << dh);
-        data = gfx + 4;
-        size = ((w * h) >> 1);
-        pal = (gfx + 4 + size);
-
-        if(!(gfx_tex_blocks[texture] = Z_Valloc(vramzone, size, PU_CACHE, &gfx_tex_params[texture])))
-        {
-            GFX_TEX_FORMAT = 0;
-            GFX_PAL_FORMAT = 0;
-            return;
-        }
-
-        stride = gfx_tex_blocks[texture]->block - gfx_tex_buffer;
-
-        swiCopy(data, gfx_tex_blocks[texture]->block, (size >> 2) | COPY_MODE_WORD);
-
-        flags = TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T;
+    gfx = gfx_tex_cache[texture];
         
-        if(pal[0] == 0 && pal[1] == 0 && pal[2] == 0)
-            flags |= GL_TEXTURE_COLOR0_TRANSPARENT;
+    dw = gfx[0];
+    dh = gfx[1];
+    w = (8 << dw);
+    h = (8 << dh);
+    data = gfx + 4;
+    size = ((w * h) >> 1);
+    pal = (gfx + 4 + size);
 
-        if(flip_s)
-            flags |= GL_TEXTURE_FLIP_S;
-
-        if(flip_t)
-            flags |= GL_TEXTURE_FLIP_T;
-
-        gfx_tex_params[texture] =
-            GFX_TEXTURE(
-            flags,
-            dw,
-            dh,
-            GL_RGB16,
-            ((uint32*)gfx_base + (stride >> 2)));
+    if(!I_AllocVBlock(gfx_tex_params, gfx_tex_blocks, data, texture, size))
+    {
+        GFX_TEX_FORMAT = 0;
+        GFX_PAL_FORMAT = 0;
+        return;
     }
-    else
-        Z_VTouch(vramzone, gfx_tex_blocks[texture]);
+
+    stride = gfx_tex_blocks[texture]->block - gfx_tex_buffer;
+
+    flags = TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T;
+        
+    if(pal[0] == 0 && pal[1] == 0 && pal[2] == 0)
+        flags |= GL_TEXTURE_COLOR0_TRANSPARENT;
+
+    if(flip_s)
+        flags |= GL_TEXTURE_FLIP_S;
+
+    if(flip_t)
+        flags |= GL_TEXTURE_FLIP_T;
+
+    gfx_tex_params[texture] =
+        GFX_TEXTURE(
+        flags,
+        dw,
+        dh,
+        GL_RGB16,
+        ((uint32*)gfx_base + (stride >> 2)));
 
     GFX_TEX_FORMAT = gfx_tex_params[texture];
     GFX_PAL_FORMAT = gfx_texpal_params[texture];
@@ -560,6 +543,14 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     spriteframe_t *sprframe;
     int spritenum;
     short* gfx;
+    uint32 stride;
+    int width;
+    int height;
+    int pw;
+    int ph;
+    dboolean ext;
+    byte* data;
+    int size;
 
     if(sprite == SPR_SPOT)
         return false;
@@ -568,77 +559,65 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     sprframe    = &sprdef->spriteframes[frame];
     spritenum   = sprframe->lump[rotation];
 
+    if(gfx_spr_cache[spritenum] == NULL)
+        gfx_spr_cache[spritenum] = (byte*)W_CacheLumpNum(s_start + spritenum, PU_CACHE);
+
+    gfx     = (short*)gfx_spr_cache[spritenum];
+    width   = gfx[0];
+    height  = gfx[1];
+    pw      = R_PadTextureDims(width);
+    ph      = R_PadTextureDims(height);
+    ext     = gfx[4];
+    size    = (pw * ph);
+
+    if(ext)
+    {
+        spritetiles[spritenum]  = gfx[5];
+        tileinfo[spritenum]     = (spritetile_t*)(gfx + 6);
+        data                    = (byte*)(gfx + 6 + ((sizeof(spritetile_t) * spritetiles[spritenum]) >> 1));
+    }
+    else
+        data = (byte*)(gfx + 5);
+
+    if(!ext)
+        size >>= 1;
+
     if(gfx_spr_params[spritenum] == 0)
     {
-        int width;
-        int height;
-        int pw;
-        int ph;
-        byte* data;
-        dboolean ext;
-        int size;
         byte* out = NULL;
-        uint32 stride;
 
-        if(gfx_spr_cache[spritenum] == NULL)
-            gfx_spr_cache[spritenum] = (byte*)W_CacheLumpNum(s_start + spritenum, PU_CACHE);
-
-        gfx                         = (short*)gfx_spr_cache[spritenum];
-        width                       = gfx[0];
-        height                      = gfx[1];
-        pw                          = R_PadTextureDims(width);
-        ph                          = R_PadTextureDims(height);
         spritewidth[spritenum]      = width;
         spriteheight[spritenum]     = height;
         spriteoffset[spritenum]     = gfx[2];
         spritetopoffset[spritenum]  = gfx[3];
-        ext                         = gfx[4];
 
-        if(ext)
-        {
-            spritetiles[spritenum]  = gfx[5];
-            tileinfo[spritenum]     = (spritetile_t*)(gfx + 6);
-            data                    = (byte*)(gfx + 6 + ((sizeof(spritetile_t) * spritetiles[spritenum]) >> 1));
-        }
-        else
-            data = (byte*)(gfx + 5);
-
-        size = (pw * ph);
         out = (byte*)R_PadTexture(data, width, height, pw, ph, ext);
-
-        if(!ext)
-            size >>= 1;
-
-        if(!(gfx_spr_blocks[spritenum] = Z_Valloc(vramzone, size, PU_CACHE, &gfx_spr_params[spritenum])))
-        {
-            GFX_TEX_FORMAT = 0;
-            GFX_PAL_FORMAT = 0;
-            return false;
-        }
-
-        stride = gfx_spr_blocks[spritenum]->block - gfx_tex_buffer;
-        swiCopy(out, gfx_spr_blocks[spritenum]->block, (size >> 2) | COPY_MODE_WORD);
-
-        gfx_spr_params[spritenum] =
-            GFX_TEXTURE(
-            (TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT),
-            R_GetTextureSize(pw),
-            R_GetTextureSize(ph),
-            (ext ? GL_RGB256 : GL_RGB16),
-            ((uint32*)gfx_base + (stride >> 2)));
+        data = out;
     }
-    else
+
+    if(!I_AllocVBlock(gfx_spr_params, gfx_spr_blocks, data, spritenum, size))
     {
-        Z_VTouch(vramzone, gfx_spr_blocks[spritenum]);
-        gfx = (short*)gfx_spr_cache[spritenum];
+        GFX_TEX_FORMAT = 0;
+        GFX_PAL_FORMAT = 0;
+        return false;
     }
+
+    stride = gfx_spr_blocks[spritenum]->block - gfx_tex_buffer;
+
+    gfx_spr_params[spritenum] =
+        GFX_TEXTURE(
+        (TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT),
+        R_GetTextureSize(pw),
+        R_GetTextureSize(ph),
+        (ext ? GL_RGB256 : GL_RGB16),
+        ((uint32*)gfx_base + (stride >> 2)));
 
     GFX_TEX_FORMAT = gfx_spr_params[spritenum];
 
     if(palindex >= 8 || palindex < 0)
         palindex = 0;
 
-    if(gfx[4])
+    if(ext)
         GFX_PAL_FORMAT = gfx_extpal_params[sprite][palindex];
     else
         GFX_PAL_FORMAT = gfx_sprpal_params[spritenum];
@@ -659,7 +638,6 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
 void R_PrecacheLevel(void)
 {
     int	i;
-    mobj_t* mo;
 
     for(i = 0; i < numsides; i++)
     {
@@ -672,32 +650,6 @@ void R_PrecacheLevel(void)
     {
         W_CacheLumpNum(t_start + sectors[i].ceilingpic, PU_CACHE);
         W_CacheLumpNum(t_start + sectors[i].floorpic, PU_CACHE);
-    }
-
-    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
-    {
-        int j;
-
-        if(!mo->sprite)
-            continue;
-
-        spritedef_t	*sprdef;
-        sprdef = &spriteinfo[mo->sprite];
-
-        for(j = 0; j < sprdef->numframes; j++)
-        {
-            spriteframe_t *sprframe;
-            int p;
-
-            sprframe = &sprdef->spriteframes[j];
-            if(sprframe->rotate)
-            {
-                for(p = 0; p < 8; p++)
-                    W_CacheLumpNum(s_start + sprframe->lump[p], PU_CACHE);
-            }
-            else
-                W_CacheLumpNum(s_start + sprframe->lump[0], PU_CACHE);
-        }
     }
 }
 

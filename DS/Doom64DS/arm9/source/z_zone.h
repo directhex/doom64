@@ -90,8 +90,8 @@ typedef struct
 extern vramzone_t* vramzone;
 
 void Z_VFree(vramzone_t* vram, vramblock_t* block);
-vramblock_t* Z_Valloc(vramzone_t* vram, int size, int tag, void* gfx);
-void Z_SetVallocBase(vramzone_t* vram);
+vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx);
+void Z_SetVAllocList(vramzone_t* vram);
 void Z_VTouch(vramzone_t* vram, vramblock_t *block);
 int Z_FreeVMemory(vramzone_t* vram);
 

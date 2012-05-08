@@ -4,6 +4,8 @@
 #include <nds.h>
 #include <fat.h>
 #include <stdio.h>
+#include "doomtype.h"
+#include "z_zone.h"
 
 #define COORD_PACK(u, v)    (((u << 4) & 0xFFFF) | (((v << 4)) << 16))
 #define GFX_SIZE_S(x)       (x << 20)
@@ -27,6 +29,9 @@ int I_GetTime(void);
 int I_GetTimeMS(void);
 void I_Sleep(uint32 ms);
 int I_GetTimeTicks(void);
+
+dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock,
+                       byte* data, int index, int size);
 
 const char* I_FilePath(const char* file);
 int I_ReadFile(char const* name, byte** buffer);

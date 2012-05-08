@@ -1043,7 +1043,7 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
     
     // set up world state
     // TODO
-    //P_SpawnSpecials();
+    P_SpawnSpecials();
     P_SetupSky();
     //P_SetupPlanes();
     

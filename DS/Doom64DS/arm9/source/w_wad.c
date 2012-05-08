@@ -364,9 +364,6 @@ void* W_CacheLumpNum(int lump, int tag)
 
     if(!l->cache)      // read the lump in
     {
-        if(tag == PU_CACHE)
-            I_Printf("Caching %s\n", lumpinfo[lump].name);
-
         Z_Malloc(W_LumpLength(lump), tag, &l->cache);
         W_ReadLump(lump, l->cache);
     }

@@ -374,15 +374,6 @@ void D_ProcessEvents(void)
 }
 
 //
-// D_IncValidCount
-//
-
-void D_IncValidCount(void)
-{
-    validcount++;
-}
-
-//
 // D_GetLowTic
 //
 
@@ -722,6 +713,8 @@ void D_DoomMain(void)
 
             swiWaitForVBlank();
         }
+
+        I_Printf("Loading Level...\n");
 
         //nomonsters = false;
         nolights = true;

@@ -92,7 +92,6 @@ void            R_PrecacheLevel(void);
 int             R_GetTextureSize(int size);
 void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t);
 dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
-void            R_FlushTextures(void);
 void            R_InitData(void);
 
 //

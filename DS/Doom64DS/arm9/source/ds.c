@@ -248,6 +248,26 @@ void I_ClearFrame(void)
     GFX_FOG_TABLE[31] = 0x7F;
     GFX_FOG_OFFSET = 0x7BFE;
 }
+
+//
+// I_AllocVBlock
+//
+
+dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index, int size)
+{
+    if(user[index] == 0)
+    {
+        if(!(vblock[index] = Z_VAlloc(vramzone, size, PU_CACHE, &user[index])))
+            return false;
+
+        swiCopy(data, vblock[index]->block, (size >> 2) | COPY_MODE_WORD);
+    }
+    else
+        Z_VTouch(vramzone, vblock[index]);
+
+    return true;
+}
+
 //
 // I_StartTic
 //

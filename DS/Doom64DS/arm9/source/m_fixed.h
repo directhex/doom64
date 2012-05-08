@@ -10,6 +10,8 @@
 #define INT2F(x)		((x)<<FRACBITS)
 #define F2INT(x)		((x)>>FRACBITS)
 #define F2D3D(x) 		(((float)(x))/FRACUNIT)
+#define F2DSFIXED(x)    ((x)>>12)
+#define INT2DSFIXED(x)  ((x)<<4)
 
 typedef int fixed_t;
 

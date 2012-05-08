@@ -2100,14 +2100,15 @@ void P_AddSectorSpecial(sector_t* sector)
 
 void P_SpawnSpecials (void)
 {
-    sector_t*   sector;
+    //sector_t*   sector;
     int         i;
     mobj_t*     mo;
 
     //
     // [kex] reset data for animpics
     //
-    for(i = 0; i < numanimdef; i++)
+    // TODO
+    /*for(i = 0; i < numanimdef; i++)
     {
         animinfo[i].delay = 0;
         animinfo[i].frame = -1;
@@ -2128,7 +2129,7 @@ void P_SpawnSpecials (void)
             if(sector->flags & MS_SECRET)
                 totalsecret++;
         }
-    }
+    }*/
 
     // Get type of key used in level
     tryopentype[0] = it_bluecard;

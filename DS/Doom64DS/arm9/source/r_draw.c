@@ -323,6 +323,12 @@ static void R_DrawSeg(seg_t* seg)
     //
     if(sidedef->midtexture != 1)
     {
+        fixed_t v1;
+        fixed_t v2;
+
+        v1 = row;
+        v2 = row + (top - bottom);
+
         if(seg->backsector)
         {
             if(!(linedef->flags & ML_DRAWMIDTEXTURE))
@@ -339,6 +345,25 @@ static void R_DrawSeg(seg_t* seg)
         
             if(top > btop)
                 top = btop;
+
+            if(linedef->flags & ML_DONTPEGMID)
+            {
+                v1 = row - (top - btop);
+                v2 = row + (((top + btop) - (bottom + bbottom)) >> 1);
+            }
+        }
+        else
+        {
+            if(linedef->flags & ML_DONTPEGTOP)
+            {
+                v1 = ((row - bottom) - (top - bottom));
+                v2 = ((row - bottom) - (top - bottom)) + (top - bottom);
+            }
+            else if(linedef->flags & ML_DONTPEGBOTTOM)
+            {
+                v1 = row - (top - bottom);
+                v2 = row;
+            }
         }
         
         if(!(linedef->flags & ML_SWITCHX02 && linedef->flags & ML_SWITCHX04))
@@ -352,8 +377,8 @@ static void R_DrawSeg(seg_t* seg)
             l2,
             (seg->offset + col) + sidedef->textureoffset,
             seg->offset + sidedef->textureoffset,
-            row,
-            (top - bottom) + row
+            v1,
+            v2
             );
         }
     }
@@ -363,7 +388,9 @@ static void R_DrawSeg(seg_t* seg)
 // R_DrawSubsector
 //
 
-static void R_DrawSubsector(subsector_t* ss, fixed_t height, dtexture texture, light_t* light)
+static void R_DrawSubsector(subsector_t* ss, fixed_t height,
+                            dtexture texture, light_t* light,
+                            fixed_t xoffset, fixed_t yoffset)
 {
     int i;
     int x;
@@ -382,8 +409,8 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height, dtexture texture, l
     else
         GFX_COLOR = RGB8(light->active_r, light->active_g, light->active_b);
 
-    tx      = F2INT(leafs[ss->leaf].vertex->x) & 0x3F;
-    ty      = F2INT(leafs[ss->leaf].vertex->y) & 0x3F;
+    tx      = F2INT(leafs[ss->leaf].vertex->x + xoffset) & 0x3F;
+    ty      = F2INT(leafs[ss->leaf].vertex->y - yoffset) & 0x3F;
     tsx     = leafs[ss->leaf].vertex->x;
     tsy     = leafs[ss->leaf].vertex->y;
     mapx    = 0;
@@ -432,6 +459,7 @@ static void R_DrawLeafs(subsector_t* subsector)
 {
     int i;
     light_t* l;
+    fixed_t x, y;
 
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
 
@@ -448,16 +476,38 @@ static void R_DrawLeafs(subsector_t* subsector)
 
     if(viewz <= frontsector->ceilingheight && frontsector->ceilingpic != skyflatnum)
     {
+        if(frontsector->flags & MS_SCROLLCEILING)
+        {
+            x = frontsector->xoffset;
+            y = frontsector->yoffset;
+        }
+        else
+            x = y = 0;
+
         l = &lights[frontsector->colors[LIGHT_CEILING]];
-        R_DrawSubsector(subsector, frontsector->ceilingheight, frontsector->ceilingpic, l);
+
+        R_DrawSubsector(subsector,
+            frontsector->ceilingheight,
+            frontsector->ceilingpic, l, x, y);
     }
 
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_FRONT | POLY_MODULATION | POLY_FOG;
 
     if(viewz >= frontsector->floorheight && frontsector->floorpic != skyflatnum)
     {
+        if(frontsector->flags & MS_SCROLLFLOOR)
+        {
+            x = frontsector->xoffset;
+            y = frontsector->yoffset;
+        }
+        else
+            x = y = 0;
+
         l = &lights[frontsector->colors[LIGHT_FLOOR]];
-        R_DrawSubsector(subsector, frontsector->floorheight, frontsector->floorpic, l);
+
+        R_DrawSubsector(subsector,
+            frontsector->floorheight,
+            frontsector->floorpic, l, x, y);
     }
 }
 
