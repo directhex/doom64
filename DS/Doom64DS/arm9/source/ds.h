@@ -29,6 +29,7 @@ int I_GetTime(void);
 int I_GetTimeMS(void);
 void I_Sleep(uint32 ms);
 int I_GetTimeTicks(void);
+void I_FinishFrame(void);
 
 dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock,
                        byte* data, int index, int size);

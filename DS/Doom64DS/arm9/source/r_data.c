@@ -4,8 +4,8 @@
 #include "w_wad.h"
 #include "p_local.h"
 
-uint32* gfx_base;
-byte    gfx_tex_buffer[0x40000];
+uint32* gfx_base = (uint32*)VRAM_A;
+byte    gfx_tex_buffer[GFX_BUFFER_SIZE];
 
 static int              gfx_texpal_stride = 0;
 static uint32*          gfx_tex_params;
@@ -63,6 +63,11 @@ static void R_CacheSpritePalette(int spritenum)
 
     gfx = (short*)W_CacheLumpNum(s_start + spritenum, PU_STATIC);
 
+    spritewidth[spritenum]      = gfx[0];
+    spriteheight[spritenum]     = gfx[1];
+    spriteoffset[spritenum]     = gfx[2];
+    spritetopoffset[spritenum]  = gfx[3];
+
     if(!gfx[4])
     {
         data = (byte*)(gfx + 5);
@@ -74,6 +79,11 @@ static void R_CacheSpritePalette(int spritenum)
         swiCopy(paldata, VRAM_E + (gfx_texpal_stride >> 1), (size >> 1) | COPY_MODE_HWORD);
         gfx_sprpal_params[spritenum] = GFX_VRAM_OFFSET((VRAM_E + (gfx_texpal_stride >> 2)));
         gfx_texpal_stride += size;
+    }
+    else
+    {
+        spritetiles[spritenum] = gfx[5];
+        spritetilelist[spritenum] = (short*)(gfx + 6);
     }
 
     Z_Free(gfx);
@@ -107,7 +117,7 @@ static void R_CacheExternalPalette(int sprite)
             uint16* paldata;
             int size;
 
-            data = (byte*)(gfx + 6 + ((sizeof(spritetile_t) * gfx[5]) >> 1));
+            data = (byte*)(gfx + 6 + ((sizeof(short) * gfx[5]) >> 1));
 
             pal = data + (gfx[0] * gfx[1]);
             size = (256 << 1);
@@ -274,7 +284,7 @@ static void R_InitSprites(void)
     gfx_sprpal_params   = (uint32*)Z_Calloc(sizeof(uint32) * numgfxsprites, PU_STATIC, NULL);
     gfx_spr_cache       = (byte**)Z_Calloc(sizeof(*gfx_spr_cache) * numgfxsprites, PU_STATIC, NULL);
     spritetiles         = (byte*)Z_Calloc(numgfxsprites, PU_STATIC, NULL);
-    tileinfo            = (spritetile_t**)Z_Calloc(sizeof(*tileinfo) * numgfxsprites, PU_STATIC, NULL);
+    spritetilelist      = (short**)Z_Calloc(sizeof(*spritetilelist) * numgfxsprites, PU_STATIC, NULL);
     gfx_spr_blocks      = (vramblock_t**)Z_Calloc(sizeof(*gfx_spr_blocks) * numgfxsprites, PU_STATIC, NULL);
 
     // count the number of sprite names
@@ -373,8 +383,6 @@ static void R_InitSprites(void)
 
 void R_InitData(void)
 {
-    gfx_base = (uint32*)VRAM_A;
-
     R_InitTextures();
     R_InitSprites();
     R_InitPalettes();
@@ -413,7 +421,7 @@ int R_PadTextureDims(int n)
 {
     int mask = MINTEXSIZE;
     
-    while(mask < MAXTEXSIZE)
+    while(mask <= MAXTEXSIZE)
     {
         if(n == mask || (n & (mask-1)) == n)
             return mask;
@@ -568,14 +576,10 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     pw      = R_PadTextureDims(width);
     ph      = R_PadTextureDims(height);
     ext     = gfx[4];
-    size    = (pw * ph);
+    size    = (pw * height);
 
     if(ext)
-    {
-        spritetiles[spritenum]  = gfx[5];
-        tileinfo[spritenum]     = (spritetile_t*)(gfx + 6);
-        data                    = (byte*)(gfx + 6 + ((sizeof(spritetile_t) * spritetiles[spritenum]) >> 1));
-    }
+        data = (byte*)(gfx + 6 + ((sizeof(short) * spritetiles[spritenum]) >> 1));
     else
         data = (byte*)(gfx + 5);
 
@@ -584,14 +588,7 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
 
     if(gfx_spr_params[spritenum] == 0)
     {
-        byte* out = NULL;
-
-        spritewidth[spritenum]      = width;
-        spriteheight[spritenum]     = height;
-        spriteoffset[spritenum]     = gfx[2];
-        spritetopoffset[spritenum]  = gfx[3];
-
-        out = (byte*)R_PadTexture(data, width, height, pw, ph, ext);
+        byte* out = (byte*)R_PadTexture(data, width, height, pw, ph, ext);
         data = out;
     }
 

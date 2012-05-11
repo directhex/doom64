@@ -408,7 +408,7 @@ void Wad_AddOutputSprite(d64ExSpriteLump_t* sprite)
             size += (sizeof(short)*256);
         }
 
-        tilesize = sizeof(d64ExSpriteTile_t) * sprite->numtiles;
+        tilesize = sizeof(short) * sprite->numtiles;
         size += tilesize;
         size += 2;
     }

@@ -214,7 +214,6 @@ void I_Init(void)
 void I_ClearFrame(void)
 {
     int i;
-    int f;
 
     GFX_CONTROL         = GL_FOG | GL_BLEND | GL_TEXTURE_2D;
     GFX_ALPHA_TEST      = 0;
@@ -236,17 +235,14 @@ void I_ClearFrame(void)
     MATRIX_CONTROL      = GL_TEXTURE;
     MATRIX_IDENTITY     = 0;
 
-    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x500;
+    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x700;
     GFX_FOG_COLOR = sky ? sky->fogcolor : RGB15(0, 0, 0);
 
-    for(i = 0; i < 16; i++)
-        GFX_FOG_TABLE[i] = 0;
-
-    for(i = 16, f = 0; i < 32; i++)
-        GFX_FOG_TABLE[i] = f++;
+    for(i = 0; i < 32; i++)
+        GFX_FOG_TABLE[i] = (i * 4);
 
     GFX_FOG_TABLE[31] = 0x7F;
-    GFX_FOG_OFFSET = 0x7BFE;
+    GFX_FOG_OFFSET = 0x7F3F;
 }
 
 //
@@ -266,6 +262,40 @@ dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index
         Z_VTouch(vramzone, vblock[index]);
 
     return true;
+}
+
+//
+// I_FinishFrame
+//
+
+void I_FinishFrame(void)
+{
+    int free = Z_FreeVMemory(vramzone);
+    
+    swiWaitForVBlank();
+    DC_FlushAll();
+
+    if((frametic & 1) == 0)
+    {
+        vramSetBankA(VRAM_A_LCD);
+        vramSetBankB(VRAM_B_LCD);
+        dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)VRAM_A, free);
+        vramSetBankA(VRAM_A_TEXTURE);
+        vramSetBankB(VRAM_B_TEXTURE);
+    }
+    else
+    {
+        vramSetBankC(VRAM_C_LCD);
+        vramSetBankD(VRAM_D_LCD);
+        dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)VRAM_C, free);
+        vramSetBankC(VRAM_C_TEXTURE);
+        vramSetBankD(VRAM_D_TEXTURE);
+    }
+
+    gfx_base = (frametic & 1) == 0 ? (uint32*)VRAM_C : (uint32*)VRAM_A;
+    frametic++;
+
+    GFX_FLUSH = 1;
 }
 
 //

@@ -601,7 +601,11 @@ drawframe:
         
         // Update display, next frame, with current state.
 
-        if(draw && !action) draw();
+        if(draw && !action)
+        {
+            draw();
+            I_FinishFrame();
+        }
         
         // TODO
         /*

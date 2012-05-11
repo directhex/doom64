@@ -90,52 +90,39 @@ void G_BuildTiccmd(ticcmd_t* cmd)
     if(buttons & KEY_LEFT)
         cmd->angleturn += angleturn[turnheld + (speed ? SLOWTURNTICS : 0)] << 2;
     
-    if(((buttons & KEY_L) && (buttons & KEY_R)) &&
-        buttons & (KEY_UP|KEY_DOWN))
+    if(buttons & KEY_X || buttons & KEY_Y)
     {
         cmd->buttons |= BT_CHANGE;
 
-        if(buttons & KEY_UP)
+        if(buttons & KEY_X)
         {
             cmd->buttons |= BT_NEXTWEAP;
-            buttons &= ~KEY_UP;
+            buttons &= ~KEY_X;
         }
-        else if(buttons & KEY_DOWN)
+        else if(buttons & KEY_Y)
         {
             cmd->buttons |= BT_PREVWEAP;
-            buttons &= ~KEY_DOWN;
+            buttons &= ~KEY_Y;
         }
     }
-    else
-    {
-        if(buttons & KEY_R)
-            side -= sidemove[speed];
-        
-        if(buttons & KEY_L)
-            side += sidemove[speed];
 
-        if(buttons & KEY_UP)
-            forward -= forwardmove[speed];
-        
-        if(buttons & KEY_DOWN)
-            forward += forwardmove[speed];
-    }
+    if(buttons & KEY_R)
+        side -= sidemove[speed];
+    
+    if(buttons & KEY_L)
+        side += sidemove[speed];
+
+    if(buttons & KEY_UP)
+        forward -= forwardmove[speed];
+    
+    if(buttons & KEY_DOWN)
+        forward += forwardmove[speed];
     
     if(buttons & KEY_B)
         cmd->buttons |= BT_ATTACK;
     
     if(buttons & KEY_A)
         cmd->buttons |= BT_USE;
-    
-    // TODO
-    /*if(forcejump != 2)
-    {
-        if(gameflags & GF_ALLOWJUMP || forcejump)
-        {
-            if(pc->key[PCKEY_JUMP])
-                cmd->buttons2 |= BT2_JUMP;
-        }
-    }*/
     
     
     if(forward > MAXPLMOVE)

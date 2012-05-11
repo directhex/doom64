@@ -58,14 +58,7 @@ extern short        *spriteheight;
 extern short        *spriteoffset;
 extern short        *spritetopoffset;
 extern byte         *spritetiles;
-
-typedef struct
-{
-    word dw;
-    word dh;
-} spritetile_t;
-
-extern spritetile_t **tileinfo;
+extern short        **spritetilelist;
 
 subsector_t*    R_PointInSubsector(fixed_t x, fixed_t y);
 angle_t         R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
@@ -79,6 +72,8 @@ void            R_DrawFrame(void);
 // R_DATA
 //
 
+#define GFX_BUFFER_SIZE     0x40000
+
 extern int          t_start;
 extern int          t_end;
 extern int          numtextures;
@@ -86,7 +81,7 @@ extern int          s_start;
 extern int          s_end;
 extern int          numgfxsprites;
 extern uint32*      gfx_base;
-extern byte         gfx_tex_buffer[0x40000];
+extern byte         gfx_tex_buffer[GFX_BUFFER_SIZE];
 
 void            R_PrecacheLevel(void);
 int             R_GetTextureSize(int size);

@@ -144,7 +144,7 @@ void Z_Init(void)
 {
     memset(allocated_blocks, 0, sizeof(allocated_blocks));
 
-    Z_InitVram(gfx_tex_buffer, 0x40000);
+    Z_InitVram(gfx_tex_buffer, GFX_BUFFER_SIZE);
 
 #ifdef ZONEFILE
     atexit(Z_CloseLogFile); // exit handler
@@ -680,7 +680,7 @@ vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx)
     vramblock_t *base;
 
     if(size & 7)
-        I_Error("Z_Valloc: size %i must be aligned to 8 bytes", size);
+        I_Error("Z_VAlloc: size %i must be aligned to 8 bytes", size);
 
     // if there is a free block behind the rover,
     //  back up over them
@@ -697,13 +697,13 @@ vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx)
         if(rover == start)
         {
             // scanned all the way around the list
-            //I_Error("Z_VAlloc: failed on allocation of %i bytes", size);
             return NULL;
         }
 	
         if(rover->tag != PU_FREE)
         {
-            if((frametic - rover->prevtic) >= 2)
+            if((frametic - rover->prevtic) >= 2 &&
+                rover->tag == PU_CACHE)
             {
                 base = base->prev;
 
@@ -720,9 +720,6 @@ vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx)
         }
 
     } while(base->tag != PU_FREE || base->size < size);
-
-    if((base->block + size) - gfx_tex_buffer >= 0x3B000)
-        return NULL;
 
     // found a block big enough
     extra = base->size - size;

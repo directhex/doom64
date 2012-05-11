@@ -92,7 +92,6 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     int r1, r2;
     int g1, g2;
     int b1, b2;
-    //gl_texture_data *tex;
 
     r1 = l1->active_r;
     g1 = l1->active_g;
@@ -162,12 +161,12 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
         }
     }
 
-    x1 = F2INT(seg->v1->x);
-    x2 = F2INT(seg->v2->x);
-    y1 = F2INT(seg->v1->y);
-    y2 = F2INT(seg->v2->y);
-    z1 = F2INT(top);
-    z2 = F2INT(bottom);
+    x1 = F2DSFIXED(seg->v1->x);
+    x2 = F2DSFIXED(seg->v2->x);
+    y1 = F2DSFIXED(seg->v1->y);
+    y2 = F2DSFIXED(seg->v2->y);
+    z1 = F2DSFIXED(top);
+    z2 = F2DSFIXED(bottom);
 
     R_LoadTexture(texture,
         (seg->linedef->flags & ML_HMIRROR),
@@ -415,7 +414,7 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     tsy     = leafs[ss->leaf].vertex->y;
     mapx    = 0;
     mapy    = 0;
-    z       = F2INT(height);
+    z       = F2DSFIXED(height);
 
     R_LoadTexture(texture, false, false);
 
@@ -429,8 +428,8 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     tv = length - ty;                       \
     mapy = length;                          \
     tsy = v->y;                             \
-    x = F2INT(v->x);                        \
-    y = F2INT(v->y);                        \
+    x = F2DSFIXED(v->x);                    \
+    y = F2DSFIXED(v->y);                    \
     GFX_TEX_COORD   = COORD_PACK(tu, tv);   \
     GFX_VERTEX16    = VERTEX_PACK(x, z);    \
     GFX_VERTEX16    = VERTEX_PACK(y, 0)
@@ -579,12 +578,12 @@ static void R_DrawSprite(mobj_t* thing)
         tx2 = width - flipoffs;
     }
 
-    x1 = F2INT(thing->x) - FixedMul(viewcos[0], tx1);
-    y1 = F2INT(thing->y) - FixedMul(viewsin[0], tx1);
-    x2 = F2INT(thing->x) + FixedMul(viewcos[0], tx2);
-    y2 = F2INT(thing->y) + FixedMul(viewsin[0], tx2);
-    z1 = F2INT(thing->z) + offy - height;
-    z2 = F2INT(thing->z) + offy;
+    x1 = INT2DSFIXED(F2INT(thing->x) - FixedMul(viewcos[0], tx1));
+    y1 = INT2DSFIXED(F2INT(thing->y) - FixedMul(viewsin[0], tx1));
+    x2 = INT2DSFIXED(F2INT(thing->x) + FixedMul(viewcos[0], tx2));
+    y2 = INT2DSFIXED(F2INT(thing->y) + FixedMul(viewsin[0], tx2));
+    z1 = INT2DSFIXED(F2INT(thing->z) + offy - height);
+    z2 = INT2DSFIXED(F2INT(thing->z) + offy);
 
     GFX_POLY_FORMAT = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
     GFX_COLOR       = color;
@@ -634,14 +633,14 @@ void R_DrawScene(void)
 
 void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 {
-    rcolor          color;
-    short           alpha;
-    fixed_t         x;
-    fixed_t         y;
-    int             width;
-    int             height;
+    rcolor      color;
+    short       alpha;
+    fixed_t     x;
+    fixed_t     y;
+    int         width;
+    int         height;
 
-    alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3) << 15;
+    alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3);
 
     if(!R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, 0, &x, &y, &width, &height))
         return;
@@ -656,13 +655,13 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     }
     
     if(psp->state->frame & FF_FULLBRIGHT || nolights)
-        color = alpha | RGB15(31, 31, 31);
+        color = RGB15(31, 31, 31);
     else
     {
         light_t *light;
 
         light = &lights[sector->colors[LIGHT_THING]];
-        color = alpha | RGB8(light->active_r, light->active_g, light->active_b);
+        color = RGB8(light->active_r, light->active_g, light->active_b);
     }
 
     MATRIX_CONTROL  = GL_PROJECTION;
@@ -670,7 +669,7 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     MATRIX_CONTROL  = GL_MODELVIEW;
     MATRIX_IDENTITY = 0;
     GFXORTHO(0);
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_POLY_FORMAT = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
     GFX_COLOR       = color;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_TEX_COORD   = COORD_PACK(0, 0);

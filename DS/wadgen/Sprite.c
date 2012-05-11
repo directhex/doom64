@@ -299,47 +299,34 @@ void Sprite_Convert(int lump)
         {
             int s;
             int cols[8];
-            int rows[8];
             int numcols;
-            int numrows;
             int th;
             int c;
-            int r;
 
             if(exs->sprite.width & 7)
                 WGen_Complain("Sprite_Convert: %s's width is not in multiples of 8", romWadFile.lump[lump].name);
 
             memset(cols, 0, sizeof(int) * 8);
-            memset(rows, 0, sizeof(int) * 8);
 
-            for(numcols = 0, s = 8; s < 256; s <<= 1)
-            {
-                if(exs->sprite.width & s)
-                    cols[numcols++] = s;
-            }
-
-            th = exs->sprite.height;
+            th = exs->sprite.width;
 
             if(th & 7)
                 th = (th ^ (th & 7)) + 8;
 
-            for(numrows = 0, s = 8; s < 256; s <<= 1)
+            for(numcols = 0, s = 8; s < 256; s <<= 1)
             {
+                if(s > th)
+                    break;
+
                 if(th & s)
-                    rows[numrows++] = s;
+                    cols[numcols++] = s;
             }
 
-            exs->numtiles = (numcols * numrows);
-            exs->tiles = (d64ExSpriteTile_t*)Mem_Alloc(sizeof(d64ExSpriteTile_t) * exs->numtiles);
+            exs->numtiles = numcols;
+            exs->tiles = (short*)Mem_Alloc(sizeof(short) * exs->numtiles);
 
-            for(i = 0, c = 0; c < numcols; c++, i++)
-            {
-                for(r = 0; r < numrows; r++, i++)
-                {
-                    exs->tiles[i].dsw = WGen_GetSizeDS(cols[c]);
-                    exs->tiles[i].dsh = WGen_GetSizeDS(rows[r]);
-                }
-            }
+            for(c = 0; c < numcols; c++)
+                exs->tiles[c] = WGen_GetSizeDS(cols[c]);
         }
     }
 }

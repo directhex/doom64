@@ -39,9 +39,7 @@ short           *spritetopoffset;
 short           *spritewidth;
 short           *spriteheight;
 byte            *spritetiles;
-spritetile_t    **tileinfo;
-
-static int      rframe = 0;
+short           **spritetilelist;
 
 //
 // R_PointToAngle2
@@ -215,7 +213,7 @@ void R_DrawFrame(void)
 
     glPushMatrix();
 
-    MATRIX_TRANSLATE    = -INT2DSFIXED(16);
+    MATRIX_TRANSLATE    = -(16 << 4);
     MATRIX_TRANSLATE    = -0;
     MATRIX_TRANSLATE    = -0;
 
@@ -226,12 +224,12 @@ void R_DrawFrame(void)
     glRotatef(-TRUEANGLES(viewpitch) + 90, 1.0f, 0.0f, 0.0f);
     glRotatef(-TRUEANGLES(viewangle) + 90, 0.0f, 1.0f, 0.0f);
 
-    MATRIX_SCALE        =  0x10000;
-    MATRIX_SCALE        =  0x10000;
-    MATRIX_SCALE        = -0x10000;
-    MATRIX_TRANSLATE    = -F2INT(viewx);
-    MATRIX_TRANSLATE    = -F2INT(viewz);
-    MATRIX_TRANSLATE    = -F2INT(viewy);
+    MATRIX_SCALE        =  0x1000;
+    MATRIX_SCALE        =  0x1000;
+    MATRIX_SCALE        = -0x1000;
+    MATRIX_TRANSLATE    = -F2DSFIXED(viewx);
+    MATRIX_TRANSLATE    = -F2DSFIXED(viewz);
+    MATRIX_TRANSLATE    = -F2DSFIXED(viewy);
 
     D_IncValidCount();
     D_UpdateTiccmd();
@@ -242,43 +240,10 @@ void R_DrawFrame(void)
     psp = &player->psprites[ps_weapon];
     for(psp = player->psprites; psp < &player->psprites[NUMPSPRITES]; psp++)
     {
-        if(psp->state)
+        if(psp->state && player->cameratarget == player->mo)
             R_DrawPSprite(psp, player->mo->subsector->sector, player);
     }
 
-    //if(gfx_tex_stride > 0)
-    {
-        int free = Z_FreeVMemory(vramzone);
-        swiWaitForVBlank();
-
-        DC_FlushAll();
-
-        if(rframe == 0)
-        {
-            vramSetBankA(VRAM_A_LCD);
-            vramSetBankB(VRAM_B_LCD);
-            dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)gfx_base, free);
-            vramSetBankA(VRAM_A_TEXTURE);
-            vramSetBankB(VRAM_B_TEXTURE);
-        }
-        else
-        {
-            vramSetBankC(VRAM_C_LCD);
-            vramSetBankD(VRAM_D_LCD);
-            dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)gfx_base, free);
-            vramSetBankC(VRAM_C_TEXTURE);
-            vramSetBankD(VRAM_D_TEXTURE);
-        }
-    }
-
-    gfx_base = rframe == 0 ? (uint32*)VRAM_C : (uint32*)VRAM_A;
-    rframe ^= 1;
-
     glPopMatrix(2);
-
-    frametic++;
-
-    GFX_FLUSH = 1;
-    Z_SetVAllocList(vramzone);
 }
 
