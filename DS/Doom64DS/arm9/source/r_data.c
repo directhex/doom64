@@ -27,20 +27,13 @@ static void R_CacheTexturePalette(int index)
     byte* gfx;
     byte* pal;
     int size;
-    int j;
-    uint16 paldata[16];
+    uint16* paldata;
 
     gfx = (byte*)W_CacheLumpNum(t_start + index, PU_STATIC);
     size = (((8 << gfx[0]) * (8 << gfx[1])) >> 1);
     pal = (gfx + 4 + size);
-
     size = (16 << 1);
-
-    for(j = 0; j < 16; j++)
-    {
-        paldata[j] = RGB8(pal[0], pal[1], pal[2]);
-        pal += 4;
-    }
+    paldata = (uint16*)pal;
 
     memcpy32(((byte*)VRAM_E) + gfx_texpal_stride, paldata, size);
     gfx_texpal_params[index] = GFX_VRAM_OFFSET((VRAM_E + (gfx_texpal_stride >> 2)));
@@ -50,10 +43,10 @@ static void R_CacheTexturePalette(int index)
 }
 
 //
-// R_CacheSpritePalette
+// R_SetupSpriteData
 //
 
-static void R_CacheSpritePalette(int spritenum)
+static void R_SetupSpriteData(int spritenum)
 {
     short* gfx;
     byte* data;
@@ -175,7 +168,7 @@ static void R_InitPalettes(void)
     for(i = 0; i < numgfxsprites; i++)
     {
         if(gfx_sprpal_params[i] == 0)
-            R_CacheSpritePalette(i);
+            R_SetupSpriteData(i);
     }
 
     for(i = 1; i < NUMSPRITES; i++)
@@ -490,7 +483,7 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     int w, dw;
     int h, dh;
     byte* data;
-    byte* pal;
+    short* pal;
     uint32 flags;
     int size;
     uint32 stride;
@@ -506,7 +499,7 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     h = (8 << dh);
     data = gfx + 4;
     size = ((w * h) >> 1);
-    pal = (gfx + 4 + size);
+    pal = (short*)(gfx + 4 + size);
 
     if(!I_AllocVBlock(gfx_tex_params, gfx_tex_blocks, data, texture, size))
     {
@@ -519,7 +512,7 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
 
     flags = TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T;
         
-    if(pal[0] == 0 && pal[1] == 0 && pal[2] == 0)
+    if(pal[0] == 0)
         flags |= GL_TEXTURE_COLOR0_TRANSPARENT;
 
     if(flip_s)

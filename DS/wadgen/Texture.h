@@ -36,6 +36,7 @@ typedef struct
 	d64ExTextureHeader_t header;
 	cache data;
 	dPalette_t palette[MAXPALETTES][NUMTEXPALETTES];
+    short dspalette[MAXPALETTES][NUMTEXPALETTES];
 	int size;
 	int lumpRef;
 } d64ExTexture_t;

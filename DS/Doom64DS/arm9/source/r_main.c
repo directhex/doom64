@@ -17,7 +17,6 @@ angle_t         viewpitch;
 fixed_t         quakeviewx;
 fixed_t         quakeviewy;
 angle_t         viewangleoffset;
-rcolor          flashcolor;
 fixed_t         viewsin[2];
 fixed_t         viewcos[2];
 int             frametic = 0;
@@ -237,13 +236,13 @@ void R_DrawFrame(void)
     R_RenderView();
     R_DrawScene();
 
+    glPopMatrix(2);
+
     psp = &player->psprites[ps_weapon];
     for(psp = player->psprites; psp < &player->psprites[NUMPSPRITES]; psp++)
     {
         if(psp->state && player->cameratarget == player->mo)
             R_DrawPSprite(psp, player->mo->subsector->sector, player);
     }
-
-    glPopMatrix(2);
 }
 

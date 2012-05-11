@@ -7,6 +7,7 @@
 #include "p_local.h"
 #include "g_game.h"
 #include "s_sound.h"
+#include "st_main.h"
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -635,6 +636,7 @@ void TestDrawer(void)
 {
     I_ClearFrame();
     R_DrawFrame();
+    ST_Drawer();
 }
 
 //
@@ -656,7 +658,7 @@ void D_DoomMain(void)
     I_Printf("P_Init\n");
     P_Init();
     I_Printf("ST_Init\n");
-    //ST_Init(); // TODO
+    ST_Init();
     I_Printf("S_Init\n");
     //S_Init(); // TODO
 

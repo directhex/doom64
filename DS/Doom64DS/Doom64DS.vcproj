@@ -230,6 +230,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\st_main.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\tables.c"
 					>
 				</File>
@@ -327,6 +331,10 @@
 				</File>
 				<File
 					RelativePath=".\arm9\source\sounds.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\st_main.h"
 					>
 				</File>
 				<File

@@ -110,6 +110,7 @@ void Texture_CreateRomLump(d64RawTexture_t *tex, cache data)
 void Texture_CreateExLump(d64ExTexture_t *pcTex, d64RawTexture_t *romTex)
 {
     int i = 0;
+    int j;
     int w, h;
     int dw, dh;
     
@@ -131,6 +132,17 @@ void Texture_CreateExLump(d64ExTexture_t *pcTex, d64RawTexture_t *romTex)
     
     for(i = 0; i < romTex->header.numpal; i++)
         WGen_ConvertN64Pal(pcTex->palette[i], romTex->palette + (i * NUMTEXPALETTES), NUMTEXPALETTES);
+
+    for(i = 0; i < romTex->header.numpal; i++)
+    {
+        for(j = 0; j < 16; j++)
+            pcTex->dspalette[i][j] =
+            RGBDS(
+            pcTex->palette[i][j].r,
+            pcTex->palette[i][j].g,
+            pcTex->palette[i][j].b
+            );
+    }
 }
 
 //**************************************************************

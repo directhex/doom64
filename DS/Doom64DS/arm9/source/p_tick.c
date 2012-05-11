@@ -305,8 +305,8 @@ int P_Ticker(void)
     P_UpdateSpecials();
     P_RunMacros();
     
-    /*ST_Ticker();
-    AM_Ticker();*/
+    ST_Ticker();
+    /*AM_Ticker();*/
     
     // for par times
     leveltime++;

@@ -15,7 +15,6 @@ extern angle_t      viewpitch;
 extern fixed_t      quakeviewx;
 extern fixed_t      quakeviewy;
 extern angle_t      viewangleoffset;
-extern rcolor       flashcolor;
 extern fixed_t      viewsin[2];
 extern fixed_t      viewcos[2];
 extern int          frametic;

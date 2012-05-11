@@ -702,7 +702,7 @@ vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx)
 	
         if(rover->tag != PU_FREE)
         {
-            if((frametic - rover->prevtic) >= 2 &&
+            if(rover->prevtic < frametic &&
                 rover->tag == PU_CACHE)
             {
                 base = base->prev;

@@ -26,6 +26,7 @@ typedef struct
 	word palPos;	//no longer used
 	cache data;
 	dPalette_t palette[256];
+    short dspalette[256];
 	int lumpRef;
 } gfxEx_t;
 

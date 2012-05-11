@@ -475,7 +475,7 @@ void Wad_AddOutputTexture(d64ExTexture_t* tex)
 	int size;
 	char name[8];
 	int pos = 0;
-	const int palSize = ((tex->header.numpal * NUMTEXPALETTES) * sizeof(dPalette_t));
+	const int palSize = ((tex->header.numpal * NUMTEXPALETTES) * sizeof(short));
 
 	strncpy(name, romWadFile.lump[tex->lumpRef].name, 8);
 	size = ((sizeof(d64ExTextureHeader_t) + tex->size) + palSize);
@@ -488,7 +488,7 @@ void Wad_AddOutputTexture(d64ExTexture_t* tex)
 	memcpy((data+pos), tex->data, tex->size);
 	pos += tex->size;
 
-	memcpy(data+pos, tex->palette, palSize);
+	memcpy(data+pos, tex->dspalette, palSize);
 
 	Wad_AddOutputLump(name, size, data);
 
@@ -511,7 +511,7 @@ void Wad_AddOutputGfx(gfxEx_t* gfx)
 	int pos = 0;
 	int i = 0;
 
-	size = (8 + 768) + (gfx->width*gfx->height);
+	size = (8 + 512) + (gfx->width*gfx->height);
 	strncpy(name, romWadFile.lump[gfx->lumpRef].name, 8);
 
 	data = (byte*)Mem_Alloc(size);
@@ -522,11 +522,7 @@ void Wad_AddOutputGfx(gfxEx_t* gfx)
 	memcpy((data+pos), gfx->data, (gfx->width*gfx->height));
 	pos += (gfx->width*gfx->height);
 
-	for(i = 0; i < 256; i++)
-	{
-		memcpy((data+pos), &gfx->palette[i], 3);
-		pos+=3;
-	}
+	memcpy((data+pos), &gfx->dspalette[i], sizeof(short) * 256);
 
 	Wad_AddOutputLump(name, size, data);
 

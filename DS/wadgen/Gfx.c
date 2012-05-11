@@ -112,6 +112,7 @@ void Gfx_CreateEXLump(gfxEx_t* pcGfx, gfxRom_t* romGfx)
 {
 	int w = 0;
 	int h = 0;
+    int i;
 
 	ZeroMemory(pcGfx, sizeof(gfxEx_t));
 
@@ -131,6 +132,9 @@ void Gfx_CreateEXLump(gfxEx_t* pcGfx, gfxRom_t* romGfx)
 	}
 
 	WGen_ConvertN64Pal(pcGfx->palette, romGfx->palette, 256);
+
+    for(i = 0; i < 256; i++)
+        pcGfx->dspalette[i] = RGBDS(pcGfx->palette[i].r, pcGfx->palette[i].g, pcGfx->palette[i].b);
 }
 
 //**************************************************************
@@ -154,6 +158,9 @@ void Gfx_CreateFirePalette(gfxEx_t* pcGfx)
 
 		pal += 16;
 	}
+
+    for(i = 0; i < 256; i++)
+        pcGfx->dspalette[i] = RGBDS(pcGfx->palette[i].r, pcGfx->palette[i].g, pcGfx->palette[i].b);
 }
 
 //**************************************************************
@@ -201,6 +208,9 @@ void Gfx_GetCloudLump(gfxEx_t* pcGfx)
 	}
 
 	WGen_ConvertN64Pal(pcGfx->palette, (word*)(romWadFile.lumpcache[l] + 4104), 256);
+
+    for(i = 0; i < 256; i++)
+        pcGfx->dspalette[i] = RGBDS(pcGfx->palette[i].r, pcGfx->palette[i].g, pcGfx->palette[i].b);
 
 	pcGfx->lumpRef = l;
 }

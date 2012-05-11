@@ -168,7 +168,7 @@ void I_Init(void)
 
     REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_B | POWER_SWAP_LCDS;
     REG_DISPCNT     = MODE_0_3D;
-    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG1_ACTIVE;
+    REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG3_ACTIVE;
     VRAM_A_CR       = VRAM_ENABLE;
     VRAM_B_CR       = VRAM_ENABLE;
     VRAM_C_CR       = VRAM_ENABLE;
@@ -177,6 +177,7 @@ void I_Init(void)
     VRAM_F_CR       = VRAM_ENABLE;
     VRAM_G_CR       = VRAM_ENABLE;
     VRAM_H_CR       = VRAM_ENABLE | VRAM_H_SUB_BG;
+    VRAM_I_CR       = VRAM_ENABLE | VRAM_I_SUB_BG_0x06208000;
     TIMER0_CR       = TIMER_ENABLE | TIMER_DIV_1024;
     TIMER1_CR       = TIMER_ENABLE | TIMER_CASCADE;
 
@@ -322,13 +323,6 @@ void I_StartTic(void)
         ev.data = keys;
         D_PostEvent(&ev);
     }
-
-    /*if((keys = keysHeld()))
-    {
-        ev.type = ev_btnheld;
-        ev.data = keys;
-        D_PostEvent(&ev);
-    }*/
 }
 
 //
