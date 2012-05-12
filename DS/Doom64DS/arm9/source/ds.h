@@ -5,6 +5,7 @@
 #include <fat.h>
 #include <stdio.h>
 #include "doomtype.h"
+#include "doomdef.h"
 #include "z_zone.h"
 
 void I_Init(void);
@@ -59,29 +60,40 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
                     GFX_FORMAT(fmt) |   \
                     GFX_VRAM_OFFSET(offs)
 
-#define GFXORTHO(znear)                                                                     \
-    MATRIX_CONTROL      = GL_PROJECTION;                                                    \
-    MATRIX_IDENTITY     = 0;                                                                \
-    MATRIX_CONTROL      = GL_MODELVIEW;                                                     \
-    MATRIX_IDENTITY     = 0;                                                                \
-    MATRIX_MULT4x4      = 0x400;                                                            \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0xFFFFFAAB;                                                       \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = divf32(-0x2000, 0x4000 - inttof32(znear));                        \
-    MATRIX_MULT4x4      = 0;                                                                \
-    MATRIX_MULT4x4      = 0xFFFFF000;                                                       \
-    MATRIX_MULT4x4      = 0x1000;                                                           \
-    MATRIX_MULT4x4      = -divf32(0x4000 + inttof32(znear), 0x4000 - inttof32(znear));      \
-    MATRIX_MULT4x4      = 0x1000;                                                           \
-    MATRIX_SCALE        = 0x80000;                                                          \
-    MATRIX_SCALE        = 0x80000;                                                          \
+#define GFX_ORTHO(znear)                                                                \
+    MATRIX_CONTROL      = GL_PROJECTION;                                                \
+    MATRIX_IDENTITY     = 0;                                                            \
+    MATRIX_CONTROL      = GL_MODELVIEW;                                                 \
+    MATRIX_IDENTITY     = 0;                                                            \
+    MATRIX_MULT4x4      = 0x400;                                                        \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0xFFFFFAAB;                                                   \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = divf32(-0x2000, 0x4000 - inttof32(znear));                    \
+    MATRIX_MULT4x4      = 0;                                                            \
+    MATRIX_MULT4x4      = 0xFFFFF000;                                                   \
+    MATRIX_MULT4x4      = 0x1000;                                                       \
+    MATRIX_MULT4x4      = -divf32(0x4000 + inttof32(znear), 0x4000 - inttof32(znear));  \
+    MATRIX_MULT4x4      = 0x1000;                                                       \
+    MATRIX_SCALE        = 0x80000;                                                      \
+    MATRIX_SCALE        = 0x80000;                                                      \
     MATRIX_SCALE        = 0x80000
+
+#define GFX_SCREENRECT()                                        \
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;                        \
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, 0);              \
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(0, SCREENHEIGHT);             \
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, SCREENHEIGHT);   \
+    GFX_VERTEX16    = VERTEX_PACK(0, 0)
 
 #endif // __DS_MAIN__

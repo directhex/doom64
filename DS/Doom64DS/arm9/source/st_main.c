@@ -156,7 +156,7 @@ void ST_UpdateFlash(void)
     if(p->powers[pw_invulnerability] > 61 || (p->powers[pw_invulnerability] & 8))
     {
         st_flashcolor = RGB15(31, 31, 31);
-        st_flashalpha = 26;
+        st_flashalpha = 16;
     }
     // bfg flash (green)
     else if(p->bfgcount)
@@ -218,7 +218,7 @@ void ST_UpdateFlash(void)
 
 void ST_Drawer(void)
 {
-    GFXORTHO(0);
+    GFX_ORTHO(0);
 
     if(st_flashcolor)
     {
@@ -232,15 +232,20 @@ void ST_Drawer(void)
         GFX_TEX_FORMAT  = 0;
         GFX_PAL_FORMAT  = 0;
         GFX_COLOR       = st_flashcolor;
-        GFX_BEGIN       = GL_TRIANGLE_STRIP;
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
-        GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, 0);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
-        GFX_VERTEX16    = VERTEX_PACK(0, SCREENHEIGHT);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
-        GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, SCREENHEIGHT);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_SCREENRECT();
+
+        GFX_POLY_FORMAT =
+            POLY_ALPHA(st_flashalpha)   |
+            POLY_ID(1)                  |
+            POLY_CULL_NONE              |
+            POLY_MODULATION             |
+            POLY_NEW_DEPTH              |
+            POLY_DEPTHTEST_EQUAL;
+
+        GFX_TEX_FORMAT  = 0;
+        GFX_PAL_FORMAT  = 0;
+        GFX_COLOR       = st_flashcolor;
+        GFX_SCREENRECT();
     }
 }
 
