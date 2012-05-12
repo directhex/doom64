@@ -162,7 +162,7 @@ void ST_UpdateFlash(void)
     else if(p->bfgcount)
     {
         st_flashcolor = RGB15(0, 31, 0);
-        st_flashalpha = ((p->bfgcount << 2) >> 3);
+        st_flashalpha = ((p->bfgcount << 1) >> 3);
     }
     // damage and strength flash (red)
     else if(p->damagecount || (p->powers[pw_strength] > 1))
@@ -208,7 +208,7 @@ void ST_UpdateFlash(void)
             c1 = ST_MAXBONCOUNT;
 
         st_flashcolor = RGB15(31, 31, 15);
-        st_flashalpha = ((c1 << 1) >> 3);
+        st_flashalpha = ((c1 + (c1 >> 1)) >> 3);
     }
 }
 
@@ -218,15 +218,17 @@ void ST_UpdateFlash(void)
 
 void ST_Drawer(void)
 {
-    MATRIX_CONTROL  = GL_PROJECTION;
-    MATRIX_IDENTITY = 0;
-    MATRIX_CONTROL  = GL_MODELVIEW;
-    MATRIX_IDENTITY = 0;
     GFXORTHO(0);
 
     if(st_flashcolor)
     {
-        GFX_POLY_FORMAT = POLY_ALPHA(st_flashalpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+        GFX_POLY_FORMAT =
+            POLY_ALPHA(st_flashalpha)   |
+            POLY_ID(1)                  |
+            POLY_CULL_NONE              |
+            POLY_MODULATION             |
+            POLY_NEW_DEPTH;
+
         GFX_TEX_FORMAT  = 0;
         GFX_PAL_FORMAT  = 0;
         GFX_COLOR       = st_flashcolor;

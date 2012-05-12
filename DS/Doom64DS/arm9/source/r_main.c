@@ -238,7 +238,6 @@ void R_DrawFrame(void)
 
     glPopMatrix(2);
 
-    psp = &player->psprites[ps_weapon];
     for(psp = player->psprites; psp < &player->psprites[NUMPSPRITES]; psp++)
     {
         if(psp->state && player->cameratarget == player->mo)

@@ -585,7 +585,14 @@ static void R_DrawSprite(mobj_t* thing)
     z1 = INT2DSFIXED(F2INT(thing->z) + offy - height);
     z2 = INT2DSFIXED(F2INT(thing->z) + offy);
 
-    GFX_POLY_FORMAT = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
+    GFX_POLY_FORMAT =
+        POLY_ALPHA(alpha)   |
+        POLY_ID(0)          |
+        POLY_CULL_BACK      |
+        POLY_MODULATION     |
+        POLY_FOG            |
+        POLY_NEW_DEPTH;
+
     GFX_COLOR       = color;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_TEX_COORD   = COORD_PACK(tu1, 0);
@@ -639,6 +646,7 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     fixed_t     y;
     int         width;
     int         height;
+    uint32      polyflags;
 
     alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3);
 
@@ -664,12 +672,14 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
         color = RGB8(light->active_r, light->active_g, light->active_b);
     }
 
-    MATRIX_CONTROL  = GL_PROJECTION;
-    MATRIX_IDENTITY = 0;
-    MATRIX_CONTROL  = GL_MODELVIEW;
-    MATRIX_IDENTITY = 0;
     GFXORTHO(0);
-    GFX_POLY_FORMAT = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+
+    polyflags = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+
+    if(psp == &players->psprites[ps_flash] && psp->state->sprite == SPR_PLAS)
+        polyflags |= POLY_DEPTHTEST_EQUAL;
+
+    GFX_POLY_FORMAT = polyflags;
     GFX_COLOR       = color;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_TEX_COORD   = COORD_PACK(0, 0);

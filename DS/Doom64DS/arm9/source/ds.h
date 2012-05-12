@@ -7,18 +7,6 @@
 #include "doomtype.h"
 #include "z_zone.h"
 
-#define COORD_PACK(u, v)    (((u << 4) & 0xFFFF) | (((v << 4)) << 16))
-#define GFX_SIZE_S(x)       (x << 20)
-#define GFX_SIZE_T(x)       (x << 23)
-#define GFX_FORMAT(x)       (x << 26)
-#define GFX_VRAM_OFFSET(x)  (((uint32)x >> 3) & 0xFFFF)
-#define GFX_TEXTURE(f, w, h, fmt, offs) \
-                    f               |   \
-                    GFX_SIZE_S(w)   |   \
-                    GFX_SIZE_T(h)   |   \
-                    GFX_FORMAT(fmt) |   \
-                    GFX_VRAM_OFFSET(offs)
-
 void I_Init(void);
 void I_Error(const char *s, ...);
 void I_Printf(const char *s, ...);
@@ -54,6 +42,22 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
 
 #define SHORT(x) x
 #define LONG(x) x
+
+#define POLY_NEW_DEPTH          (1 << 11)
+#define POLY_DEPTHTEST_EQUAL    (1 << 14)
+#define COORD_PACK(u, v)        (((u << 4) & 0xFFFF) | (((v << 4)) << 16))
+
+#define GFX_SIZE_S(x)       (x << 20)
+#define GFX_SIZE_T(x)       (x << 23)
+#define GFX_FORMAT(x)       (x << 26)
+#define GFX_VRAM_OFFSET(x)  (((uint32)x >> 3) & 0xFFFF)
+
+#define GFX_TEXTURE(f, w, h, fmt, offs) \
+                    f               |   \
+                    GFX_SIZE_S(w)   |   \
+                    GFX_SIZE_T(h)   |   \
+                    GFX_FORMAT(fmt) |   \
+                    GFX_VRAM_OFFSET(offs)
 
 #define GFXORTHO(znear)                                                                     \
     MATRIX_CONTROL      = GL_PROJECTION;                                                    \
