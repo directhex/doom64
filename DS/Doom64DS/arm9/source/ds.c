@@ -209,6 +209,35 @@ void I_Init(void)
 }
 
 //
+// I_CheckGFX
+//
+
+dboolean (I_CheckGFX)(char* file, int line)
+{
+    if(GFX_VERTEX_RAM_USAGE >= 4096)
+    {
+#ifdef CHECKGFX_ABORT
+        I_Error("I_CheckGFX: vertex overflowed by %d\n(%s : %i)",
+        GFX_VERTEX_RAM_USAGE - 4096, file, line);
+#else
+        return false;
+#endif
+    }
+
+    if(GFX_POLYGON_RAM_USAGE >= 2048)
+    {
+#ifdef CHECKGFX_ABORT
+        I_Error("I_CheckGFX: polygon overflowed by %d\n(%s : %i)",
+        GFX_POLYGON_RAM_USAGE - 2048, file, line);
+#else
+        return false;
+#endif
+    }
+
+    return true;
+}
+
+//
 // I_ClearFrame
 //
 
@@ -271,7 +300,11 @@ dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index
 
 void I_FinishFrame(void)
 {
-    int free = Z_FreeVMemory(vramzone);
+    int free;
+    
+    I_CheckGFX();
+    
+    free = Z_FreeVMemory(vramzone);
     
     swiWaitForVBlank();
     DC_FlushAll();
@@ -383,6 +416,10 @@ void I_Sleep(uint32 ms)
     now = I_GetTimeTicks();
     while(I_GetTimeTicks() < now + ms);
 }
+
+//
+// main
+//
 
 int main(void)
 {

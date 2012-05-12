@@ -93,6 +93,8 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     int g1, g2;
     int b1, b2;
 
+    I_CheckGFX();
+
     r1 = l1->active_r;
     g1 = l1->active_g;
     b1 = l1->active_b;
@@ -168,6 +170,8 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     z1 = F2DSFIXED(top);
     z2 = F2DSFIXED(bottom);
 
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
+
     R_LoadTexture(texture,
         (seg->linedef->flags & ML_HMIRROR),
         (seg->linedef->flags & ML_VMIRROR));
@@ -190,6 +194,36 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     GFX_TEX_COORD   = COORD_PACK(F2INT(u2), F2INT(v2));
     GFX_VERTEX16    = VERTEX_PACK(x1, z2);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+
+    if(frontsector->lightlevel)
+    {
+        int lightlevel = ((frontsector->lightlevel << 1) >> 3);
+
+        if(lightlevel)
+        {
+            GFX_TEX_FORMAT = 0;
+            GFX_PAL_FORMAT = 0;
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(lightlevel) |
+                POLY_ID(2) |
+                POLY_CULL_BACK |
+                POLY_MODULATION |
+                POLY_FOG |
+                POLY_DEPTHTEST_EQUAL;
+
+            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_COLOR       = RGB8(r1, g1, b1);
+            GFX_VERTEX16    = VERTEX_PACK(x2, z1);
+            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+            GFX_COLOR       = RGB8(r2, g2, b2);
+            GFX_VERTEX16    = VERTEX_PACK(x2, z2);
+            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x1, z2);
+            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+        }
+    }
 }
 
 //
@@ -403,6 +437,8 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     int mapy;
     int length;
 
+    I_CheckGFX();
+
     if(nolights)
         GFX_COLOR = 0x1F7FFF;
     else
@@ -416,7 +452,13 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     mapy    = 0;
     z       = F2DSFIXED(height);
 
-    R_LoadTexture(texture, false, false);
+    if(texture >= 0)
+        R_LoadTexture(texture, false, false);
+    else
+    {
+        GFX_TEX_FORMAT = 0;
+        GFX_PAL_FORMAT = 0;
+    }
 
 #define DRAWSSECT(index)                    \
     v = leafs[index].vertex;                \
@@ -460,8 +502,6 @@ static void R_DrawLeafs(subsector_t* subsector)
     light_t* l;
     fixed_t x, y;
 
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
-
     for(i = 0; i < subsector->numleafs; i++)
     {
         seg_t* seg;
@@ -470,8 +510,6 @@ static void R_DrawLeafs(subsector_t* subsector)
         if(seg->draw)
             R_DrawSeg(seg);
     }
-
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
 
     if(viewz <= frontsector->ceilingheight && frontsector->ceilingpic != skyflatnum)
     {
@@ -485,12 +523,32 @@ static void R_DrawLeafs(subsector_t* subsector)
 
         l = &lights[frontsector->colors[LIGHT_CEILING]];
 
+        GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
+
         R_DrawSubsector(subsector,
             frontsector->ceilingheight,
             frontsector->ceilingpic, l, x, y);
-    }
 
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_FRONT | POLY_MODULATION | POLY_FOG;
+        if(frontsector->lightlevel)
+        {
+            int lightlevel = ((frontsector->lightlevel << 1) >> 3);
+
+            if(lightlevel)
+            {
+                GFX_POLY_FORMAT =
+                    POLY_ALPHA(lightlevel) |
+                    POLY_ID(2) |
+                    POLY_CULL_BACK |
+                    POLY_MODULATION |
+                    POLY_FOG |
+                    POLY_DEPTHTEST_EQUAL;
+
+                R_DrawSubsector(subsector,
+                    frontsector->ceilingheight,
+                    -1, l, 0, 0);
+            }
+        }
+    }
 
     if(viewz >= frontsector->floorheight && frontsector->floorpic != skyflatnum)
     {
@@ -504,9 +562,31 @@ static void R_DrawLeafs(subsector_t* subsector)
 
         l = &lights[frontsector->colors[LIGHT_FLOOR]];
 
+        GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_FRONT | POLY_MODULATION | POLY_FOG;
+
         R_DrawSubsector(subsector,
             frontsector->floorheight,
             frontsector->floorpic, l, x, y);
+
+        if(frontsector->lightlevel)
+        {
+            int lightlevel = ((frontsector->lightlevel << 1) >> 3);
+
+            if(lightlevel)
+            {
+                GFX_POLY_FORMAT =
+                    POLY_ALPHA(lightlevel) |
+                    POLY_ID(2) |
+                    POLY_CULL_FRONT |
+                    POLY_MODULATION |
+                    POLY_FOG |
+                    POLY_DEPTHTEST_EQUAL;
+
+                R_DrawSubsector(subsector,
+                    frontsector->floorheight,
+                    -1, l, 0, 0);
+            }
+        }
     }
 }
 
@@ -535,6 +615,12 @@ static void R_DrawSprite(mobj_t* thing)
     fixed_t z1, z2;
 
     alpha = thing->alpha >> 3;
+
+    if(alpha <= 0)
+        return;
+
+    I_CheckGFX();
+
     sprframe = &spriteinfo[thing->sprite].spriteframes[thing->frame & FF_FRAMEMASK];
     
     if(sprframe->rotate)
@@ -607,6 +693,35 @@ static void R_DrawSprite(mobj_t* thing)
     GFX_TEX_COORD   = COORD_PACK(tu2, height);
     GFX_VERTEX16    = VERTEX_PACK(x2, z1);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+
+    if(thing->subsector->sector->lightlevel)
+    {
+        int lightlevel = ((thing->subsector->sector->lightlevel << 1) >> 3);
+
+        if(lightlevel)
+        {
+            GFX_TEX_FORMAT = 0;
+            GFX_PAL_FORMAT = 0;
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(lightlevel) |
+                POLY_ID(2) |
+                POLY_CULL_BACK |
+                POLY_MODULATION |
+                POLY_FOG |
+                POLY_DEPTHTEST_EQUAL;
+
+            GFX_COLOR       = color;
+            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_VERTEX16    = VERTEX_PACK(x1, z2);
+            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x2, z2);
+            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x2, z1);
+            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+        }
+    }
 }
 
 //
@@ -647,6 +762,8 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     int         width;
     int         height;
     uint32      polyflags;
+
+    I_CheckGFX();
 
     alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3);
 
@@ -694,5 +811,33 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     GFX_TEX_COORD   = COORD_PACK(width, height);
     GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
     GFX_VERTEX16    = VERTEX_PACK(0, 0);
+
+    if(sector->lightlevel)
+    {
+        int lightlevel = ((sector->lightlevel << 1) >> 3);
+
+        if(lightlevel)
+        {
+            GFX_TEX_FORMAT = 0;
+            GFX_PAL_FORMAT = 0;
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(lightlevel) |
+                POLY_ID(2) |
+                POLY_CULL_NONE |
+                POLY_MODULATION |
+                POLY_DEPTHTEST_EQUAL;
+
+            GFX_COLOR       = color;
+            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_VERTEX16    = VERTEX_PACK(x, y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(width + x, y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x, height + y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        }
+    }
 }
 

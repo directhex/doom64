@@ -20,6 +20,19 @@ void I_Sleep(uint32 ms);
 int I_GetTimeTicks(void);
 void I_FinishFrame(void);
 
+//
+// disable for debug/testing only
+//
+//#define CHECKGFX_ABORT
+
+dboolean (I_CheckGFX)(char* file, int line);
+
+#ifdef CHECKGFX_ABORT
+#define I_CheckGFX() (I_CheckGFX) (__FILE__, __LINE__)
+#else
+#define I_CheckGFX() if(!(I_CheckGFX)(__FILE__, __LINE__)) return
+#endif
+
 dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock,
                        byte* data, int index, int size);
 

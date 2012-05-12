@@ -1049,7 +1049,6 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
     
     // preload graphics
     R_PrecacheLevel();
-    //R_SetupLevel();
 
     Z_CheckHeap();
     

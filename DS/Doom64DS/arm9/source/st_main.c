@@ -155,7 +155,7 @@ void ST_UpdateFlash(void)
     // invulnerability flash (white)
     if(p->powers[pw_invulnerability] > 61 || (p->powers[pw_invulnerability] & 8))
     {
-        st_flashcolor = RGB15(31, 31, 31);
+        st_flashcolor = RGB15(16, 16, 16);
         st_flashalpha = 16;
     }
     // bfg flash (green)
@@ -218,9 +218,11 @@ void ST_UpdateFlash(void)
 
 void ST_Drawer(void)
 {
+    I_CheckGFX();
+
     GFX_ORTHO(0);
 
-    if(st_flashcolor)
+    if(st_flashcolor && st_flashalpha)
     {
         GFX_POLY_FORMAT =
             POLY_ALPHA(st_flashalpha)   |

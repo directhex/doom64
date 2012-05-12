@@ -2100,7 +2100,7 @@ void P_AddSectorSpecial(sector_t* sector)
 
 void P_SpawnSpecials (void)
 {
-    //sector_t*   sector;
+    sector_t*   sector;
     int         i;
     mobj_t*     mo;
 
@@ -2114,7 +2114,7 @@ void P_SpawnSpecials (void)
         animinfo[i].frame = -1;
         animinfo[i].tic = 0;
         animinfo[i].isreverse = false;
-    }
+    }*/
     
     // Init special sectors
     // Might as well count all the secrets while we're at it..
@@ -2129,7 +2129,7 @@ void P_SpawnSpecials (void)
             if(sector->flags & MS_SECRET)
                 totalsecret++;
         }
-    }*/
+    }
 
     // Get type of key used in level
     tryopentype[0] = it_bluecard;
