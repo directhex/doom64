@@ -169,17 +169,18 @@ void I_Init(void)
     REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_B | POWER_SWAP_LCDS;
     REG_DISPCNT     = MODE_0_3D;
     REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG3_ACTIVE;
-    VRAM_A_CR       = VRAM_ENABLE;
-    VRAM_B_CR       = VRAM_ENABLE;
-    VRAM_C_CR       = VRAM_ENABLE;
-    VRAM_D_CR       = VRAM_ENABLE;
-    VRAM_E_CR       = VRAM_ENABLE;
-    VRAM_F_CR       = VRAM_ENABLE;
-    VRAM_G_CR       = VRAM_ENABLE;
-    VRAM_H_CR       = VRAM_ENABLE | VRAM_H_SUB_BG;
-    VRAM_I_CR       = VRAM_ENABLE | VRAM_I_SUB_BG_0x06208000;
     TIMER0_CR       = TIMER_ENABLE | TIMER_DIV_1024;
     TIMER1_CR       = TIMER_ENABLE | TIMER_CASCADE;
+
+    vramSetBankA(VRAM_A_LCD);
+    vramSetBankB(VRAM_B_LCD);
+    vramSetBankC(VRAM_C_LCD);
+    vramSetBankD(VRAM_D_LCD);
+    vramSetBankE(VRAM_E_LCD);
+    vramSetBankF(VRAM_F_LCD);
+    vramSetBankG(VRAM_G_LCD);
+    vramSetBankH(VRAM_H_SUB_BG);
+    vramSetBankI(VRAM_I_SUB_BG_0x06208000);
 
     while(GFX_BUSY);
 
@@ -300,33 +301,43 @@ dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index
 
 void I_FinishFrame(void)
 {
-    int free;
+    int i;
+    byte* buff;
+    byte* vram;
     
     I_CheckGFX();
     
-    free = Z_FreeVMemory(vramzone);
-    
+    // wait for vblank before flushing cache
     swiWaitForVBlank();
     DC_FlushAll();
 
-    if((frametic & 1) == 0)
+    buff = (byte*)gfx_tex_buffer;
+    vram = (byte*)VRAM_A;
+
+    // lock banks
+    vramSetBankA(VRAM_A_LCD);
+    vramSetBankB(VRAM_B_LCD);
+    vramSetBankC(VRAM_C_LCD);
+    vramSetBankD(VRAM_D_LCD);
+
+    for(i = 0; i < 32; i++)
     {
-        vramSetBankA(VRAM_A_LCD);
-        vramSetBankB(VRAM_B_LCD);
-        dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)VRAM_A, free);
-        vramSetBankA(VRAM_A_TEXTURE);
-        vramSetBankB(VRAM_B_TEXTURE);
-    }
-    else
-    {
-        vramSetBankC(VRAM_C_LCD);
-        vramSetBankD(VRAM_D_LCD);
-        dmaCopyWords(0, (uint32*)gfx_tex_buffer, (uint32*)VRAM_C, free);
-        vramSetBankC(VRAM_C_TEXTURE);
-        vramSetBankD(VRAM_D_TEXTURE);
+        // transfer 16kb of data at a time
+        dmaCopyWords(0, (uint32*)buff, (uint32*)vram, 0x4000);
+
+        // force scanline back at 192
+        REG_VCOUNT = 192;
+
+        buff += 0x4000;
+        vram += 0x4000;
     }
 
-    gfx_base = (frametic & 1) == 0 ? (uint32*)VRAM_C : (uint32*)VRAM_A;
+    // unlock banks
+    vramSetBankA(VRAM_A_TEXTURE);
+    vramSetBankB(VRAM_B_TEXTURE);
+    vramSetBankC(VRAM_C_TEXTURE);
+    vramSetBankD(VRAM_D_TEXTURE);
+
     frametic++;
 
     GFX_FLUSH = 1;

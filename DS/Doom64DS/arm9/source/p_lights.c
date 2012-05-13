@@ -414,18 +414,6 @@ void P_SpawnSequenceLight(sector_t* sector, dboolean first)
                 break;
         }
     }
-
-    //
-    // 20120512 villsa - horrible hack for DS port.
-    // sequenced lighting in map03's final room will lead
-    // to vertex/polygon overflows. headsector special 204 is
-    // used only in map03 for the sequence special
-    //
-
-#ifdef CHECKGFX_ABORT
-    if(first && headsector->special == 204)
-        return;
-#endif
     
     seq = Z_Malloc(sizeof(*seq), PU_LEVSPEC, 0);
     

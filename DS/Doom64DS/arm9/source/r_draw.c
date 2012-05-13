@@ -102,6 +102,21 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     g2 = l2->active_g;
     b2 = l2->active_b;
 
+    //
+    // sequenced lighting is too expensive on the DS
+    // instead of creating a glowing plane, just amplify the
+    // RGB values
+    //
+    if(frontsector->lightlevel && frontsector->special == 205)
+    {
+        r1 = MIN(r1 + (frontsector->lightlevel << 1), 255);
+        g1 = MIN(g1 + (frontsector->lightlevel << 1), 255);
+        b1 = MIN(b1 + (frontsector->lightlevel << 1), 255);
+        r2 = MIN(r2 + (frontsector->lightlevel << 1), 255);
+        g2 = MIN(g2 + (frontsector->lightlevel << 1), 255);
+        b2 = MIN(b2 + (frontsector->lightlevel << 1), 255);
+    }
+
     if(seg->linedef->flags & ML_TWOSIDED)
     {
         int height = 0;
@@ -117,6 +132,9 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
                 sideheight1 = seg->backsector->ceilingheight - seg->frontsector->floorheight;
                 sideheight2 = seg->frontsector->ceilingheight - seg->backsector->ceilingheight;
 
+                //
+                // math for RGB values is done in fixed point first
+                //
                 r1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_r), height), sideheight1));
                 g1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_g), height), sideheight1));
                 b1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_b), height), sideheight1));
@@ -147,6 +165,9 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
             sideheight1 = seg->backsector->floorheight - seg->frontsector->floorheight;
             sideheight2 = seg->frontsector->ceilingheight - seg->backsector->floorheight;
 
+            //
+            // math for RGB values is done in fixed point first
+            //
             r1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_r), height), sideheight1));
             g1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_g), height), sideheight1));
             b1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_b), height), sideheight1));
@@ -195,7 +216,11 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     GFX_VERTEX16    = VERTEX_PACK(x1, z2);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
 
-    if(frontsector->lightlevel)
+    //
+    // create a glowing plane on top of the geometry for
+    // specialized sectors
+    //
+    if(frontsector->lightlevel && frontsector->special != 205)
     {
         int lightlevel = ((frontsector->lightlevel << 1) >> 3);
 
@@ -436,13 +461,32 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     int mapx;
     int mapy;
     int length;
+    int r;
+    int g;
+    int b;
 
     I_CheckGFX();
+
+    r = light->active_r;
+    g = light->active_g;
+    b = light->active_b;
+
+    //
+    // sequenced lighting is too expensive on the DS
+    // instead of creating a glowing plane, just amplify the
+    // RGB values
+    //
+    if(frontsector->lightlevel && frontsector->special == 205)
+    {
+        r = MIN(r + (frontsector->lightlevel << 1), 255);
+        g = MIN(g + (frontsector->lightlevel << 1), 255);
+        b = MIN(b + (frontsector->lightlevel << 1), 255);
+    }
 
     if(nolights)
         GFX_COLOR = 0x1F7FFF;
     else
-        GFX_COLOR = RGB8(light->active_r, light->active_g, light->active_b);
+        GFX_COLOR = RGB8(r, g, b);
 
     tx      = F2INT(leafs[ss->leaf].vertex->x + xoffset) & 0x3F;
     ty      = F2INT(leafs[ss->leaf].vertex->y - yoffset) & 0x3F;
@@ -529,7 +573,11 @@ static void R_DrawLeafs(subsector_t* subsector)
             frontsector->ceilingheight,
             frontsector->ceilingpic, l, x, y);
 
-        if(frontsector->lightlevel)
+        //
+        // create a glowing plane on top of the geometry for
+        // specialized sectors
+        //
+        if(frontsector->lightlevel && frontsector->special != 205)
         {
             int lightlevel = ((frontsector->lightlevel << 1) >> 3);
 
@@ -568,7 +616,11 @@ static void R_DrawLeafs(subsector_t* subsector)
             frontsector->floorheight,
             frontsector->floorpic, l, x, y);
 
-        if(frontsector->lightlevel)
+        //
+        // create a glowing plane on top of the geometry for
+        // specialized sectors
+        //
+        if(frontsector->lightlevel && frontsector->special != 205)
         {
             int lightlevel = ((frontsector->lightlevel << 1) >> 3);
 
@@ -793,6 +845,11 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     polyflags = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
 
+    //
+    // hack for plasma gun sprite;
+    // set the depth test to equal when
+    // drawing the animating plasma tube
+    //
     if(psp == &players->psprites[ps_flash] && psp->state->sprite == SPR_PLAS)
         polyflags |= POLY_DEPTHTEST_EQUAL;
 

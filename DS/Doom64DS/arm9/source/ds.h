@@ -23,7 +23,7 @@ void I_FinishFrame(void);
 //
 // disable for debug/testing only
 //
-//#define CHECKGFX_ABORT
+#define CHECKGFX_ABORT
 
 dboolean (I_CheckGFX)(char* file, int line);
 

@@ -71,7 +71,7 @@ void            R_DrawFrame(void);
 // R_DATA
 //
 
-#define GFX_BUFFER_SIZE     0x40000
+#define GFX_BUFFER_SIZE     0x80000
 
 extern int          t_start;
 extern int          t_end;
