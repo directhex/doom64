@@ -210,13 +210,13 @@ void R_DrawFrame(void)
     MATRIX_CONTROL      = GL_MODELVIEW;
     MATRIX_IDENTITY     = 0;
 
-    glPushMatrix();
+    MATRIX_PUSH = 0;
 
     MATRIX_TRANSLATE    = -(16 << 4);
     MATRIX_TRANSLATE    = -0;
     MATRIX_TRANSLATE    = -0;
 
-    glPushMatrix();
+    MATRIX_PUSH = 0;
 
     gluPerspective(74, 256.0f / 192.0f, 0.002f, 1000);
 
@@ -236,7 +236,7 @@ void R_DrawFrame(void)
     R_RenderView();
     R_DrawScene();
 
-    glPopMatrix(2);
+    MATRIX_POP = GFX_MTX_STACK_LEVEL;
 
     for(psp = player->psprites; psp < &player->psprites[NUMPSPRITES]; psp++)
     {

@@ -841,7 +841,7 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
         color = RGB8(light->active_r, light->active_g, light->active_b);
     }
 
-    GFX_ORTHO(0);
+    GFX_ORTHO();
 
     polyflags = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
 

@@ -197,7 +197,7 @@ void ST_UpdateFlash(void)
     else if(p->powers[pw_ironfeet] > 61 || (p->powers[pw_ironfeet] & 8))
     {
         st_flashcolor = RGB15(0, 31, 4);
-        st_flashalpha = 26;
+        st_flashalpha = 12;
     }
     // bonus flash (yellow)
     else if(p->bonuscount)
@@ -220,7 +220,7 @@ void ST_Drawer(void)
 {
     I_CheckGFX();
 
-    GFX_ORTHO(0);
+    GFX_ORTHO();
 
     if(st_flashcolor && st_flashalpha)
     {

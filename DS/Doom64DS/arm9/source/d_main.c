@@ -604,6 +604,7 @@ drawframe:
 
         if(draw && !action)
         {
+            I_ClearFrame();
             draw();
             I_FinishFrame();
         }
@@ -634,7 +635,6 @@ int P_Ticker(void);
 
 void TestDrawer(void)
 {
-    I_ClearFrame();
     R_DrawFrame();
     ST_Drawer();
 }

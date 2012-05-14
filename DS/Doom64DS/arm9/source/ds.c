@@ -187,13 +187,13 @@ void I_Init(void)
     //
     // make sure there are no push/pops that haven't executed yet
     //
-    while(GFX_STATUS & BIT(14))
-        GFX_STATUS |= 1 << 15;  // clear push/pop errors or push/pop busy bit never clears
+    while(GFX_STATUS & GFX_MTX_BUSY)
+        GFX_STATUS |= GFX_MTX_STACK_RESET;  // clear push/pop errors or push/pop busy bit never clears
 
     //
     // pop the projection stack to the top; poping 0 off an empty stack causes an error... weird?
     //
-    if((GFX_STATUS & (1 << 13)) != 0)
+    if((GFX_STATUS & GFX_MTX_PROJ_STACK) != 0)
     {
         MATRIX_CONTROL  = GL_PROJECTION;
         MATRIX_POP      = 1;
@@ -202,8 +202,8 @@ void I_Init(void)
     //
     // 31 deep modelview matrix; 32nd entry works but sets error flag
     //
-    MATRIX_CONTROL      = GL_MODELVIEW;
-    MATRIX_POP          = (GFX_STATUS >> 8) & 0x1F;
+    MATRIX_CONTROL  = GL_MODELVIEW;
+    MATRIX_POP      = GFX_MTX_STACK_LEVEL;
 
     consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
     consoleClear();
@@ -265,15 +265,26 @@ void I_ClearFrame(void)
     MATRIX_IDENTITY     = 0;
     MATRIX_CONTROL      = GL_TEXTURE;
     MATRIX_IDENTITY     = 0;
-
-    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x700;
-    GFX_FOG_COLOR = sky ? sky->fogcolor : RGB15(0, 0, 0);
+    MATRIX_CONTROL      = GL_POSITION;
+    MATRIX_IDENTITY     = 0;
 
     for(i = 0; i < 32; i++)
         GFX_FOG_TABLE[i] = (i * 4);
 
     GFX_FOG_TABLE[31] = 0x7F;
-    GFX_FOG_OFFSET = 0x7F3F;
+
+    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x700;
+
+    if(sky)
+    {
+        GFX_FOG_COLOR = sky->fogcolor;
+        GFX_FOG_OFFSET = GL_MAX_DEPTH - ((1000 - sky->fognear) * 10);
+    }
+    else
+    {
+        GFX_FOG_COLOR = 0;
+        GFX_FOG_OFFSET = GL_MAX_DEPTH - 192;
+    }
 }
 
 //

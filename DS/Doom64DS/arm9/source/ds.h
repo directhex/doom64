@@ -61,6 +61,11 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
 #define POLY_DEPTHTEST_EQUAL    (1 << 14)
 #define COORD_PACK(u, v)        (((u << 4) & 0xFFFF) | (((v << 4)) << 16))
 
+#define GFX_MTX_STACK_LEVEL     ((GFX_STATUS >> 8) & 0x1F)
+#define GFX_MTX_PROJ_STACK      (1 << 13)
+#define GFX_MTX_BUSY            (1 << 14)
+#define GFX_MTX_STACK_RESET     (1 << 15)
+
 #define GFX_SIZE_S(x)       (x << 20)
 #define GFX_SIZE_T(x)       (x << 23)
 #define GFX_FORMAT(x)       (x << 26)
@@ -73,29 +78,29 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
                     GFX_FORMAT(fmt) |   \
                     GFX_VRAM_OFFSET(offs)
 
-#define GFX_ORTHO(znear)                                                                \
-    MATRIX_CONTROL      = GL_PROJECTION;                                                \
-    MATRIX_IDENTITY     = 0;                                                            \
-    MATRIX_CONTROL      = GL_MODELVIEW;                                                 \
-    MATRIX_IDENTITY     = 0;                                                            \
-    MATRIX_MULT4x4      = 0x400;                                                        \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0xFFFFFAAB;                                                   \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = divf32(-0x2000, 0x4000 - inttof32(znear));                    \
-    MATRIX_MULT4x4      = 0;                                                            \
-    MATRIX_MULT4x4      = 0xFFFFF000;                                                   \
-    MATRIX_MULT4x4      = 0x1000;                                                       \
-    MATRIX_MULT4x4      = -divf32(0x4000 + inttof32(znear), 0x4000 - inttof32(znear));  \
-    MATRIX_MULT4x4      = 0x1000;                                                       \
-    MATRIX_SCALE        = 0x80000;                                                      \
-    MATRIX_SCALE        = 0x80000;                                                      \
+#define GFX_ORTHO()                         \
+    MATRIX_CONTROL      = GL_PROJECTION;    \
+    MATRIX_IDENTITY     = 0;                \
+    MATRIX_CONTROL      = GL_MODELVIEW;     \
+    MATRIX_IDENTITY     = 0;                \
+    MATRIX_MULT4x4      = 0x400;            \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0xFFFFFAAB;       \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = -0x800;           \
+    MATRIX_MULT4x4      = 0;                \
+    MATRIX_MULT4x4      = 0xFFFFF000;       \
+    MATRIX_MULT4x4      = 0x1000;           \
+    MATRIX_MULT4x4      = -0x1000;          \
+    MATRIX_MULT4x4      = 0x1000;           \
+    MATRIX_SCALE        = 0x80000;          \
+    MATRIX_SCALE        = 0x80000;          \
     MATRIX_SCALE        = 0x80000
 
 #define GFX_SCREENRECT()                                        \
