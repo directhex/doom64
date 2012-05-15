@@ -291,7 +291,8 @@ void I_ClearFrame(void)
 // I_AllocVBlock
 //
 
-dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index, int size)
+dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index, int size,
+                       int flags, int texel_w, int texel_h, int type)
 {
     if(user[index] == 0)
     {
@@ -303,7 +304,20 @@ dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index
     else
         Z_VTouch(vramzone, vblock[index]);
 
+    user[index] = GFX_TEXTURE(flags, texel_w, texel_h, type,
+        ((uint32*)gfx_base + ((vblock[index]->block - gfx_tex_buffer) >> 2)));
+
     return true;
+}
+
+//
+// I_SetPalette
+//
+
+uint32 I_SetPalette(uint16* data, int offset, int size)
+{
+    swiCopy(data, VRAM_E + (offset >> 1), (size >> 1) | COPY_MODE_HWORD);
+    return GFX_VRAM_OFFSET((VRAM_E + (offset >> 2)));
 }
 
 //

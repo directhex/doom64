@@ -1,3 +1,5 @@
+#include <ctype.h>
+
 #include "doomdef.h"
 #include "d_englsh.h"
 #include "d_main.h"
@@ -12,6 +14,8 @@
 // STATUS BAR DATA
 //
 
+#define NUMSYMBOLS      97
+
 typedef struct
 {
     dboolean    active;
@@ -22,33 +26,58 @@ typedef struct
 
 static keyflash_t flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
+#define ST_HUDCOLOR     ARGB16(31, 20, 0, 4)
 #define	FLASHDELAY      8       /* # of tics delay (1/30 sec) */
 #define FLASHTIMES      6       /* # of times to flash new frag amount (EVEN!) */
-
 #define ST_HEALTHTEXTX  29
 #define ST_HEALTHTEXTY  203
-
 #define ST_ARMORTEXTX   253
 #define ST_ARMORTEXTY   203
-
 #define ST_KEYX         78
 #define ST_KEYY         216
-
 #define ST_JMESSAGES    45
-
 #define ST_MSGTIMEOUT   (5*TICRATE)
 #define ST_MSGFADESTART (ST_MSGTIMEOUT - (1*TICRATE))
 #define ST_MSGFADETIME  5
+#define ST_FONTWHSIZE	8
+#define ST_FONTNUMSET	32	//# of fonts per row in font pic
+#define ST_FONTSTART	'!'	// the first font characters
+#define ST_FONTEND		'_'	// the last font characters
+#define ST_FONTSIZE		(ST_FONTEND - ST_FONTSTART + 1) // Calculate # of glyphs in font.
 
 
-static rcolor   st_flashcolor;
-static byte     st_flashalpha;
-static int      st_msgtic = 0;
-static int      st_msgalpha = 0xff;
-static char*    st_msg = NULL;
-static byte*    lump_sfont;
-static byte*    lump_status;
-static int      lump_symbols;
+static rcolor       st_flashcolor;
+static byte         st_flashalpha;
+static int          st_msgtic = 0;
+static int          st_msgalpha = 0xff;
+static char*        st_msg = NULL;
+static int          lump_bfontnum;
+static byte*        lump_bfont;
+static short*       lump_sfont;
+static short*       lump_status;
+static uint32       st_sfontparms[64];
+static uint32       st_bfontparams[NUMSYMBOLS];
+static vramblock_t* st_sfontblocks[64];
+static vramblock_t* st_bfontblocks[NUMSYMBOLS];
+static byte         st_fontbuffer[128 * 32];
+static uint32       st_sfontpalparam;
+static uint32       st_bfontpalparam;
+
+#define ST_FONT1		16
+#define ST_FONT2		42
+#define ST_MISCFONT		10
+#define ST_NUMBERS		0
+#define ST_SKULLS		70
+#define ST_THERMO		68
+#define ST_MICONS		78
+
+typedef struct
+{
+    int x;
+    int y;
+    int w;
+    int h;
+} fontmap_t;
 
 //
 // ST_ClearMessage
@@ -110,8 +139,6 @@ void ST_Ticker(void)
     //
     if(plyr->message)
     {
-        I_Printf("%s\n", plyr->message);
-
         ST_ClearMessage();
         st_msg = plyr->message;
         plyr->message = NULL;
@@ -218,9 +245,27 @@ void ST_UpdateFlash(void)
 
 void ST_Drawer(void)
 {
+    player_t* plyr = &players[consoleplayer];
+
     I_CheckGFX();
 
     GFX_ORTHO();
+
+    if(st_msg)
+    {
+        ST_DrawMessage(10, 10,
+            ARGB16((st_msgalpha >> 3), 31, 31, 31), st_msg);
+    }
+
+    //Draw Health
+    ST_DrawNumber(39, 172, plyr->health, 0, ST_HUDCOLOR);
+
+    //Draw Armor
+    ST_DrawNumber(216, 172, plyr->armorpoints, 0, ST_HUDCOLOR);
+
+    //Draw Ammo counter
+    if(weaponinfo[plyr->readyweapon].ammo != am_noammo)
+        ST_DrawNumber(128, 172, plyr->ammo[weaponinfo[plyr->readyweapon].ammo], 0, ST_HUDCOLOR);
 
     if(st_flashcolor && st_flashalpha)
     {
@@ -251,6 +296,498 @@ void ST_Drawer(void)
     }
 }
 
+static const fontmap_t bfontmap[NUMSYMBOLS + 1] =
+{
+    { 120, 14, 13, 13 },
+    { 134, 14, 9, 13 },
+    { 144, 14, 14, 13 },
+    { 159, 14, 14, 13 },
+    { 174, 14, 16, 13 },
+    { 191, 14, 13, 13 },
+    { 205, 14, 13, 13 },
+    { 219, 14, 14, 13 },
+    { 234, 14, 14, 13 },
+    { 0, 29, 13, 13 },
+    { 67, 28, 14, 13 },	// -
+    { 36, 28, 15, 14 },	// %
+    { 28, 28, 7, 14 },	// !
+    { 14, 29, 6, 13 },	// .
+    { 52, 28, 13, 13 },	// ?
+    { 21, 29, 6, 13 },	// :
+    { 0, 0, 13, 13 },
+    { 14, 0, 13, 13 },
+    { 28, 0, 13, 13 },
+    { 42, 0, 14, 13 },
+    { 57, 0, 14, 13 },
+    { 72, 0, 10, 13 },
+    { 87, 0, 15, 13 },
+    { 103, 0, 15, 13 },
+    { 119, 0, 6, 13 },
+    { 126, 0, 13, 13 },
+    { 140, 0, 14, 13 },
+    { 155, 0, 11, 13 },
+    { 167, 0, 15, 13 },
+    { 183, 0, 16, 13 },
+    { 200, 0, 15, 13 },
+    { 216, 0, 13, 13 },
+    { 230, 0, 15, 13 },
+    { 246, 0, 13, 13 },
+    { 0, 14, 14, 13 },
+    { 15, 14, 14, 13 },
+    { 30, 14, 13, 13 },
+    { 44, 14, 15, 13 },
+    { 60, 14, 15, 13 },
+    { 76, 14, 15, 13 },
+    { 92, 14, 13, 13 },
+    { 106, 14, 13, 13 },
+    { 83, 31, 10, 11 },
+    { 93, 31, 10, 11 },
+    { 103, 31, 11, 11 },
+    { 114, 31, 11, 11 },
+    { 125, 31, 11, 11 },
+    { 136, 31, 11, 11 },
+    { 147, 31, 12, 11 },
+    { 159, 31, 12, 11 },
+    { 171, 31, 4, 11 },
+    { 175, 31, 10, 11 },
+    { 185, 31, 11, 11 },
+    { 196, 31, 9, 11 },
+    { 205, 31, 12, 11 },
+    { 217, 31, 13, 11 },
+    { 230, 31, 12, 11 },
+    { 242, 31, 11, 11 },
+    { 0, 43, 12, 11 },
+    { 12, 43, 11, 11 },
+    { 23, 43, 11, 11 },
+    { 34, 43, 10, 11 },
+    { 44, 43, 11, 11 },
+    { 55, 43, 12, 11 },
+    { 67, 43, 13, 11 },
+    { 80, 43, 13, 11 },
+    { 93, 43, 10, 11 },
+    { 103, 43, 11, 11 },
+    { 0, 95, 108, 11 },
+    { 108, 95, 6, 11 },
+    { 0, 54, 32, 26 },
+    { 32, 54, 32, 26 },
+    { 64, 54, 32, 26 },
+    { 96, 54, 32, 26 },
+    { 128, 54, 32, 26 },
+    { 160, 54, 32, 26 },
+    { 192, 54, 32, 26 },
+    { 224, 54, 32, 26 },
+    { 134, 97, 7, 11 },
+    { 114, 95, 20, 18 },
+    { 105, 80, 15, 15 },
+    { 120, 80, 15, 15 },
+    { 135, 80, 15, 15 },
+    { 150, 80, 15, 15 },
+    { 45, 80, 15, 15 },
+    { 60, 80, 15, 15 },
+    { 75, 80, 15, 15 },
+    { 90, 80, 15, 15 },
+    { 165, 80, 15, 15 },
+    { 180, 80, 15, 15 },
+    { 0, 80, 15, 15 },
+    { 15, 80, 15, 15 },
+    { 195, 80, 15, 15 },
+    { 30, 80, 15, 15 },
+    { 156, 96, 13, 13 },
+    { 143, 96, 13, 13 },
+    { 169, 96, 7, 13 },
+    { -1, -1, -1, -1 }
+};
+
+//
+// ST_CenterString
+//
+
+int ST_CenterString(const char* string)
+{
+    int width = 0;
+    char t = 0;
+    int id = 0;
+    int len = 0;
+    int i = 0;
+    
+    len = strlen(string);
+    
+    for(i = 0; i < len; i++)
+    {
+        t = string[i];
+        
+        switch(t)
+        {
+        case 0x20: width += 6;
+            break;
+        case '-': width += bfontmap[ST_MISCFONT].w;
+            break;
+        case '%': width += bfontmap[ST_MISCFONT + 1].w;
+            break;
+        case '!': width += bfontmap[ST_MISCFONT + 2].w;
+            break;
+        case '.': width += bfontmap[ST_MISCFONT + 3].w;
+            break;
+        case '?': width += bfontmap[ST_MISCFONT + 4].w;
+            break;
+        case ':': width += bfontmap[ST_MISCFONT + 5].w;
+            break;
+        default:
+            if(t >= 'A' && t <= 'Z')
+            {
+                id = t - 'A';
+                width += bfontmap[ST_FONT1 + id].w;
+            }
+            if(t >= 'a' && t <= 'z')
+            {
+                id = t - 'a';
+                width += bfontmap[ST_FONT2 + id].w;
+            }
+            if(t >= '0' && t <= '9')
+            {
+                id = t - '0';
+                width += bfontmap[ST_NUMBERS + id].w;
+            }
+            break;
+        }
+    }
+    
+    return (160 - (width / 2));
+}
+
+//
+// ST_DrawBigFont
+//
+
+int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
+{
+    byte* data;
+    int width;
+    int i;
+    int c;
+
+    if(x <= -1)
+        x = ST_CenterString(string);
+
+    lump_bfont = W_CacheLumpNum(lump_bfontnum, PU_CACHE);
+
+    width   = *(short*)(lump_bfont + 0);
+    data    = lump_bfont + 8;
+
+    for(i = 0; i < strlen(string); i++)
+    {
+        int j;
+        int pw;
+        int ph;
+        fontmap_t* fontmap;
+        int index = 0;
+        int dy;
+
+        c = string[i];
+        dy = 0;
+
+        if(c == '\n' || c == '\t')
+            continue;
+        else if(c == 0x20)
+        {
+            x += 6;
+            continue;
+        }
+        else
+        {
+            if(c >= '0' && c <= '9')    { index = (c - '0') + ST_NUMBERS;       }
+            if(c >= 'A' && c <= 'Z')    { index = (c - 'A') + ST_FONT1;         }
+            if(c >= 'a' && c <= 'z')    { index = (c - 'a') + ST_FONT2; dy = 2; }
+            if(c == '-')                { index = ST_MISCFONT;                  }
+            if(c == '%')                { index = ST_MISCFONT + 1;              }
+            if(c == '!')                { index = ST_MISCFONT + 2;              }
+            if(c == '.')                { index = ST_MISCFONT + 3;              }
+            if(c == '?')                { index = ST_MISCFONT + 4;              }
+            if(c == ':')                { index = ST_MISCFONT + 5;              }
+
+            if(c == '/')
+            {
+                c = string[++i];
+
+                switch(c)
+                {
+                    // up arrow
+                case 'u':
+                    index = ST_MICONS + 17;
+                    break;
+                    // down arrow
+                case 'd':
+                    index = ST_MICONS + 16;
+                    break;
+                    // right arrow
+                case 'r':
+                    index = ST_MICONS + 18;
+                    break;
+                    // left arrow
+                case 'l':
+                    index = ST_MICONS;
+                    break;
+                    // cursor box
+                case 'b':
+                    index = ST_MICONS + 1;
+                    break;
+                    // thermbar
+                case 't':
+                    index = ST_THERMO;
+                    break;
+                    // thermcursor
+                case 's':
+                    index = ST_THERMO + 1;
+                    break;
+                default:
+                    return 0;
+                }
+            }
+        }
+
+        fontmap = (fontmap_t*)&bfontmap[index];
+        pw = R_PadTextureDims(fontmap->w);
+        ph = R_PadTextureDims(fontmap->h);
+
+        for(j = 0; j < fontmap->h; j++)
+        {
+            byte* src;
+            byte* dst;
+
+            src = &data[((j + fontmap->y) * width) + fontmap->x];
+            dst = &st_fontbuffer[j * pw];
+
+            memset(dst, 0, pw);
+            memcpy(dst, src, fontmap->w);
+        }
+
+        if(!I_AllocVBlock(
+            st_bfontparams,
+            st_bfontblocks,
+            st_fontbuffer,
+            index, pw * fontmap->h,
+            TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
+            R_GetTextureSize(pw),
+            R_GetTextureSize(ph),
+            GL_RGB256))
+            continue;
+
+        GFX_TEX_FORMAT = st_bfontparams[index];
+        GFX_PAL_FORMAT = st_bfontpalparam;
+
+        GFX_POLY_FORMAT =
+            POLY_ALPHA(color >> 15) |
+            POLY_ID(0)              |
+            POLY_CULL_NONE          |
+            POLY_MODULATION;
+
+        GFX_COLOR       = (color & 0x7FFF);
+        GFX_BEGIN       = GL_TRIANGLE_STRIP;
+        GFX_TEX_COORD   = COORD_PACK(0, 0);
+        GFX_VERTEX16    = VERTEX_PACK(x, y + dy);
+        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), 0);
+        GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, y + dy);
+        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_TEX_COORD   = COORD_PACK(0, fontmap->h);
+        GFX_VERTEX16    = VERTEX_PACK(x, fontmap->h + y + dy);
+        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), fontmap->h);
+        GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, fontmap->h + y + dy);
+        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+
+        x += fontmap->w + 1;
+    }
+
+    return x;
+}
+
+//
+// ST_DrawMessage
+//
+
+int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
+{
+    int i;
+    va_list	va;
+    byte* data;
+    char msg[128];
+    const int ix = x;
+
+    va_start(va, string);
+    vsprintf(msg, string, va);
+    va_end(va);
+
+    data = (byte*)(lump_sfont + 4);
+
+    for(i = 0; i < strlen(msg); i++)
+    {
+        int c;
+        int j;
+        int start = 0;
+        int	col;
+        int row;
+
+        c = toupper((int)msg[i]);
+
+        if(c == '\t')
+        {
+            while(x % 64) x++;
+            continue;
+        }
+
+        if(c == '\n')
+        {
+            y += ST_FONTWHSIZE;
+            x = ix;
+            continue;
+        }
+
+        if(c == 0x20)
+        {
+            if(x > 192)
+            {
+                y += ST_FONTWHSIZE;
+                x = ix;
+                continue;
+            }
+            else
+                x += ST_FONTWHSIZE;
+        }
+        else
+        {
+            start = (c - ST_FONTSTART);
+            col = (start & (ST_FONTNUMSET - 1)) * ST_FONTWHSIZE;
+            row = (start >= ST_FONTNUMSET) ? 8 : 0;
+
+            for(j = 0; j < ST_FONTWHSIZE; j++)
+            {
+                byte* src;
+                byte* dst;
+
+                src = &data[((j + row) * lump_sfont[0]) + col];
+                dst = &st_fontbuffer[j * ST_FONTWHSIZE];
+
+                memset(dst, 0, ST_FONTWHSIZE);
+                memcpy(dst, src, ST_FONTWHSIZE);
+            }
+
+            if(!I_AllocVBlock(
+                st_sfontparms,
+                st_sfontblocks,
+                st_fontbuffer,
+                start,
+                64,
+                TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
+                TEXTURE_SIZE_8,
+                TEXTURE_SIZE_8,
+                GL_RGB256))
+                continue;
+
+            GFX_TEX_FORMAT = st_sfontparms[start];
+            GFX_PAL_FORMAT = st_sfontpalparam;
+
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(color >> 15) |
+                POLY_ID(0)              |
+                POLY_CULL_NONE          |
+                POLY_MODULATION;
+
+            GFX_COLOR       = (color & 0x7FFF);
+            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_TEX_COORD   = COORD_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x, y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_TEX_COORD   = COORD_PACK(ST_FONTWHSIZE, 0);
+            GFX_VERTEX16    = VERTEX_PACK(ST_FONTWHSIZE + x, y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_TEX_COORD   = COORD_PACK(0, ST_FONTWHSIZE);
+            GFX_VERTEX16    = VERTEX_PACK(x, ST_FONTWHSIZE + y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_TEX_COORD   = COORD_PACK(ST_FONTWHSIZE, ST_FONTWHSIZE);
+            GFX_VERTEX16    = VERTEX_PACK(ST_FONTWHSIZE + x, ST_FONTWHSIZE + y);
+            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+
+            x += ST_FONTWHSIZE;
+        }
+    }
+
+    return x;
+}
+
+//
+// ST_DrawNumber
+//
+//
+
+void ST_DrawNumber(int x, int y, int num, int type, rcolor c)
+{
+    int digits[16];
+    int nx = 0;
+    int count;
+    int j;
+    char str[2];
+
+    for(count = 0, j = 0; count < 16; count++, j++)
+    {
+        digits[j] = num % 10;
+        nx += bfontmap[ST_NUMBERS + digits[j]].w;
+
+        num /= 10;
+
+        if(!num)
+            break;
+    }
+
+    if(type == 0)
+        x -= (nx >> 1);
+
+    if(type == 0 || type == 1)
+    {
+        if(count < 0)
+            return;
+
+        while(count >= 0)
+        {
+            sprintf(str, "%i", digits[j]);
+            ST_DrawBigFont(x, y, c, str);
+
+            x += bfontmap[ST_NUMBERS + digits[j]].w;
+
+            count--;
+            j--;
+        }
+    }
+    else
+    {
+        if(count < 0)
+            return;
+
+        j = 0;
+
+        while(count >= 0)
+        {
+            x -= bfontmap[ST_NUMBERS + digits[j]].w;
+
+            sprintf(str, "%i", digits[j]);
+            ST_DrawBigFont(x, y, c, str);
+
+            count--;
+            j++;
+        }
+    }
+}
+
+//
+// ST_CachePalettes
+//
+
+void ST_CachePalettes(void)
+{
+    st_bfontpalparam = R_CachePalette("SYMBOLS");
+    st_sfontpalparam = R_CachePalette("SFONT");
+}
+
 //
 // ST_Init
 //
@@ -259,10 +796,11 @@ void ST_Init(void)
 {
     int i = 0;
 
-    lump_sfont  = (byte*)W_CacheLumpName("SFONT", PU_STATIC);
-    lump_status = (byte*)W_CacheLumpName("STATUS", PU_STATIC);
+    lump_bfont  = NULL;
+    lump_sfont  = (short*)W_CacheLumpName("SFONT", PU_STATIC);
+    lump_status = (short*)W_CacheLumpName("STATUS", PU_STATIC);
 
-    lump_symbols = W_GetNumForName("SYMBOLS");
+    lump_bfontnum = W_GetNumForName("SYMBOLS");
     
     // setup keycards
     

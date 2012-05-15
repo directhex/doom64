@@ -3,6 +3,7 @@
 #include "z_zone.h"
 #include "w_wad.h"
 #include "p_local.h"
+#include "st_main.h"
 
 uint32* gfx_base = (uint32*)VRAM_A;
 byte    gfx_tex_buffer[GFX_BUFFER_SIZE];
@@ -17,6 +18,32 @@ static byte**           gfx_tex_cache;
 static byte**           gfx_spr_cache;
 static vramblock_t**    gfx_tex_blocks;
 static vramblock_t**    gfx_spr_blocks;
+
+//
+// R_CachePalette
+// Returns the palette parameter for generic texture lumps
+//
+
+uint32 R_CachePalette(const char* name)
+{
+    uint16* lump;
+    uint16* pal;
+    int size;
+    int stride;
+    int width;
+    int height;
+
+    stride = gfx_texpal_stride;
+    lump = (uint16*)W_CacheLumpName(name, PU_AUTO);
+    width = lump[0];
+    height = lump[1];
+    size = (256 << 1);
+    pal = lump + 4 + ((width * height) >> 1);
+
+    gfx_texpal_stride += size;
+
+    return I_SetPalette(pal, stride, size);
+}
 
 //
 // R_CacheTexture
@@ -35,8 +62,7 @@ static void R_CacheTexturePalette(int index)
     size = (16 << 1);
     paldata = (uint16*)pal;
 
-    memcpy32(((byte*)VRAM_E) + gfx_texpal_stride, paldata, size);
-    gfx_texpal_params[index] = GFX_VRAM_OFFSET((VRAM_E + (gfx_texpal_stride >> 2)));
+    gfx_texpal_params[index] = I_SetPalette(paldata, gfx_texpal_stride, size);
     gfx_texpal_stride += size;
 
     Z_Free(gfx);
@@ -69,8 +95,7 @@ static void R_SetupSpriteData(int spritenum)
         size = (16 << 1);
         paldata = (uint16*)pal;
 
-        swiCopy(paldata, VRAM_E + (gfx_texpal_stride >> 1), (size >> 1) | COPY_MODE_HWORD);
-        gfx_sprpal_params[spritenum] = GFX_VRAM_OFFSET((VRAM_E + (gfx_texpal_stride >> 2)));
+        gfx_sprpal_params[spritenum] = I_SetPalette(paldata, gfx_texpal_stride, size);
         gfx_texpal_stride += size;
     }
     else
@@ -116,8 +141,7 @@ static void R_CacheExternalPalette(int sprite)
             size = (256 << 1);
             paldata = (uint16*)pal;
 
-            swiCopy(paldata, VRAM_E + (gfx_texpal_stride >> 1), (size >> 1) | COPY_MODE_HWORD);
-            gfx_extpal_params[sprite][0] = GFX_VRAM_OFFSET((VRAM_E + (gfx_texpal_stride >> 2)));
+            gfx_extpal_params[sprite][0] = I_SetPalette(paldata, gfx_texpal_stride, size);
             gfx_texpal_stride += size;
         }
         else if(gfx[4] == 1)
@@ -137,8 +161,7 @@ static void R_CacheExternalPalette(int sprite)
                 paldata = (uint16*)W_CacheLumpNum(lump, PU_STATIC);
                 size = (256 << 1);
 
-                swiCopy(paldata, VRAM_E + (gfx_texpal_stride >> 1), (size >> 1) | COPY_MODE_HWORD);
-                gfx_extpal_params[sprite][i] = GFX_VRAM_OFFSET((VRAM_E + (gfx_texpal_stride >> 2)));
+                gfx_extpal_params[sprite][i] = I_SetPalette(paldata, gfx_texpal_stride, size);
                 gfx_texpal_stride += size;
             }
         }
@@ -173,6 +196,8 @@ static void R_InitPalettes(void)
 
     for(i = 1; i < NUMSPRITES; i++)
         R_CacheExternalPalette(i);
+
+    ST_CachePalettes();
 
     vramSetBankE(VRAM_E_TEX_PALETTE);
     vramSetBankF(VRAM_F_TEX_PALETTE_SLOT4);
@@ -486,7 +511,6 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     short* pal;
     uint32 flags;
     int size;
-    uint32 stride;
 
     if(gfx_tex_cache[texture] == NULL)
         gfx_tex_cache[texture] = (byte*)W_CacheLumpNum(t_start + texture, PU_CACHE);
@@ -501,15 +525,6 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     size = ((w * h) >> 1);
     pal = (short*)(gfx + 4 + size);
 
-    if(!I_AllocVBlock(gfx_tex_params, gfx_tex_blocks, data, texture, size))
-    {
-        GFX_TEX_FORMAT = 0;
-        GFX_PAL_FORMAT = 0;
-        return;
-    }
-
-    stride = gfx_tex_blocks[texture]->block - gfx_tex_buffer;
-
     flags = TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T;
         
     if(pal[0] == 0)
@@ -521,13 +536,12 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     if(flip_t)
         flags |= GL_TEXTURE_FLIP_T;
 
-    gfx_tex_params[texture] =
-        GFX_TEXTURE(
-        flags,
-        dw,
-        dh,
-        GL_RGB16,
-        ((uint32*)gfx_base + (stride >> 2)));
+    if(!I_AllocVBlock(gfx_tex_params, gfx_tex_blocks, data, texture, size, flags, dw, dh, GL_RGB16))
+    {
+        GFX_TEX_FORMAT = 0;
+        GFX_PAL_FORMAT = 0;
+        return;
+    }
 
     GFX_TEX_FORMAT = gfx_tex_params[texture];
     GFX_PAL_FORMAT = gfx_texpal_params[texture];
@@ -544,7 +558,6 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     spriteframe_t *sprframe;
     int spritenum;
     short* gfx;
-    uint32 stride;
     int width;
     int height;
     int pw;
@@ -585,22 +598,21 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
         data = out;
     }
 
-    if(!I_AllocVBlock(gfx_spr_params, gfx_spr_blocks, data, spritenum, size))
+    if(!I_AllocVBlock(
+        gfx_spr_params,
+        gfx_spr_blocks,
+        data,
+        spritenum,
+        size,
+        TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
+        R_GetTextureSize(pw),
+        R_GetTextureSize(ph),
+        ext ? GL_RGB256 : GL_RGB16))
     {
         GFX_TEX_FORMAT = 0;
         GFX_PAL_FORMAT = 0;
         return false;
     }
-
-    stride = gfx_spr_blocks[spritenum]->block - gfx_tex_buffer;
-
-    gfx_spr_params[spritenum] =
-        GFX_TEXTURE(
-        (TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT),
-        R_GetTextureSize(pw),
-        R_GetTextureSize(ph),
-        (ext ? GL_RGB256 : GL_RGB16),
-        ((uint32*)gfx_base + (stride >> 2)));
 
     GFX_TEX_FORMAT = gfx_spr_params[spritenum];
 

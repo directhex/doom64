@@ -33,8 +33,9 @@ dboolean (I_CheckGFX)(char* file, int line);
 #define I_CheckGFX() if(!(I_CheckGFX)(__FILE__, __LINE__)) return
 #endif
 
-dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock,
-                       byte* data, int index, int size);
+uint32 I_SetPalette(uint16* data, int offset, int size);
+dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index, int size,
+                       int flags, int texel_w, int texel_h, int type);
 
 const char* I_FilePath(const char* file);
 int I_ReadFile(char const* name, byte** buffer);

@@ -83,6 +83,8 @@ extern uint32*      gfx_base;
 extern byte         gfx_tex_buffer[GFX_BUFFER_SIZE];
 
 void            R_PrecacheLevel(void);
+uint32          R_CachePalette(const char* name);
+int             R_PadTextureDims(int n);
 int             R_GetTextureSize(int size);
 void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t);
 dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
