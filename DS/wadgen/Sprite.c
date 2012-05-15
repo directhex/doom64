@@ -290,11 +290,11 @@ void Sprite_Convert(int lump)
 		}
 	}
 
+    for(i = 0; i < (exs->sprite.useExtPal ? 256 : 16); i++)
+        exs->dspalette[i] = RGBDS(exs->palette[i].r, exs->palette[i].g, exs->palette[i].b);
+
     if(INSPRITELIST(lump))
     {
-        for(i = 0; i < (exs->sprite.useExtPal ? 256 : 16); i++)
-            exs->dspalette[i] = RGBDS(exs->palette[i].r, exs->palette[i].g, exs->palette[i].b);
-
         if(exs->sprite.useExtPal)
         {
             int s;

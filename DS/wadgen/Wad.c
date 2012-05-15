@@ -537,32 +537,29 @@ void Wad_AddOutputGfx(gfxEx_t* gfx)
 
 void Wad_AddOutputHudSprite(d64ExSpriteLump_t* sprite)
 {
-	cache data;
-	int size;
-	char name[8];
-	int pos = 0;
-	int i = 0;
+    cache data;
+    int size;
+    char name[8];
+    int pos = 0;
+    int i = 0;
+    
+    size = (8 + sprite->size) + 512;
+    
+    strncpy(name, romWadFile.lump[sprite->lumpRef].name, 8);
+    
+    data = (byte*)Mem_Alloc(size);
+    memcpy(data, &sprite->sprite, 8);
+    pos += 8;
+    
+    memcpy((data+pos), sprite->data, sprite->size);
+    pos += sprite->size;
 
-	size = (8 + sprite->size) + 768;
-
-	strncpy(name, romWadFile.lump[sprite->lumpRef].name, 8);
-
-	data = (byte*)Mem_Alloc(size);
-	memcpy(data, &sprite->sprite, 8);
-	pos += 8;
-
-	memcpy((data+pos), sprite->data, sprite->size);
-	pos += sprite->size;
-
-	for(i = 0; i < 256; i++)
-	{
-		memcpy((data+pos), &sprite->palette[i], 3);
-		pos+=3;
-	}
-
-	Wad_AddOutputLump(name, size, data);
-
-	Mem_Free((void**)&data);
+    memcpy((data + pos), &sprite->dspalette, sizeof(short) * 256);
+    pos += 512;
+    
+    Wad_AddOutputLump(name, size, data);
+    
+    Mem_Free((void**)&data);
 }
 
 //**************************************************************
