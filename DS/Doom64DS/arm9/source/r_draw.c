@@ -858,16 +858,16 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_TEX_COORD   = COORD_PACK(0, 0);
     GFX_VERTEX16    = VERTEX_PACK(x, y);
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
     GFX_TEX_COORD   = COORD_PACK(width, 0);
     GFX_VERTEX16    = VERTEX_PACK(width + x, y);
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
     GFX_TEX_COORD   = COORD_PACK(0, height);
     GFX_VERTEX16    = VERTEX_PACK(x, height + y);
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
     GFX_TEX_COORD   = COORD_PACK(width, height);
     GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
 
     if(sector->lightlevel)
     {
@@ -887,13 +887,13 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
             GFX_COLOR       = color;
             GFX_BEGIN       = GL_TRIANGLE_STRIP;
             GFX_VERTEX16    = VERTEX_PACK(x, y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
             GFX_VERTEX16    = VERTEX_PACK(width + x, y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
             GFX_VERTEX16    = VERTEX_PACK(x, height + y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
             GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
         }
     }
 }

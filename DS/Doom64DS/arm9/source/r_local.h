@@ -89,6 +89,8 @@ int             R_GetTextureSize(int size);
 void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t);
 dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
 void            R_InitData(void);
+void            R_CopyPic(byte* pic, byte* buffer, int x, int y, int rows, int colsize,
+                          int copysize, int mainwidth);
 
 //
 // R_BSP

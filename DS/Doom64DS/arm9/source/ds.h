@@ -60,17 +60,16 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
 
 #define POLY_NEW_DEPTH          (1 << 11)
 #define POLY_DEPTHTEST_EQUAL    (1 << 14)
-#define COORD_PACK(u, v)        (((u << 4) & 0xFFFF) | (((v << 4)) << 16))
+#define COORD_PACK(u, v)        (((u << 4) & 0xFFFF) | ((v << 4) << 16))
 
 #define GFX_MTX_STACK_LEVEL     ((GFX_STATUS >> 8) & 0x1F)
 #define GFX_MTX_PROJ_STACK      (1 << 13)
 #define GFX_MTX_BUSY            (1 << 14)
 #define GFX_MTX_STACK_RESET     (1 << 15)
-
-#define GFX_SIZE_S(x)       (x << 20)
-#define GFX_SIZE_T(x)       (x << 23)
-#define GFX_FORMAT(x)       (x << 26)
-#define GFX_VRAM_OFFSET(x)  (((uint32)x >> 3) & 0xFFFF)
+#define GFX_SIZE_S(x)           (x << 20)
+#define GFX_SIZE_T(x)           (x << 23)
+#define GFX_FORMAT(x)           (x << 26)
+#define GFX_VRAM_OFFSET(x)      (((uint32)x >> 3) & 0xFFFF)
 
 #define GFX_TEXTURE(f, w, h, fmt, offs) \
                     f               |   \
@@ -84,35 +83,32 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
     MATRIX_IDENTITY     = 0;                \
     MATRIX_CONTROL      = GL_MODELVIEW;     \
     MATRIX_IDENTITY     = 0;                \
-    MATRIX_MULT4x4      = 0x400;            \
+    MATRIX_MULT4x4      = 0x20000;          \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0;                \
-    MATRIX_MULT4x4      = 0xFFFFFAAB;       \
+    MATRIX_MULT4x4      = 0xFFFD5556;       \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0;                \
-    MATRIX_MULT4x4      = -0x800;           \
+    MATRIX_MULT4x4      = 0xFFFFF7FF;       \
     MATRIX_MULT4x4      = 0;                \
     MATRIX_MULT4x4      = 0xFFFFF000;       \
     MATRIX_MULT4x4      = 0x1000;           \
-    MATRIX_MULT4x4      = -0x1000;          \
-    MATRIX_MULT4x4      = 0x1000;           \
-    MATRIX_SCALE        = 0x80000;          \
-    MATRIX_SCALE        = 0x80000;          \
-    MATRIX_SCALE        = 0x80000
+    MATRIX_MULT4x4      = 0xFFFFEFFF;       \
+    MATRIX_MULT4x4      = 0x1000
 
 #define GFX_SCREENRECT()                                        \
     GFX_BEGIN       = GL_TRIANGLE_STRIP;                        \
     GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
     GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, 0);              \
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
     GFX_VERTEX16    = VERTEX_PACK(0, SCREENHEIGHT);             \
-    GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
     GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, SCREENHEIGHT);   \
-    GFX_VERTEX16    = VERTEX_PACK(0, 0)
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0)
 
 #endif // __DS_MAIN__

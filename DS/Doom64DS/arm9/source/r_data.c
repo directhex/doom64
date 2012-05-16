@@ -46,6 +46,28 @@ uint32 R_CachePalette(const char* name)
 }
 
 //
+// R_CopyPic
+//
+
+void R_CopyPic(byte* pic, byte* buffer, int x, int y, int rows, int colsize,
+               int copysize, int mainwidth)
+{
+    int i;
+
+    for(i = 0; i < rows; i++)
+    {
+        byte* src;
+        byte* dst;
+
+        src = &pic[((i + y) * mainwidth) + x];
+        dst = &buffer[i * colsize];
+
+        memset(dst, 0, colsize);
+        memcpy(dst, src, copysize);
+    }
+}
+
+//
 // R_CacheTexture
 //
 

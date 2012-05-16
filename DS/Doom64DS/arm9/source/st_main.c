@@ -15,6 +15,7 @@
 //
 
 #define NUMSYMBOLS      97
+#define NUMSTATUSITEMS  8
 
 typedef struct
 {
@@ -26,15 +27,15 @@ typedef struct
 
 static keyflash_t flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
-#define ST_HUDCOLOR     ARGB16(31, 20, 0, 4)
+#define ST_HUDCOLOR     ARGB16(20, 31, 0, 0)
 #define	FLASHDELAY      8       /* # of tics delay (1/30 sec) */
 #define FLASHTIMES      6       /* # of times to flash new frag amount (EVEN!) */
-#define ST_HEALTHTEXTX  29
-#define ST_HEALTHTEXTY  203
-#define ST_ARMORTEXTX   253
-#define ST_ARMORTEXTY   203
-#define ST_KEYX         78
-#define ST_KEYY         216
+#define ST_HEALTHTEXTX  20
+#define ST_HEALTHTEXTY  162
+#define ST_ARMORTEXTX   198
+#define ST_ARMORTEXTY   162
+#define ST_KEYX         64
+#define ST_KEYY         172
 #define ST_JMESSAGES    45
 #define ST_MSGTIMEOUT   (5*TICRATE)
 #define ST_MSGFADESTART (ST_MSGTIMEOUT - (1*TICRATE))
@@ -49,16 +50,18 @@ static keyflash_t flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 static rcolor       st_flashcolor;
 static byte         st_flashalpha;
 static int          st_msgtic = 0;
-static int          st_msgalpha = 0xff;
+static int          st_msgalpha = 0xf0;
 static char*        st_msg = NULL;
 static int          lump_bfontnum;
-static byte*        lump_bfont;
+static lumpinfo_t*  lump_bfont;
 static short*       lump_sfont;
 static short*       lump_status;
 static uint32       st_sfontparms[64];
 static uint32       st_bfontparams[NUMSYMBOLS];
+static uint32       st_statusparams[NUMSTATUSITEMS];
 static vramblock_t* st_sfontblocks[64];
 static vramblock_t* st_bfontblocks[NUMSYMBOLS];
+static vramblock_t* st_statusblocks[NUMSTATUSITEMS];
 static byte         st_fontbuffer[128 * 32];
 static uint32       st_sfontpalparam;
 static uint32       st_bfontpalparam;
@@ -86,7 +89,7 @@ typedef struct
 void ST_ClearMessage(void)
 {
     st_msgtic = 0;
-    st_msgalpha = 0xff;
+    st_msgalpha = 0xf0;
     st_msg = NULL;
 }
 
@@ -240,6 +243,75 @@ void ST_UpdateFlash(void)
 }
 
 //
+// ST_DrawStatusItem
+//
+
+static const fontmap_t statusmap[NUMSTATUSITEMS] =
+{
+    { 0, 0, 40, 6 },
+    { 40, 0, 36, 6 },
+    { 0, 6, 9, 10 },
+    { 9, 6, 9, 10 },
+    { 18, 6, 9, 10 },
+    { 27, 6, 9, 10 },
+    { 36, 6, 9, 10 },
+    { 45, 6, 9, 10 }
+};
+
+static void ST_DrawStatusItem(int index, int x, int y)
+{
+    byte* data;
+    fontmap_t* fontmap;
+    int pw;
+    int ph;
+
+    I_CheckGFX();
+
+    data = (byte*)(lump_status + 4);
+    fontmap = (fontmap_t*)&statusmap[index];
+    pw = R_PadTextureDims(fontmap->w);
+    ph = R_PadTextureDims(fontmap->h);
+
+    R_CopyPic(data, st_fontbuffer, fontmap->x, fontmap->y,
+        fontmap->h, pw, fontmap->w, lump_status[0]);
+
+    if(!I_AllocVBlock(
+        st_statusparams,
+        st_statusblocks,
+        st_fontbuffer,
+        index, pw * fontmap->h,
+        TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
+        R_GetTextureSize(pw),
+        R_GetTextureSize(ph),
+        GL_RGB256))
+        return;
+
+    GFX_TEX_FORMAT = st_statusparams[index];
+    GFX_PAL_FORMAT = st_bfontpalparam;
+
+    GFX_POLY_FORMAT =
+        POLY_ALPHA(18)      |
+        POLY_ID(0)          |
+        POLY_CULL_NONE      |
+        POLY_MODULATION;
+
+    GFX_COLOR       = RGB15(31, 31, 31);
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x, y);
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+    GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), 0);
+    GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, y);
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, fontmap->h);
+    GFX_VERTEX16    = VERTEX_PACK(x, fontmap->h + y);
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+    GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), fontmap->h);
+    GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, fontmap->h + y);
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+}
+
+//
 // ST_Drawer
 //
 
@@ -247,28 +319,69 @@ void ST_Drawer(void)
 {
     player_t* plyr = &players[consoleplayer];
 
-    I_CheckGFX();
-
     GFX_ORTHO();
 
     if(st_msg)
     {
-        ST_DrawMessage(10, 10,
-            ARGB16((st_msgalpha >> 3), 31, 31, 31), st_msg);
+        int alpha = (st_msgalpha >> 3);
+
+        if(alpha > 0)
+        {
+            ST_DrawMessage(10, 10,
+                ARGB16(alpha, 31, 31, 31), st_msg);
+        }
     }
 
-    //Draw Health
+    // draw health text
+    ST_DrawStatusItem(0, ST_HEALTHTEXTX, ST_HEALTHTEXTY);
+
+    // draw armor text
+    ST_DrawStatusItem(1, ST_ARMORTEXTX, ST_ARMORTEXTY);
+
+    // draw blue card
+    if(plyr->cards[it_bluecard] ||
+        (flashCards[it_bluecard].doDraw && flashCards[it_bluecard].active))
+        ST_DrawStatusItem(2, ST_KEYX, ST_KEYY);
+
+    // draw yellow card
+    if(plyr->cards[it_yellowcard] ||
+        (flashCards[it_yellowcard].doDraw && flashCards[it_yellowcard].active))
+        ST_DrawStatusItem(3, ST_KEYX + 10, ST_KEYY);
+
+    // draw red card
+    if(plyr->cards[it_redcard] ||
+        (flashCards[it_redcard].doDraw && flashCards[it_redcard].active))
+        ST_DrawStatusItem(4, ST_KEYX + 20, ST_KEYY);
+
+    // draw blue skull
+    if(plyr->cards[it_blueskull] ||
+        (flashCards[it_bluecard].doDraw && flashCards[it_bluecard].active))
+        ST_DrawStatusItem(5, ST_KEYX, ST_KEYY);
+
+    // draw yellow skull
+    if(plyr->cards[it_yellowskull] ||
+        (flashCards[it_yellowcard].doDraw && flashCards[it_yellowcard].active))
+        ST_DrawStatusItem(6, ST_KEYX + 10, ST_KEYY);
+
+    // draw red skull
+    if(plyr->cards[it_redskull] ||
+        (flashCards[it_redcard].doDraw && flashCards[it_redcard].active))
+        ST_DrawStatusItem(7, ST_KEYX + 20, ST_KEYY);
+
+    //draw health value
     ST_DrawNumber(39, 172, plyr->health, 0, ST_HUDCOLOR);
 
-    //Draw Armor
+    //draw armor value
     ST_DrawNumber(216, 172, plyr->armorpoints, 0, ST_HUDCOLOR);
 
-    //Draw Ammo counter
+    //draw ammo counter
     if(weaponinfo[plyr->readyweapon].ammo != am_noammo)
         ST_DrawNumber(128, 172, plyr->ammo[weaponinfo[plyr->readyweapon].ammo], 0, ST_HUDCOLOR);
 
     if(st_flashcolor && st_flashalpha)
     {
+        I_CheckGFX();
+
         GFX_POLY_FORMAT =
             POLY_ALPHA(st_flashalpha)   |
             POLY_ID(1)                  |
@@ -462,21 +575,26 @@ int ST_CenterString(const char* string)
 int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
 {
     byte* data;
+    short* lumpdata;
     int width;
     int i;
     int c;
 
+    I_CheckGFX();
+
     if(x <= -1)
         x = ST_CenterString(string);
 
-    lump_bfont = W_CacheLumpNum(lump_bfontnum, PU_CACHE);
+    if(lump_bfont->cache == NULL)
+        W_CacheLumpNum(lump_bfontnum, PU_CACHE);
 
-    width   = *(short*)(lump_bfont + 0);
-    data    = lump_bfont + 8;
+    lumpdata = (short*)lump_bfont->cache;
+
+    width   = lumpdata[0];
+    data    = (byte*)(lumpdata + 4);
 
     for(i = 0; i < strlen(string); i++)
     {
-        int j;
         int pw;
         int ph;
         fontmap_t* fontmap;
@@ -549,17 +667,8 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
         pw = R_PadTextureDims(fontmap->w);
         ph = R_PadTextureDims(fontmap->h);
 
-        for(j = 0; j < fontmap->h; j++)
-        {
-            byte* src;
-            byte* dst;
-
-            src = &data[((j + fontmap->y) * width) + fontmap->x];
-            dst = &st_fontbuffer[j * pw];
-
-            memset(dst, 0, pw);
-            memcpy(dst, src, fontmap->w);
-        }
+        R_CopyPic(data, st_fontbuffer, fontmap->x, fontmap->y,
+            fontmap->h, pw, fontmap->w, width);
 
         if(!I_AllocVBlock(
             st_bfontparams,
@@ -585,16 +694,16 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
         GFX_BEGIN       = GL_TRIANGLE_STRIP;
         GFX_TEX_COORD   = COORD_PACK(0, 0);
         GFX_VERTEX16    = VERTEX_PACK(x, y + dy);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_VERTEX16    = VERTEX_PACK(-2, 0);
         GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), 0);
         GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, y + dy);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_VERTEX16    = VERTEX_PACK(-2, 0);
         GFX_TEX_COORD   = COORD_PACK(0, fontmap->h);
         GFX_VERTEX16    = VERTEX_PACK(x, fontmap->h + y + dy);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_VERTEX16    = VERTEX_PACK(-2, 0);
         GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), fontmap->h);
         GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, fontmap->h + y + dy);
-        GFX_VERTEX16    = VERTEX_PACK(0, 0);
+        GFX_VERTEX16    = VERTEX_PACK(-2, 0);
 
         x += fontmap->w + 1;
     }
@@ -614,6 +723,8 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
     char msg[128];
     const int ix = x;
 
+    I_CheckGFX();
+
     va_start(va, string);
     vsprintf(msg, string, va);
     va_end(va);
@@ -623,7 +734,6 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
     for(i = 0; i < strlen(msg); i++)
     {
         int c;
-        int j;
         int start = 0;
         int	col;
         int row;
@@ -660,17 +770,8 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
             col = (start & (ST_FONTNUMSET - 1)) * ST_FONTWHSIZE;
             row = (start >= ST_FONTNUMSET) ? 8 : 0;
 
-            for(j = 0; j < ST_FONTWHSIZE; j++)
-            {
-                byte* src;
-                byte* dst;
-
-                src = &data[((j + row) * lump_sfont[0]) + col];
-                dst = &st_fontbuffer[j * ST_FONTWHSIZE];
-
-                memset(dst, 0, ST_FONTWHSIZE);
-                memcpy(dst, src, ST_FONTWHSIZE);
-            }
+            R_CopyPic(data, st_fontbuffer, col, row,
+                ST_FONTWHSIZE, ST_FONTWHSIZE, ST_FONTWHSIZE, lump_sfont[0]);
 
             if(!I_AllocVBlock(
                 st_sfontparms,
@@ -697,16 +798,16 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
             GFX_BEGIN       = GL_TRIANGLE_STRIP;
             GFX_TEX_COORD   = COORD_PACK(0, 0);
             GFX_VERTEX16    = VERTEX_PACK(x, y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-2, 0);
             GFX_TEX_COORD   = COORD_PACK(ST_FONTWHSIZE, 0);
             GFX_VERTEX16    = VERTEX_PACK(ST_FONTWHSIZE + x, y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-2, 0);
             GFX_TEX_COORD   = COORD_PACK(0, ST_FONTWHSIZE);
             GFX_VERTEX16    = VERTEX_PACK(x, ST_FONTWHSIZE + y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-2, 0);
             GFX_TEX_COORD   = COORD_PACK(ST_FONTWHSIZE, ST_FONTWHSIZE);
             GFX_VERTEX16    = VERTEX_PACK(ST_FONTWHSIZE + x, ST_FONTWHSIZE + y);
-            GFX_VERTEX16    = VERTEX_PACK(0, 0);
+            GFX_VERTEX16    = VERTEX_PACK(-2, 0);
 
             x += ST_FONTWHSIZE;
         }
@@ -796,11 +897,11 @@ void ST_Init(void)
 {
     int i = 0;
 
-    lump_bfont  = NULL;
     lump_sfont  = (short*)W_CacheLumpName("SFONT", PU_STATIC);
     lump_status = (short*)W_CacheLumpName("STATUS", PU_STATIC);
 
     lump_bfontnum = W_GetNumForName("SYMBOLS");
+    lump_bfont = &lumpinfo[lump_bfontnum];
     
     // setup keycards
     
