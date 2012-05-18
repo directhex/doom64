@@ -536,8 +536,6 @@ int (Z_CheckTag)(void *ptr, const char *file, int line)
     
     block = (memblock_t*)((byte *)ptr - sizeof(memblock_t));
 
-    (Z_CheckHeap)(file, line);
-
     if(block->id != ZONEID)
         I_Error("Z_CheckTag: block doesn't have ZONEID (%s:%d)", file, line);
 

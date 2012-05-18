@@ -131,8 +131,7 @@ typedef enum
 	SPR_PLAS,
 	SPR_BFGG,
 	SPR_LASR,
-    //SPR_RBLD,   // [kex] region-specific sprite
-    //SPR_GBLD,   // [kex] region-specific sprite
+    SPR_BOLT,
     NUMSPRITES
 
 } spritenum_t;

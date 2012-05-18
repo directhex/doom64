@@ -31,20 +31,20 @@ static keyflash_t flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 #define	FLASHDELAY      8       /* # of tics delay (1/30 sec) */
 #define FLASHTIMES      6       /* # of times to flash new frag amount (EVEN!) */
 #define ST_HEALTHTEXTX  20
-#define ST_HEALTHTEXTY  162
-#define ST_ARMORTEXTX   198
-#define ST_ARMORTEXTY   162
+#define ST_HEALTHTEXTY  164
+#define ST_ARMORTEXTX   200
+#define ST_ARMORTEXTY   164
 #define ST_KEYX         64
 #define ST_KEYY         172
 #define ST_JMESSAGES    45
 #define ST_MSGTIMEOUT   (5*TICRATE)
 #define ST_MSGFADESTART (ST_MSGTIMEOUT - (1*TICRATE))
 #define ST_MSGFADETIME  5
-#define ST_FONTWHSIZE	8
-#define ST_FONTNUMSET	32	//# of fonts per row in font pic
-#define ST_FONTSTART	'!'	// the first font characters
-#define ST_FONTEND		'_'	// the last font characters
-#define ST_FONTSIZE		(ST_FONTEND - ST_FONTSTART + 1) // Calculate # of glyphs in font.
+#define ST_FONTWHSIZE   8
+#define ST_FONTNUMSET   32	//# of fonts per row in font pic
+#define ST_FONTSTART    '!'	// the first font characters
+#define ST_FONTEND      '_'	// the last font characters
+#define ST_FONTSIZE     (ST_FONTEND - ST_FONTSTART + 1) // Calculate # of glyphs in font.
 
 
 static rcolor       st_flashcolor;
@@ -62,7 +62,7 @@ static uint32       st_statusparams[NUMSTATUSITEMS];
 static vramblock_t* st_sfontblocks[64];
 static vramblock_t* st_bfontblocks[NUMSYMBOLS];
 static vramblock_t* st_statusblocks[NUMSTATUSITEMS];
-static byte         st_fontbuffer[128 * 32];
+static byte*        st_fontbuffer;
 static uint32       st_sfontpalparam;
 static uint32       st_bfontpalparam;
 
@@ -272,14 +272,14 @@ static void ST_DrawStatusItem(int index, int x, int y)
     pw = R_PadTextureDims(fontmap->w);
     ph = R_PadTextureDims(fontmap->h);
 
-    R_CopyPic(data, st_fontbuffer, fontmap->x, fontmap->y,
+    st_fontbuffer = R_CopyPic(data, fontmap->x, fontmap->y,
         fontmap->h, pw, fontmap->w, lump_status[0]);
 
     if(!I_AllocVBlock(
         st_statusparams,
         st_statusblocks,
         st_fontbuffer,
-        index, pw * fontmap->h,
+        index, pw * ph,
         TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
         R_GetTextureSize(pw),
         R_GetTextureSize(ph),
@@ -300,15 +300,25 @@ static void ST_DrawStatusItem(int index, int x, int y)
     GFX_TEX_COORD   = COORD_PACK(0, 0);
     GFX_VERTEX16    = VERTEX_PACK(x, y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-    GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), 0);
-    GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, y);
+    GFX_TEX_COORD   = COORD_PACK(pw, 0);
+    GFX_VERTEX16    = VERTEX_PACK(pw + x, y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-    GFX_TEX_COORD   = COORD_PACK(0, fontmap->h);
-    GFX_VERTEX16    = VERTEX_PACK(x, fontmap->h + y);
+    GFX_TEX_COORD   = COORD_PACK(0, ph);
+    GFX_VERTEX16    = VERTEX_PACK(x, ph + y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-    GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), fontmap->h);
-    GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, fontmap->h + y);
+    GFX_TEX_COORD   = COORD_PACK(pw, ph);
+    GFX_VERTEX16    = VERTEX_PACK(pw + x, ph + y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+}
+
+//
+// ST_DrawKey
+//
+
+static void ST_DrawKey(player_t* player, int key, int offset)
+{
+    if(player->cards[key] || (flashCards[key].doDraw && flashCards[key].active))
+        ST_DrawStatusItem(2 + key, ST_KEYX + offset, ST_KEYY);
 }
 
 //
@@ -321,6 +331,7 @@ void ST_Drawer(void)
 
     GFX_ORTHO();
 
+    // messages
     if(st_msg)
     {
         int alpha = (st_msgalpha >> 3);
@@ -332,52 +343,41 @@ void ST_Drawer(void)
         }
     }
 
-    // draw health text
+    // health text
     ST_DrawStatusItem(0, ST_HEALTHTEXTX, ST_HEALTHTEXTY);
 
-    // draw armor text
+    // armor text
     ST_DrawStatusItem(1, ST_ARMORTEXTX, ST_ARMORTEXTY);
 
-    // draw blue card
-    if(plyr->cards[it_bluecard] ||
-        (flashCards[it_bluecard].doDraw && flashCards[it_bluecard].active))
-        ST_DrawStatusItem(2, ST_KEYX, ST_KEYY);
+    // blue card
+    ST_DrawKey(plyr, it_bluecard, 0);
 
-    // draw yellow card
-    if(plyr->cards[it_yellowcard] ||
-        (flashCards[it_yellowcard].doDraw && flashCards[it_yellowcard].active))
-        ST_DrawStatusItem(3, ST_KEYX + 10, ST_KEYY);
+    // yellow card
+    ST_DrawKey(plyr, it_yellowcard, 10);
 
-    // draw red card
-    if(plyr->cards[it_redcard] ||
-        (flashCards[it_redcard].doDraw && flashCards[it_redcard].active))
-        ST_DrawStatusItem(4, ST_KEYX + 20, ST_KEYY);
+    // red card
+    ST_DrawKey(plyr, it_redcard, 20);
 
-    // draw blue skull
-    if(plyr->cards[it_blueskull] ||
-        (flashCards[it_bluecard].doDraw && flashCards[it_bluecard].active))
-        ST_DrawStatusItem(5, ST_KEYX, ST_KEYY);
+    // blue skull
+    ST_DrawKey(plyr, it_blueskull, 0);
 
-    // draw yellow skull
-    if(plyr->cards[it_yellowskull] ||
-        (flashCards[it_yellowcard].doDraw && flashCards[it_yellowcard].active))
-        ST_DrawStatusItem(6, ST_KEYX + 10, ST_KEYY);
+    // yellow skull
+    ST_DrawKey(plyr, it_yellowskull, 10);
 
-    // draw red skull
-    if(plyr->cards[it_redskull] ||
-        (flashCards[it_redcard].doDraw && flashCards[it_redcard].active))
-        ST_DrawStatusItem(7, ST_KEYX + 20, ST_KEYY);
+    // red skull
+    ST_DrawKey(plyr, it_redskull, 20);
 
-    //draw health value
-    ST_DrawNumber(39, 172, plyr->health, 0, ST_HUDCOLOR);
+    // health value
+    ST_DrawNumber(40, 172, plyr->health, 0, ST_HUDCOLOR);
 
-    //draw armor value
+    // armor value
     ST_DrawNumber(216, 172, plyr->armorpoints, 0, ST_HUDCOLOR);
 
-    //draw ammo counter
+    // ammo counter
     if(weaponinfo[plyr->readyweapon].ammo != am_noammo)
         ST_DrawNumber(128, 172, plyr->ammo[weaponinfo[plyr->readyweapon].ammo], 0, ST_HUDCOLOR);
 
+    // flash overlay
     if(st_flashcolor && st_flashalpha)
     {
         I_CheckGFX();
@@ -667,14 +667,14 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
         pw = R_PadTextureDims(fontmap->w);
         ph = R_PadTextureDims(fontmap->h);
 
-        R_CopyPic(data, st_fontbuffer, fontmap->x, fontmap->y,
+        st_fontbuffer = R_CopyPic(data, fontmap->x, fontmap->y,
             fontmap->h, pw, fontmap->w, width);
 
         if(!I_AllocVBlock(
             st_bfontparams,
             st_bfontblocks,
             st_fontbuffer,
-            index, pw * fontmap->h,
+            index, pw * ph,
             TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
             R_GetTextureSize(pw),
             R_GetTextureSize(ph),
@@ -695,14 +695,14 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
         GFX_TEX_COORD   = COORD_PACK(0, 0);
         GFX_VERTEX16    = VERTEX_PACK(x, y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-        GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), 0);
-        GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, y + dy);
+        GFX_TEX_COORD   = COORD_PACK(pw, 0);
+        GFX_VERTEX16    = VERTEX_PACK(pw + x, y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-        GFX_TEX_COORD   = COORD_PACK(0, fontmap->h);
-        GFX_VERTEX16    = VERTEX_PACK(x, fontmap->h + y + dy);
+        GFX_TEX_COORD   = COORD_PACK(0, ph);
+        GFX_VERTEX16    = VERTEX_PACK(x, ph + y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-        GFX_TEX_COORD   = COORD_PACK((fontmap->w + 1), fontmap->h);
-        GFX_VERTEX16    = VERTEX_PACK(fontmap->w + 1 + x, fontmap->h + y + dy);
+        GFX_TEX_COORD   = COORD_PACK(pw, ph);
+        GFX_VERTEX16    = VERTEX_PACK(pw + x, ph + y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
 
         x += fontmap->w + 1;
@@ -770,7 +770,7 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
             col = (start & (ST_FONTNUMSET - 1)) * ST_FONTWHSIZE;
             row = (start >= ST_FONTNUMSET) ? 8 : 0;
 
-            R_CopyPic(data, st_fontbuffer, col, row,
+            st_fontbuffer = R_CopyPic(data, col, row,
                 ST_FONTWHSIZE, ST_FONTWHSIZE, ST_FONTWHSIZE, lump_sfont[0]);
 
             if(!I_AllocVBlock(
@@ -887,6 +887,8 @@ void ST_CachePalettes(void)
 {
     st_bfontpalparam = R_CachePalette("SYMBOLS");
     st_sfontpalparam = R_CachePalette("SFONT");
+
+    dmaCopy(VRAM_E + (st_bfontpalparam << 3), BG_PALETTE, 512);
 }
 
 //

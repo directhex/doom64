@@ -2,6 +2,7 @@
 #include "tables.h"
 #include "r_local.h"
 #include "z_zone.h"
+#include "p_local.h"
 #include "w_wad.h"
 
 int         skypicnum = -1;
@@ -15,67 +16,82 @@ dboolean    skyfadeback = false;
 fixed_t     scrollfrac;
 
 //
-// R_DrawSimpleSky
+// R_DrawSwitch
 //
 
-static dtexture gfxskypic = -1;
-
-void R_DrawSimpleSky(void)
+static void R_DrawSwitch(seg_t* seg, dtexture texture, fixed_t top, fixed_t bottom)
 {
-    if(gfxskypic == -1)
+    fixed_t cenx;
+    fixed_t ceny;
+    fixed_t f1;
+    fixed_t f2;
+    fixed_t s1;
+    fixed_t s2;
+    light_t* light;
+    int x1;
+    int x2;
+    int y1;
+    int y2;
+    int z1;
+    int z2;
+    int r;
+    int g;
+    int b;
+
+    I_CheckGFX();
+
+    light = &lights[frontsector->colors[LIGHT_THING]];
+
+    r = light->active_r;
+    g = light->active_g;
+    b = light->active_b;
+
+    //
+    // sequenced lighting is too expensive on the DS
+    // instead of creating a glowing plane, just amplify the
+    // RGB values
+    //
+    if(frontsector->lightlevel && frontsector->special == 205)
     {
-        short* gfx;
-        int i;
-        int w;
-        int h;
-        byte* data;
-        byte* pal;
-        uint16 paldata[256];
-
-        gfx = (short*)W_CacheLumpNum(skypicnum, PU_CACHE);
-        w = gfx[0];
-        h = gfx[1];
-        data = (byte*)(gfx + 4);
-        pal = (byte*)(gfx + 4 + ((w * h) >> 1));
-
-        for(i = 0; i < 256; i++)
-        {
-            paldata[i] = RGB8(pal[0], pal[1], pal[2]);
-            pal += 3;
-        }
-
-        glGenTextures(1, &gfxskypic);
-        glBindTexture(0, gfxskypic);
-        glTexImage2D(
-            0,
-            0,
-            GL_RGB256,
-            R_GetTextureSize(w),
-            R_GetTextureSize(h),
-            0,
-            TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T,
-            data);
-
-        glColorTableEXT(0, 0, 256, 0, 0, paldata);
+        r = MIN(r + (frontsector->lightlevel << 1), 255);
+        g = MIN(g + (frontsector->lightlevel << 1), 255);
+        b = MIN(b + (frontsector->lightlevel << 1), 255);
     }
-    else
-        glBindTexture(0, gfxskypic);
 
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
-    GFX_COLOR       = RGB15(31, 31, 31);
+    if(nolights)
+        GFX_COLOR = 0x1F7FFF;
+    else
+        GFX_COLOR = RGB8(r, g, b);
+
+    cenx    = (seg->linedef->v1->x + seg->linedef->v2->x) >> 1;
+    ceny    = (seg->linedef->v1->y + seg->linedef->v2->y) >> 1;
+    f1      = FixedMul(2*FRACUNIT, dcos(seg->angle + ANG90));
+    f2      = FixedMul(2*FRACUNIT, dsin(seg->angle + ANG90));
+    s1      = FixedMul(16*FRACUNIT, dcos(seg->angle));
+    s2      = FixedMul(16*FRACUNIT, dsin(seg->angle));
+    x1      = F2DSFIXED((cenx - s1) - f1);
+    x2      = F2DSFIXED((cenx + s1) - f1);
+    y1      = F2DSFIXED((ceny - s2) - f2);
+    y2      = F2DSFIXED((ceny + s2) - f2);
+    z1      = F2DSFIXED(top);
+    z2      = F2DSFIXED(bottom);
+
+    R_LoadTexture(texture, false, false);
+
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_TEX_COORD   = COORD_PACK(0, 0);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
-    GFX_TEX_COORD   = COORD_PACK(256, 0);
-    GFX_VERTEX16    = VERTEX_PACK(0x7FFF, 0);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
-    GFX_TEX_COORD   = COORD_PACK(0, -128);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0x5FFF);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
-    GFX_TEX_COORD   = COORD_PACK(256, -128);
-    GFX_VERTEX16    = VERTEX_PACK(0x7FFF, 0x5FFF);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x2, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+    GFX_TEX_COORD   = COORD_PACK(32, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, 32);
+    GFX_VERTEX16    = VERTEX_PACK(x2, z2);
+    GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+    GFX_TEX_COORD   = COORD_PACK(32, 32);
+    GFX_VERTEX16    = VERTEX_PACK(x1, z2);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
 }
 
 //
@@ -135,19 +151,22 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
                 //
                 // math for RGB values is done in fixed point first
                 //
-                r1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_r), height), sideheight1));
-                g1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_g), height), sideheight1));
-                b1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_b), height), sideheight1));
-                r2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_r), height), sideheight2));
-                g2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_g), height), sideheight2));
-                b2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_b), height), sideheight2));
+                if(!nolights)
+                {
+                    r1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_r), height), sideheight1));
+                    g1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_g), height), sideheight1));
+                    b1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_b), height), sideheight1));
+                    r2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_r), height), sideheight2));
+                    g2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_g), height), sideheight2));
+                    b2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_b), height), sideheight2));
 
-                r2 = MIN(r1+r2, 255);
-                g2 = MIN(g1+g2, 255);
-                b2 = MIN(b1+b2, 255);
-                r1 = l1->active_r;
-                g1 = l1->active_g;
-                b1 = l1->active_b;
+                    r2 = MIN(r1+r2, 255);
+                    g2 = MIN(g1+g2, 255);
+                    b2 = MIN(b1+b2, 255);
+                    r1 = l1->active_r;
+                    g1 = l1->active_g;
+                    b1 = l1->active_b;
+                }
             }
 
             if(seg->linedef->flags & ML_INVERSEBLEND)
@@ -168,19 +187,22 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
             //
             // math for RGB values is done in fixed point first
             //
-            r1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_r), height), sideheight1));
-            g1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_g), height), sideheight1));
-            b1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_b), height), sideheight1));
-            r2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_r), height), sideheight2));
-            g2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_g), height), sideheight2));
-            b2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_b), height), sideheight2));
+            if(!nolights)
+            {
+                r1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_r), height), sideheight1));
+                g1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_g), height), sideheight1));
+                b1 = F2INT(FixedMul(FixedDiv(INT2F(l1->active_b), height), sideheight1));
+                r2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_r), height), sideheight2));
+                g2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_g), height), sideheight2));
+                b2 = F2INT(FixedMul(FixedDiv(INT2F(l2->active_b), height), sideheight2));
 
-            r1 = MIN(r1+r2, 255);
-            g1 = MIN(g1+g2, 255);
-            b1 = MIN(b1+b2, 255);
-            r2 = l2->active_r;
-            g2 = l2->active_g;
-            b2 = l2->active_b;
+                r1 = MIN(r1+r2, 255);
+                g1 = MIN(g1+g2, 255);
+                b1 = MIN(b1+b2, 255);
+                r2 = l2->active_r;
+                g2 = l2->active_g;
+                b2 = l2->active_b;
+            }
         }
     }
 
@@ -191,8 +213,6 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     z1 = F2DSFIXED(top);
     z2 = F2DSFIXED(bottom);
 
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
-
     R_LoadTexture(texture,
         (seg->linedef->flags & ML_HMIRROR),
         (seg->linedef->flags & ML_VMIRROR));
@@ -200,6 +220,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     if(nolights)
         r1 = r2 = g1 = g2 = b1 = b2 = 255;
 
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
     GFX_COLOR       = RGB8(r1, g1, b1);
     GFX_TEX_COORD   = COORD_PACK(F2INT(u1), F2INT(v1));
@@ -267,6 +288,7 @@ static void R_DrawSeg(seg_t* seg)
     light_t*    l2;
     fixed_t     col;
     fixed_t     row;
+    fixed_t     offset;
     
     linedef = seg->linedef;
     sidedef = seg->sidedef;
@@ -374,6 +396,33 @@ static void R_DrawSeg(seg_t* seg)
             
             top = btop;
         }
+
+        if(SWITCHMASK(linedef->flags))
+        {
+            if(SWITCHMASK(linedef->flags) == ML_SWITCHX02)
+            {
+                offset = seg->backsector->floorheight - (16*FRACUNIT - (seg->sidedef->rowoffset));
+                R_DrawSwitch(seg, seg->sidedef->toptexture, offset, offset - (32*FRACUNIT));
+            }
+            else if(SWITCHMASK(linedef->flags) == ML_SWITCHX04)
+            {
+                offset = seg->backsector->ceilingheight + (16*FRACUNIT + (seg->sidedef->rowoffset));
+                R_DrawSwitch(seg, seg->sidedef->bottomtexture, offset + (32*FRACUNIT), offset);
+            }
+            else
+            {
+                if(seg->backsector->floorheight > seg->frontsector->floorheight)
+                {
+                    offset = seg->backsector->floorheight - (16*FRACUNIT - (seg->sidedef->rowoffset));
+                    R_DrawSwitch(seg, seg->sidedef->midtexture, offset, offset - (32*FRACUNIT));
+                }
+                else if(seg->backsector->ceilingheight < seg->frontsector->ceilingheight)
+                {
+                    offset = seg->backsector->ceilingheight + (16*FRACUNIT + (seg->sidedef->rowoffset));
+                    R_DrawSwitch(seg, seg->sidedef->midtexture, offset + (32*FRACUNIT), offset);
+                }
+            }
+        }
     }
 
     //
@@ -421,6 +470,20 @@ static void R_DrawSeg(seg_t* seg)
             {
                 v1 = row - (top - bottom);
                 v2 = row;
+            }
+
+            if(SWITCHMASK(linedef->flags))
+            {
+                if(SWITCHMASK(linedef->flags) == ML_SWITCHX02)
+                {
+                    offset = seg->frontsector->floorheight + (16*FRACUNIT + (seg->sidedef->rowoffset));
+                    R_DrawSwitch(seg, seg->sidedef->toptexture, offset + (32*FRACUNIT), offset);
+                }
+                else if(SWITCHMASK(linedef->flags) == ML_SWITCHX04)
+                {
+                    offset = seg->frontsector->floorheight + (16*FRACUNIT + (seg->sidedef->rowoffset));
+                    R_DrawSwitch(seg, seg->sidedef->bottomtexture, offset + (32*FRACUNIT), offset);
+                }
             }
         }
         
@@ -746,7 +809,7 @@ static void R_DrawSprite(mobj_t* thing)
     GFX_VERTEX16    = VERTEX_PACK(x2, z1);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
 
-    if(thing->subsector->sector->lightlevel)
+    if(thing->subsector->sector->lightlevel && !(thing->flags & MF_MISSILE))
     {
         int lightlevel = ((thing->subsector->sector->lightlevel << 1) >> 3);
 
@@ -777,6 +840,64 @@ static void R_DrawSprite(mobj_t* thing)
 }
 
 //
+// R_DrawLaser
+//
+
+static void R_DrawLaser(mobj_t* thing)
+{
+    laser_t* laser;
+    int spritenum;
+    fixed_t c;
+    fixed_t s;
+    fixed_t dx1;
+    fixed_t dx2;
+
+    // must have data present
+    if(!thing->extradata)
+        return;
+
+    laser = (laser_t*)thing->extradata;
+    spritenum = spriteinfo[SPR_BOLT].spriteframes[0].lump[0];
+
+    if(!R_LoadSprite(SPR_BOLT, thing->frame & FF_FRAMEMASK, 0, 0, NULL, NULL, NULL, NULL))
+        return;
+
+    I_CheckGFX();
+
+    // get angles
+    s = dsin(laser->angle + ANG90);
+    c = dcos(laser->angle + ANG90);
+
+    dx1 = -INT2F(spritetopoffset[spritenum]);
+    dx2 = dx1 + INT2F(spriteheight[spritenum] << 2);
+
+    GFX_POLY_FORMAT =
+        POLY_ALPHA((thing->alpha >> 3)) |
+        POLY_ID(0)                      |
+        POLY_CULL_NONE                  |
+        POLY_MODULATION;
+
+#define LASER_VERTEX(x, a, d) F2DSFIXED(laser->x + FixedMul(a, d))
+
+    GFX_COLOR       = RGB15(31, 0, 0);
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(x1, c, dx1), F2DSFIXED(laser->z1));
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(y1, s, dx1), 0);
+    GFX_TEX_COORD   = COORD_PACK(spritewidth[spritenum], 0);
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(x2, c, dx1), F2DSFIXED(laser->z2));
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(y2, s, dx1), 0);
+    GFX_TEX_COORD   = COORD_PACK(0, spriteheight[spritenum]);
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(x1, c, dx2), F2DSFIXED(laser->z1));
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(y1, s, dx2), 0);
+    GFX_TEX_COORD   = COORD_PACK(spritewidth[spritenum], spriteheight[spritenum]);
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(x2, c, dx2), F2DSFIXED(laser->z2));
+    GFX_VERTEX16    = VERTEX_PACK(LASER_VERTEX(y2, s, dx2), 0);
+
+#undef LASER_VERTEX
+}
+
+//
 // R_DrawScene
 //
 
@@ -797,7 +918,11 @@ void R_DrawScene(void)
         mobj_t* mobj;
 
         mobj = *vissprite;
-        R_DrawSprite(mobj);
+
+        if(mobj->flags & MF_RENDERLASER)
+            R_DrawLaser(mobj);
+        else
+            R_DrawSprite(mobj);
     }
 }
 
@@ -819,7 +944,8 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     alpha = (((player->mo->alpha * psp->alpha) / 0xff) >> 3);
 
-    if(!R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK, 0, 0, &x, &y, &width, &height))
+    if(!R_LoadSprite(psp->state->sprite, psp->state->frame & FF_FRAMEMASK,
+        0, 0, &x, &y, &width, &height))
         return;
 
     x = F2INT(psp->sx) - x - 32;

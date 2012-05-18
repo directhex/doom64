@@ -630,14 +630,9 @@ drawframe:
 }
 
 void P_Start(void);
+void P_Drawer(void);
 void P_Stop(void);
 int P_Ticker(void);
-
-void TestDrawer(void)
-{
-    R_DrawFrame();
-    ST_Drawer();
-}
 
 //
 // D_DoomMain
@@ -735,7 +730,7 @@ void D_DoomMain(void)
         G_DoLoadLevel();
         players[0].cheats |= CF_GODMODE;
         I_Printf("%s\n", P_GetMapInfo(gamemap)->mapname);
-        D_MiniLoop(P_Start, P_Stop, TestDrawer, P_Ticker);
+        D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
     }
 }
 

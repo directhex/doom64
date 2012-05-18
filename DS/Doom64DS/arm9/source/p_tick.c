@@ -4,6 +4,8 @@
 #include "d_main.h"
 #include "s_sound.h"
 #include "p_spec.h"
+#include "r_local.h"
+#include "st_main.h"
 
 void G_PlayerFinishLevel(int player);
 void G_DoReborn(int playernum);
@@ -260,14 +262,9 @@ void P_Drawer(void)
     if(!leveltime)
         return;
 
-    // TODO
-    /*R_GLClearFrame(0xFF000000);
-
-    if(!automapactive || am_overlay.value)
-        R_RenderPlayerView(&players[displayplayer]);
-
-    AM_Drawer();
-    ST_Drawer();*/
+    R_DrawFrame();
+    //AM_Drawer();  // TODO
+    ST_Drawer();
 }
 
 //

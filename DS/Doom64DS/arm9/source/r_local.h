@@ -76,6 +76,7 @@ void            R_DrawFrame(void);
 extern int          t_start;
 extern int          t_end;
 extern int          numtextures;
+extern int          swx_start;
 extern int          s_start;
 extern int          s_end;
 extern int          numgfxsprites;
@@ -89,7 +90,7 @@ int             R_GetTextureSize(int size);
 void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t);
 dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
 void            R_InitData(void);
-void            R_CopyPic(byte* pic, byte* buffer, int x, int y, int rows, int colsize,
+byte*           R_CopyPic(byte* pic, int x, int y, int rows, int colsize,
                           int copysize, int mainwidth);
 
 //
@@ -120,7 +121,6 @@ extern dboolean     skyfadeback;
 extern fixed_t      scrollfrac;
 
 void            R_DrawScene(void);
-void            R_DrawSimpleSky(void);
 void            R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player);
 
 //

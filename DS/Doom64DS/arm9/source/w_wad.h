@@ -26,6 +26,7 @@ void            W_Init(void);
 wad_file_t*     W_AddFile(char *filename);
 unsigned int    W_HashLumpName(const char* str);
 int             W_CheckNumForName(const char* name);
+int             W_FindNumForName(const char* match);
 int             W_GetNumForName(const char* name);
 int             W_LumpLength(int lump);
 void            W_ReadLump(int lump, void *dest);

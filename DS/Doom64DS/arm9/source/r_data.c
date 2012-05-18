@@ -18,6 +18,7 @@ static byte**           gfx_tex_cache;
 static byte**           gfx_spr_cache;
 static vramblock_t**    gfx_tex_blocks;
 static vramblock_t**    gfx_spr_blocks;
+static byte             gfx_padbuffer[256 * 256];
 
 //
 // R_CachePalette
@@ -49,10 +50,12 @@ uint32 R_CachePalette(const char* name)
 // R_CopyPic
 //
 
-void R_CopyPic(byte* pic, byte* buffer, int x, int y, int rows, int colsize,
+byte* R_CopyPic(byte* pic, int x, int y, int rows, int colsize,
                int copysize, int mainwidth)
 {
     int i;
+
+    memset(gfx_padbuffer, 0, R_PadTextureDims(rows) * colsize);
 
     for(i = 0; i < rows; i++)
     {
@@ -60,11 +63,12 @@ void R_CopyPic(byte* pic, byte* buffer, int x, int y, int rows, int colsize,
         byte* dst;
 
         src = &pic[((i + y) * mainwidth) + x];
-        dst = &buffer[i * colsize];
+        dst = &gfx_padbuffer[i * colsize];
 
-        memset(dst, 0, colsize);
         memcpy(dst, src, copysize);
     }
+
+    return gfx_padbuffer;
 }
 
 //
@@ -121,10 +125,7 @@ static void R_SetupSpriteData(int spritenum)
         gfx_texpal_stride += size;
     }
     else
-    {
         spritetiles[spritenum] = gfx[5];
-        spritetilelist[spritenum] = (short*)(gfx + 6);
-    }
 
     Z_Free(gfx);
 }
@@ -201,8 +202,6 @@ static void R_InitPalettes(void)
     int i;
 
     vramSetBankE(VRAM_E_LCD);
-    vramSetBankF(VRAM_F_LCD);
-    vramSetBankG(VRAM_G_LCD);
 
     for(i = 0; i < numtextures; i++)
     {
@@ -222,11 +221,10 @@ static void R_InitPalettes(void)
     ST_CachePalettes();
 
     vramSetBankE(VRAM_E_TEX_PALETTE);
-    vramSetBankF(VRAM_F_TEX_PALETTE_SLOT4);
-    vramSetBankG(VRAM_G_TEX_PALETTE_SLOT5);
 
-    if(gfx_texpal_stride > (VRAM_H - VRAM_E))
-        I_Error("R_InitPalettes: Palette cache overflow");
+    if(gfx_texpal_stride >= 0x10000)
+        I_Error("R_InitPalettes: palette cache overflowed by %d",
+        gfx_texpal_stride - 0x10000);
 }
 
 //
@@ -237,6 +235,7 @@ static void R_InitTextures(void)
 {
     t_start             = W_GetNumForName("T_START") + 1;
     t_end               = W_GetNumForName("T_END") - 1;
+    swx_start           = W_FindNumForName("SWX") + 1;
     numtextures         = (t_end - t_start) + 1;
     gfx_tex_params      = (uint32*)Z_Calloc(sizeof(uint32) * numtextures, PU_STATIC, NULL);
     gfx_texpal_params   = (uint32*)Z_Calloc(sizeof(uint32) * numtextures, PU_STATIC, NULL);
@@ -475,7 +474,6 @@ int R_PadTextureDims(int n)
 // R_PadTexture
 //
 
-static byte gfx_padbuffer[256 * 256];
 static byte* R_PadTexture(byte* in, int width, int height,
                           int newwidth, int newheight, dboolean rgb256)
 {

@@ -35,24 +35,6 @@
 
 #define MAX_MESSAGE_SIZE 1024
 
-
-// If rangecheck is undefined,
-// most parameter validation debugging code will not be compiled
-//#define RANGECHECK
-
-//villsa
-#define D_RGBA(r,g,b,a) ((rcolor)((((a)&0xff)<<24)|(((b)&0xff)<<16)|(((g)&0xff)<<8)|((r)&0xff)))
-
-// basic color definitions
-#define WHITE               0xFFFFFFFF
-#define RED                 0xFF0000FF
-#define BLUE                0xFFFF0000
-#define AQUA                0xFFFFFF00
-#define YELLOW              0xFF00FFFF
-#define GREEN               0xFF00FF00
-#define REDALPHA(x)         (x<<24|0x0000FF)
-#define WHITEALPHA(x)       (x<<24|0xFFFFFF)
-
 // The maximum number of players, multiplayer/networking.
 // remember to add settings for extra skins if increase:)
 #define MAXPLAYERS      4

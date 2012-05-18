@@ -8,6 +8,7 @@
 #include "r_local.h"
 
 static char msg[256];
+static int bg_id = 0;
 
 //
 // I_Error
@@ -166,8 +167,8 @@ void I_Init(void)
 {
     fatInitDefault();
 
-    REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_B | POWER_SWAP_LCDS;
-    REG_DISPCNT     = MODE_0_3D;
+    REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_A | POWER_2D_B | POWER_SWAP_LCDS;
+    REG_DISPCNT     = MODE_5_3D;
     REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG3_ACTIVE;
     TIMER0_CR       = TIMER_ENABLE | TIMER_DIV_1024;
     TIMER1_CR       = TIMER_ENABLE | TIMER_CASCADE;
@@ -177,10 +178,13 @@ void I_Init(void)
     vramSetBankC(VRAM_C_LCD);
     vramSetBankD(VRAM_D_LCD);
     vramSetBankE(VRAM_E_LCD);
-    vramSetBankF(VRAM_F_LCD);
-    vramSetBankG(VRAM_G_LCD);
+    vramSetBankF(VRAM_F_MAIN_BG);
+    vramSetBankG(VRAM_G_MAIN_BG_0x06004000);
     vramSetBankH(VRAM_H_SUB_BG);
     vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+
+    bg_id = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0,0);
+    bgSetPriority(0, 1);
 
     while(GFX_BUSY);
 
@@ -204,7 +208,7 @@ void I_Init(void)
     //
     MATRIX_CONTROL  = GL_MODELVIEW;
     MATRIX_POP      = GFX_MTX_STACK_LEVEL;
-
+    
     consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
     consoleClear();
 }

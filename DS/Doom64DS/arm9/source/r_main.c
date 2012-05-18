@@ -28,6 +28,7 @@ spritedef_t     *spriteinfo;
 int             t_start;
 int             t_end;
 int             numtextures;
+int             swx_start;
 
 // gfx sprite globals
 int             s_start;

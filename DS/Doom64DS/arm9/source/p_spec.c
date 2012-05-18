@@ -294,9 +294,7 @@ void P_StartButton(line_t* line, bwhere_e w, int texture, int time)
 
 void P_ChangeSwitchTexture(line_t* line, int useAgain)
 {
-    // TODO
-
-    /*int sound;
+    int sound;
     int swx;
     
     if(SPECIALMASK(line->special) == 52 || SPECIALMASK(line->special) == 124)
@@ -309,7 +307,7 @@ void P_ChangeSwitchTexture(line_t* line, int useAgain)
     
     if(SWITCHMASK(line->flags) == ML_SWITCHX04)
     {
-        swx = swx_start + (sides[line->sidenum[0]].bottomtexture - swx_start) ^ 1;
+        swx = swx_start + ((sides[line->sidenum[0]].bottomtexture - swx_start) ^ 1);
         
         S_StartSound(buttonlist->soundorg, sound);
         sides[line->sidenum[0]].bottomtexture = swx;
@@ -321,7 +319,7 @@ void P_ChangeSwitchTexture(line_t* line, int useAgain)
     }
     else if(SWITCHMASK(line->flags) == ML_SWITCHX02)
     {
-        swx = swx_start + (sides[line->sidenum[0]].toptexture - swx_start) ^ 1;
+        swx = swx_start + ((sides[line->sidenum[0]].toptexture - swx_start) ^ 1);
         
         S_StartSound(buttonlist->soundorg, sound);
         sides[line->sidenum[0]].toptexture = swx;
@@ -333,7 +331,7 @@ void P_ChangeSwitchTexture(line_t* line, int useAgain)
     }
     else if(SWITCHMASK(line->flags) == (ML_SWITCHX02 | ML_SWITCHX04))
     {
-        swx = swx_start + (sides[line->sidenum[0]].midtexture - swx_start) ^ 1;
+        swx = swx_start + ((sides[line->sidenum[0]].midtexture - swx_start) ^ 1);
         
         S_StartSound(buttonlist->soundorg, sound);
         sides[line->sidenum[0]].midtexture = swx;
@@ -342,7 +340,7 @@ void P_ChangeSwitchTexture(line_t* line, int useAgain)
             P_StartButton(line, middle, swx, BUTTONTIME);
         
         return;
-    }*/
+    }
 }
 
 

@@ -299,6 +299,26 @@ int W_CheckNumForName(const char* name)
 }
 
 //
+// W_FindNumForName
+//
+
+int W_FindNumForName(const char* match)
+{
+    register int i = -1;
+    int size;
+
+    size = strlen(match) - 1;
+    
+    for(i = 0; i < numlumps; i++)
+    {
+        if(!strncmp(lumpinfo[i].name, match, size))
+            break;
+    }
+
+    return i;
+}
+
+//
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
 //

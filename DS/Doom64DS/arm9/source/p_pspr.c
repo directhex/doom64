@@ -819,6 +819,7 @@ void A_CloseShotgun2(player_t* player, pspdef_t* psp)
     S_StartSound(player->mo, sfx_sht2load2);
 }
 
+#if 0
 //
 // P_LaserPointOnSide
 //
@@ -938,6 +939,8 @@ static void P_LaserCrossBSP(int bspnum, laser_t* laser)
     marker->extradata = (laser_t*)laser;
     laser->marker = marker;
 }
+
+#endif
 
 //
 // T_LaserThinker
@@ -1090,7 +1093,7 @@ void A_FireLaser(player_t *player, pspdef_t *psp)
         z = (laser[i]->z1 - laser[i]->z2) >> FRACBITS;
 
         laser[i]->dist = 0;
-        laser[i]->distmax = (int)sqrt((x * x) + (y * y) + (z * z));
+        laser[i]->distmax = sqrt32((x * x) + (y * y) + (z * z));
 
         laser[i]->next = NULL;
         laser[i]->marker = NULL;
@@ -1101,7 +1104,17 @@ void A_FireLaser(player_t *player, pspdef_t *psp)
         y = laser[i]->y2;
         z = laser[i]->z2;
 
+#if 0
         P_LaserCrossBSP(numnodes - 1, laser[i]);
+#else
+        {
+            mobj_t* marker;
+
+            marker = P_SpawnMobj(x, y, z, MT_LASERMARKER);
+            marker->extradata = (laser_t*)laser[i];
+            laser[i]->marker = marker;
+        }
+#endif
 
         laserthinker[i] = Z_Malloc(sizeof(*laserthinker[i]), PU_LEVSPEC, 0);
         P_AddThinker(&laserthinker[i]->thinker);
