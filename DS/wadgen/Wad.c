@@ -381,6 +381,69 @@ void Wad_AddOutputLump(const char* name, int size, cache data)
 	header->lmpdirpos += padSize;
 }
 
+#define MAXTEXSIZE	256
+#define MINTEXSIZE	8
+
+static int Wad_GetPadDims(int n)
+{
+    int mask = MINTEXSIZE;
+    
+    while(mask <= MAXTEXSIZE)
+    {
+        if(n == mask || (n & (mask-1)) == n)
+            return mask;
+        
+        mask <<= 1;
+    }
+    return n;
+}
+
+static byte padbuffer[256 * 256];
+
+static byte* Wad_PadTexture(byte* in, int width, int height,
+                          int newwidth, int newheight, bool rgb256)
+{
+    byte* out = NULL;
+    int row;
+    unsigned int size;
+    unsigned int colsize;
+
+    size = (newwidth * height);
+    colsize = width;
+
+    if(!rgb256)
+    {
+        size >>= 1;
+        colsize >>= 1;
+    }
+
+    out = (byte*)padbuffer;
+
+    for(row = 0; row < height; row++)
+    {
+        byte* d1;
+        byte* d2;
+        unsigned int stride1;
+        unsigned int stride2;
+
+        stride1 = (row * newwidth);
+        stride2 = (row * width);
+
+        if(!rgb256)
+        {
+            stride1 >>= 1;
+            stride2 >>= 1;
+        }
+
+        d1 = out + stride1;
+        d2 = in + stride2;
+        memset(d1, 0, newwidth);
+        memcpy(d1, d2, colsize);
+    }
+
+    return out;
+}
+
 //**************************************************************
 //**************************************************************
 //	Wad_AddOutputSprite
@@ -392,12 +455,26 @@ void Wad_AddOutputLump(const char* name, int size, cache data)
 void Wad_AddOutputSprite(d64ExSpriteLump_t* sprite)
 {
 	cache data;
+    cache paddata;
+    int width;
+    int height;
 	int size;
 	char name[8];
 	int pos = 0;
+    int datasize;
     int tilesize = 0;
 
-	size = (sizeof(d64ExSprite_t) + sprite->size);
+    width = Wad_GetPadDims(sprite->sprite.width);
+    height = Wad_GetPadDims(sprite->sprite.height);
+    datasize = (width * sprite->sprite.height);
+
+    if(!(sprite->sprite.useExtPal))
+        datasize >>= 1;
+
+    paddata = Wad_PadTexture(sprite->data, sprite->sprite.width, sprite->sprite.height,
+        width, sprite->sprite.height, sprite->sprite.useExtPal > 0);
+
+	size = (sizeof(d64ExSprite_t) + datasize);
 	if(!sprite->sprite.useExtPal)
 		size += (sizeof(short)*CMPPALCOUNT);
     else
@@ -417,6 +494,8 @@ void Wad_AddOutputSprite(d64ExSpriteLump_t* sprite)
 
 	data = (byte*)Mem_Alloc(size);
 
+    sprite->sprite.width = width;
+
 	memcpy(data, &sprite->sprite, sizeof(d64ExSprite_t));
 	pos += sizeof(d64ExSprite_t);
 
@@ -428,8 +507,8 @@ void Wad_AddOutputSprite(d64ExSpriteLump_t* sprite)
         pos += tilesize;
     }
 
-	memcpy((data+pos), sprite->data, sprite->size);
-	pos += sprite->size;
+	memcpy((data+pos), paddata, datasize);
+    pos += datasize;
 
 	if(!sprite->sprite.useExtPal)
 		memcpy((data+pos), sprite->dspalette, sizeof(short)*CMPPALCOUNT);
