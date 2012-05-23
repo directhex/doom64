@@ -9,16 +9,15 @@ uint32* gfx_base = (uint32*)VRAM_A;
 byte    gfx_tex_buffer[GFX_BUFFER_SIZE];
 
 static int              gfx_texpal_stride = 0;
-static uint32*          gfx_tex_params;
 static uint32*          gfx_texpal_params;
-static uint32*          gfx_spr_params;
 static uint32*          gfx_sprpal_params;
 static uint32           gfx_extpal_params[NUMSPRITES][8];
-static byte**           gfx_tex_cache;
-static byte**           gfx_spr_cache;
-static vramblock_t**    gfx_tex_blocks;
-static vramblock_t**    gfx_spr_blocks;
 static byte             gfx_padbuffer[256 * 256];
+static gfx_t*           gfx_textures;
+static gfx_t*           gfx_sprites;
+
+extern uint32          gfx_skypalparams[5];
+extern int             gfx_skylumpnums[5];
 
 //
 // R_CachePalette
@@ -201,8 +200,6 @@ static void R_InitPalettes(void)
 {
     int i;
 
-    vramSetBankE(VRAM_E_LCD);
-
     for(i = 0; i < numtextures; i++)
     {
         if(gfx_texpal_params[i] == 0)
@@ -220,7 +217,11 @@ static void R_InitPalettes(void)
 
     ST_CachePalettes();
 
-    vramSetBankE(VRAM_E_TEX_PALETTE);
+    gfx_skypalparams[0] = R_CachePalette("SPACE");
+    gfx_skypalparams[1] = R_CachePalette("MOUNTA");
+    gfx_skypalparams[2] = R_CachePalette("MOUNTB");
+    gfx_skypalparams[3] = R_CachePalette("MOUNTC");
+    gfx_skypalparams[4] = R_CachePalette("CLOUD");
 
     if(gfx_texpal_stride >= 0x10000)
         I_Error("R_InitPalettes: palette cache overflowed by %d",
@@ -237,10 +238,8 @@ static void R_InitTextures(void)
     t_end               = W_GetNumForName("T_END") - 1;
     swx_start           = W_FindNumForName("SWX") + 1;
     numtextures         = (t_end - t_start) + 1;
-    gfx_tex_params      = (uint32*)Z_Calloc(sizeof(uint32) * numtextures, PU_STATIC, NULL);
+    gfx_textures        = (gfx_t*)Z_Calloc(sizeof(gfx_t) * numtextures, PU_STATIC, NULL);
     gfx_texpal_params   = (uint32*)Z_Calloc(sizeof(uint32) * numtextures, PU_STATIC, NULL);
-    gfx_tex_cache       = (byte**)Z_Calloc(sizeof(*gfx_tex_cache) * numtextures, PU_STATIC, NULL);
-    gfx_tex_blocks      = (vramblock_t**)Z_Calloc(sizeof(*gfx_tex_blocks) * numtextures, PU_STATIC, NULL);
 }
 
 //
@@ -319,12 +318,10 @@ static void R_InitSprites(void)
     spriteheight        = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
     spriteoffset        = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
     spritetopoffset     = (short*)Z_Calloc(sizeof(short) * numgfxsprites, PU_STATIC, NULL);
-    gfx_spr_params      = (uint32*)Z_Calloc(sizeof(uint32) * numgfxsprites, PU_STATIC, NULL);
+    gfx_sprites         = (gfx_t*)Z_Calloc(sizeof(gfx_t) * numgfxsprites, PU_STATIC, NULL);
     gfx_sprpal_params   = (uint32*)Z_Calloc(sizeof(uint32) * numgfxsprites, PU_STATIC, NULL);
-    gfx_spr_cache       = (byte**)Z_Calloc(sizeof(*gfx_spr_cache) * numgfxsprites, PU_STATIC, NULL);
     spritetiles         = (byte*)Z_Calloc(numgfxsprites, PU_STATIC, NULL);
     spritetilelist      = (short**)Z_Calloc(sizeof(*spritetilelist) * numgfxsprites, PU_STATIC, NULL);
-    gfx_spr_blocks      = (vramblock_t**)Z_Calloc(sizeof(*gfx_spr_blocks) * numgfxsprites, PU_STATIC, NULL);
 
     // count the number of sprite names
     check = sprnames;
@@ -417,6 +414,17 @@ static void R_InitSprites(void)
 }
 
 //
+// R_InitImgs
+//
+
+void R_InitImgs(void)
+{
+    g_start     = W_GetNumForName("G_START") + 1;
+    g_end       = W_GetNumForName("G_END") - 1;
+    numgfximgs  = (g_end - g_start) + 1;
+}
+
+//
 // R_InitData
 //
 
@@ -424,7 +432,14 @@ void R_InitData(void)
 {
     R_InitTextures();
     R_InitSprites();
+    R_InitImgs();
     R_InitPalettes();
+
+    gfx_skylumpnums[0] = W_GetNumForName("SPACE");
+    gfx_skylumpnums[1] = W_GetNumForName("MOUNTA");
+    gfx_skylumpnums[2] = W_GetNumForName("MOUNTB");
+    gfx_skylumpnums[3] = W_GetNumForName("MOUNTC");
+    gfx_skylumpnums[4] = W_GetNumForName("CLOUD");
 }
 
 //
@@ -471,54 +486,6 @@ int R_PadTextureDims(int n)
 }
 
 //
-// R_PadTexture
-//
-
-static byte* R_PadTexture(byte* in, int width, int height,
-                          int newwidth, int newheight, dboolean rgb256)
-{
-    byte* out = NULL;
-    int row;
-    unsigned int size;
-    unsigned int colsize;
-
-    size = (newwidth * height);
-    colsize = width;
-
-    if(!rgb256)
-    {
-        size >>= 1;
-        colsize >>= 1;
-    }
-
-    out = (byte*)gfx_padbuffer;
-
-    for(row = 0; row < height; row++)
-    {
-        byte* d1;
-        byte* d2;
-        unsigned int stride1;
-        unsigned int stride2;
-
-        stride1 = (row * newwidth);
-        stride2 = (row * width);
-
-        if(!rgb256)
-        {
-            stride1 >>= 1;
-            stride2 >>= 1;
-        }
-
-        d1 = out + stride1;
-        d2 = in + stride2;
-        memset(d1, 0, newwidth);
-        memcpy(d1, d2, colsize);
-    }
-
-    return out;
-}
-
-//
 // R_LoadTexture
 //
 
@@ -531,11 +498,14 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     short* pal;
     uint32 flags;
     int size;
+    lumpinfo_t* lump;
 
-    if(gfx_tex_cache[texture] == NULL)
-        gfx_tex_cache[texture] = (byte*)W_CacheLumpNum(t_start + texture, PU_CACHE);
+    lump = &lumpinfo[t_start + texture];
 
-    gfx = gfx_tex_cache[texture];
+    if(lump->cache == NULL)
+        W_CacheLumpNum(t_start + texture, PU_CACHE);
+
+    gfx = (byte*)lump->cache;
         
     dw = gfx[0];
     dh = gfx[1];
@@ -556,15 +526,60 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     if(flip_t)
         flags |= GL_TEXTURE_FLIP_T;
 
-    if(!I_AllocVBlock(gfx_tex_params, gfx_tex_blocks, data, texture, size, flags, dw, dh, GL_RGB16))
+    if(!I_AllocVBlock(&gfx_textures[texture], data, size, flags, dw, dh, GL_RGB16))
     {
         GFX_TEX_FORMAT = 0;
         GFX_PAL_FORMAT = 0;
         return;
     }
 
-    GFX_TEX_FORMAT = gfx_tex_params[texture];
+    GFX_TEX_FORMAT = gfx_textures[texture].params;
     GFX_PAL_FORMAT = gfx_texpal_params[texture];
+}
+
+//
+// R_SetTextureFrame
+//
+
+void R_SetTextureFrame(int texture, int frame, dboolean palette)
+{
+    lumpinfo_t* lump;
+    int t;
+    byte* gfx;
+    byte* data;
+    int size;
+
+    if(gfx_textures[texture].params == 0)
+        return;
+
+    if(gfx_textures[texture].vram == NULL)
+        return;
+
+    if(frametic - gfx_textures[texture].vram->prevtic > 4)
+        return;
+
+    if(palette)
+        t = t_start + texture;
+    else
+        t = t_start + texture + frame;
+
+    lump = &lumpinfo[t];
+
+    if(lump->cache == NULL)
+        W_CacheLumpNum(t, PU_CACHE);
+
+    gfx = (byte*)lump->cache;
+    size = (((8 << gfx[0]) * (8 << gfx[1])) >> 1);
+
+    if(palette)
+        data = (gfx + 4 + size + (32 * frame));
+    else
+        data = gfx + 4;
+
+    if(palette)
+        I_SetPalette((uint16*)data, gfx_texpal_params[texture] << 4, 32);
+    else
+        memcpy16(gfx_textures[texture].vram->block, data, size >> 1);
 }
 
 //
@@ -580,11 +595,10 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     short* gfx;
     int width;
     int height;
-    int pw;
-    int ph;
     dboolean ext;
     byte* data;
     int size;
+    lumpinfo_t* lump;
 
     if(sprite == SPR_SPOT)
         return false;
@@ -593,16 +607,16 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     sprframe    = &sprdef->spriteframes[frame];
     spritenum   = sprframe->lump[rotation];
 
-    if(gfx_spr_cache[spritenum] == NULL)
-        gfx_spr_cache[spritenum] = (byte*)W_CacheLumpNum(s_start + spritenum, PU_CACHE);
+    lump = &lumpinfo[s_start + spritenum];
 
-    gfx     = (short*)gfx_spr_cache[spritenum];
+    if(lump->cache == NULL)
+        W_CacheLumpNum(s_start + spritenum, PU_CACHE);
+
+    gfx     = (short*)lump->cache;
     width   = gfx[0];
     height  = gfx[1];
-    pw      = R_PadTextureDims(width);
-    ph      = R_PadTextureDims(height);
     ext     = gfx[4];
-    size    = (pw * height);
+    size    = (width * height);
 
     if(ext)
         data = (byte*)(gfx + 6 + ((sizeof(short) * spritetiles[spritenum]) >> 1));
@@ -612,21 +626,13 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
     if(!ext)
         size >>= 1;
 
-    if(gfx_spr_params[spritenum] == 0)
-    {
-        byte* out = (byte*)R_PadTexture(data, width, height, pw, ph, ext);
-        data = out;
-    }
-
     if(!I_AllocVBlock(
-        gfx_spr_params,
-        gfx_spr_blocks,
+        &gfx_sprites[spritenum],
         data,
-        spritenum,
         size,
         TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
-        R_GetTextureSize(pw),
-        R_GetTextureSize(ph),
+        R_GetTextureSize(width),
+        R_GetTextureSize(R_PadTextureDims(height)),
         ext ? GL_RGB256 : GL_RGB16))
     {
         GFX_TEX_FORMAT = 0;
@@ -634,7 +640,7 @@ dboolean R_LoadSprite(int sprite, int frame, int rotation, int palindex,
         return false;
     }
 
-    GFX_TEX_FORMAT = gfx_spr_params[spritenum];
+    GFX_TEX_FORMAT = gfx_sprites[spritenum].params;
 
     if(palindex >= 8 || palindex < 0)
         palindex = 0;

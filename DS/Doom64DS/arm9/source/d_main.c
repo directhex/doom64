@@ -34,6 +34,9 @@ skill_t         startskill;
 int             startmap;
 dboolean        paused          = false;
 dboolean        nolights        = false;
+dboolean        devparm         = false;
+int             dsvertices      = 0;
+int             dspolygons      = 0;
 
 player_t players[MAXPLAYERS];
 dboolean playeringame[MAXPLAYERS];
@@ -375,6 +378,24 @@ void D_ProcessEvents(void)
 }
 
 //
+// D_PrintDevStats
+//
+
+static int rendertime = 0;
+
+static void D_PrintDevStats(void)
+{
+    consoleClear();
+
+    I_Printf("Memory: %ikb\n", Z_FreeMemory() >> 10);
+    I_Printf("Static: %ikb\n", Z_TagUsage(PU_STATIC) >> 10);
+    I_Printf("Cache: %ikb\n", Z_TagUsage(PU_CACHE) >> 10);
+    I_Printf("Vertex: %i\n", dsvertices);
+    I_Printf("Tris: %i\n", dspolygons);
+    I_Printf("Frame: %i\n", I_GetTimeTicks() - rendertime);
+}
+
+//
 // D_GetLowTic
 //
 
@@ -604,6 +625,9 @@ drawframe:
 
         if(draw && !action)
         {
+            if(devparm)
+                rendertime = I_GetTimeTicks();
+
             I_ClearFrame();
             draw();
             I_FinishFrame();
@@ -620,6 +644,9 @@ drawframe:
 
         // force garbage collection
         Z_FreeAlloca();
+
+        if(devparm)
+            D_PrintDevStats();
     }
 
     gamestate = GS_NONE;
@@ -661,6 +688,7 @@ void D_DoomMain(void)
     gamestate = GS_NONE;
     gametic = 0;
     startskill = sk_medium;
+    gameskill = sk_medium;
     startmap = 1;
     ticdup = 1;
     offsetms = 0;
@@ -711,6 +739,43 @@ void D_DoomMain(void)
                 else
                     I_Printf("off\n");
             }
+            if(keys & KEY_X)
+            {
+                devparm ^= 1;
+                I_Printf("development mode ");
+                if(devparm)
+                    I_Printf("on\n");
+                else
+                    I_Printf("off\n");
+            }
+            if(keys & KEY_Y)
+            {
+                gameskill++;
+                if(gameskill > sk_nightmare)
+                    gameskill = sk_baby;
+
+                I_Printf("skill ");
+                switch(gameskill)
+                {
+                case sk_baby:
+                    I_Printf("sk_baby\n");
+                    break;
+                case sk_easy:
+                    I_Printf("sk_easy\n");
+                    break;
+                case sk_medium:
+                    I_Printf("sk_medium\n");
+                    break;
+                case sk_hard:
+                    I_Printf("sk_hard\n");
+                    break;
+                case sk_nightmare:
+                    I_Printf("sk_nightmare\n");
+                    break;
+                default:
+                    break;
+                }
+            }
 
             swiWaitForVBlank();
         }
@@ -729,7 +794,6 @@ void D_DoomMain(void)
         players[0].maxammo[am_clip] = 200;
         G_DoLoadLevel();
         players[0].cheats |= CF_GODMODE;
-        I_Printf("%s\n", P_GetMapInfo(gamemap)->mapname);
         D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
     }
 }

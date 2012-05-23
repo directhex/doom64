@@ -22,6 +22,8 @@ typedef struct
     fixed_t     y;
 
     // info for occlusion
+    fixed_t     dx;
+    fixed_t     dy;
     int         validcount;
     angle_t     clipspan;
 
@@ -121,19 +123,24 @@ typedef	struct
 typedef struct
 {
     // add this to the calculated texture column
-    fixed_t	textureoffset;
+    fixed_t     textureoffset;
 
     // add this to the calculated texture top
-    fixed_t	rowoffset;
+    fixed_t     rowoffset;
 
     // Texture indices.
     // We do not maintain names here.
-    short	toptexture;
-    short	bottomtexture;
-    short	midtexture;
+    short       toptexture;
+    short       bottomtexture;
+    short       midtexture;
 
     // Sector the SideDef is facing.
-    sector_t*	sector;
+    sector_t*   sector;
+
+    vertex_t*   v1;
+    vertex_t*   v2;
+    fixed_t     length;
+    dboolean    draw;
 
 } side_t;
 
@@ -277,7 +284,6 @@ typedef struct
     sector_t*	    frontsector;
     sector_t*       backsector;
 
-    dboolean        draw;
 	fixed_t         length;
 
 } seg_t;

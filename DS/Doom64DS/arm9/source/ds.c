@@ -219,6 +219,9 @@ void I_Init(void)
 
 dboolean (I_CheckGFX)(char* file, int line)
 {
+    dsvertices = GFX_VERTEX_RAM_USAGE;
+    dspolygons = GFX_POLYGON_RAM_USAGE;
+
     if(GFX_VERTEX_RAM_USAGE >= 4096)
     {
 #ifdef CHECKGFX_ABORT
@@ -295,21 +298,21 @@ void I_ClearFrame(void)
 // I_AllocVBlock
 //
 
-dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index, int size,
-                       int flags, int texel_w, int texel_h, int type)
+dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
+                        int flags, int texel_w, int texel_h, int type)
 {
-    if(user[index] == 0)
+    if(gfx->params == 0)
     {
-        if(!(vblock[index] = Z_VAlloc(vramzone, size, PU_CACHE, &user[index])))
+        if(!(gfx->vram = Z_VAlloc(vramzone, size, PU_CACHE, &gfx->params)))
             return false;
 
-        swiCopy(data, vblock[index]->block, (size >> 2) | COPY_MODE_WORD);
+        memcpy16(gfx->vram->block, data, size >> 1);
     }
     else
-        Z_VTouch(vramzone, vblock[index]);
+        Z_VTouch(vramzone, gfx->vram);
 
-    user[index] = GFX_TEXTURE(flags, texel_w, texel_h, type,
-        ((uint32*)gfx_base + ((vblock[index]->block - gfx_tex_buffer) >> 2)));
+    gfx->params = GFX_TEXTURE(flags, texel_w, texel_h, type,
+        ((uint32*)gfx_base + ((gfx->vram->block - gfx_tex_buffer) >> 2)));
 
     return true;
 }
@@ -320,7 +323,10 @@ dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index
 
 uint32 I_SetPalette(uint16* data, int offset, int size)
 {
-    swiCopy(data, VRAM_E + (offset >> 1), (size >> 1) | COPY_MODE_HWORD);
+    vramSetBankE(VRAM_E_LCD);
+    memcpy16(VRAM_E + (offset >> 1), data, size >> 1);
+    vramSetBankE(VRAM_E_TEX_PALETTE);
+
     return GFX_VRAM_OFFSET((VRAM_E + (offset >> 2)));
 }
 

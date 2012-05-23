@@ -94,6 +94,9 @@ extern dboolean     respawnparm;    // checkparm of -respawn
 extern dboolean     respawnitem;
 extern dboolean     paused;
 extern dboolean     nolights;
+extern dboolean     devparm;
+extern int          dsvertices;
+extern int          dspolygons;
 
 extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];

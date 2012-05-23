@@ -32,26 +32,113 @@ int	checkcoord[12][4] =
 // R_CheckBBox
 //
 
-dboolean R_CheckBBox(fixed_t* bspcoord)
-{	
-    angle_t     angle1;
-    angle_t     angle2;
+static dboolean R_CheckBBox(fixed_t* bspcoord)
+{
     int         boxpos;
-    const int*  check;
+    fixed_t     x1;
+    fixed_t     y1;
+    fixed_t     x2;
+    fixed_t     y2;
+    fixed_t     left;
+    fixed_t     right;
+    fixed_t     span_x1;
+    fixed_t     span_y1;
+    fixed_t     span_x2;
+    fixed_t     span_y2;
+    fixed_t     cos;
+    fixed_t     sin;
+    byte        bit;
+    byte        *occlude;
+    
+    cos = dcos(viewangle);
+    sin = dsin(viewangle);
     
     // Find the corners of the box
     // that define the edges from current viewpoint.
     boxpos = (viewx <= bspcoord[BOXLEFT] ? 0 : viewx < bspcoord[BOXRIGHT] ? 1 : 2) +
         (viewy >= bspcoord[BOXTOP] ? 0 : viewy > bspcoord[BOXBOTTOM] ? 4 : 8);
-    
+
     if(boxpos == 5)
         return true;
     
-    check = checkcoord[boxpos];
-    angle1 = R_PointToAngle2(bspcoord[check[0]], bspcoord[check[1]], viewx, viewy) - viewangle;
-    angle2 = R_PointToAngle2(bspcoord[check[2]], bspcoord[check[3]], viewx, viewy) - viewangle;
+    // rotate box to relative viewpoint
+    span_x1 = bspcoord[checkcoord[boxpos][BOXTOP]] - viewx;
+    span_y1 = bspcoord[checkcoord[boxpos][BOXBOTTOM]] - viewy;
+    span_x2 = bspcoord[checkcoord[boxpos][BOXLEFT]] - viewx;
+    span_y2 = bspcoord[checkcoord[boxpos][BOXRIGHT]] - viewy;
     
-    return R_Clipper_SafeCheckRange(angle2 + viewangle, angle1 + viewangle);
+    x1 = FixedMul(sin, span_x1) - FixedMul(cos, span_y1);
+    y1 = FixedMul(sin, span_y1) + FixedMul(cos, span_x1);
+    x2 = FixedMul(sin, span_x2) - FixedMul(cos, span_y2);
+    y2 = FixedMul(sin, span_y2) + FixedMul(cos, span_x2);
+    
+    // check if viewing backside
+    if(x1 < -y1 && x2 < -y2)
+        return false;
+
+    // check if viewing backside
+    if(y1 < x1 && y2 < x2)
+        return false;
+    
+    // check for length
+    if(((F2INT(x2) * F2INT(y1)) -
+        (F2INT(x1) * F2INT(y2))) < 2)
+        return true;
+    
+    if(y1 <= 0 && y2 <= 0)
+        return false; // near plane clipped
+    
+    // drag left side over if needed
+    if(x1 < -y1)
+    {
+        fixed_t div = FixedDiv((x1 + y1), ((x1 + y1) - x2) - y2);
+        y1 += FixedMul(div, (y2 - y1));
+        x1 = -y1;
+    }
+    
+    // drag right side over if needed
+    if(y2 < x2)
+    {
+        fixed_t div = FixedDiv(x1 - y1, ((x1 - y1) - x2) + y2);
+        x2 = y2 = (FixedMul(div, (y2 - y1)) + y1);
+    }
+    
+    // project left side to screen space
+    left = F2INT(FixedDiv(x1, y1) * CLIPSPACE) + CLIPSPACE;
+    
+    // project right side to screen space
+    right = F2INT(FixedDiv(x2, y2) * CLIPSPACE) + CLIPSPACE;
+    
+    // clamp left
+    if(left < 0)
+        left = 0;
+    
+    // clamp right
+    if(right > SCREENWIDTH)
+        right = SCREENWIDTH;
+    
+    // check if viewing backside
+    if(!(left < right))
+        return false;
+    
+    // set occlusion table
+    occlude = occludeBuffer + left;
+    
+    // test against occlusion table
+    do
+    {
+        bit = *occlude;
+        occlude++;
+        left++;
+        
+        if(!(bit < 1))
+            continue;
+        
+        return true; // part of it is visible
+        
+    } while(left < right);
+    
+    return false;
 }
 
 //
@@ -60,56 +147,196 @@ dboolean R_CheckBBox(fixed_t* bspcoord)
 // and adds any visible pieces to the line list.
 //
 
-static void R_AddClipLine(seg_t* line)
+static dboolean R_AddClipLine(seg_t *seg)
 {
-    angle_t angle1;
-    angle_t angle2;
+    vertex_t *v1;
+    vertex_t *v2;
+    fixed_t x;
+    fixed_t y;
+    fixed_t x1;
+    fixed_t x2;
+    fixed_t y1;
+    fixed_t y2;
+    fixed_t left;
+    fixed_t right;
+    int i;
+    byte bit;
+    dboolean occluded;
+    byte *occlude;
+    fixed_t cos;
+    fixed_t sin;
+    
+    occluded = true;
+    v1 = seg->v1;
+    v2 = seg->v2;
 
-    line->draw = false;
+    cos = dcos(viewangle);
+    sin = dsin(viewangle);
     
-    if(line->v1->validcount != validcount)
+    // rotate v1 to relative viewpoint
+    if(v1->validcount != validcount)
     {
-        line->v1->clipspan = R_PointToAngle2(line->v1->x, line->v1->y, viewx, viewy);
-        line->v1->validcount = validcount;
+        x = v1->x - viewx;
+        y = v1->y - viewy;
+        
+        v1->dx = FixedMul(sin, x) - FixedMul(cos, y);
+        v1->dy = FixedMul(sin, y) + FixedMul(cos, x);
+        
+        v1->validcount = validcount;
     }
     
-    if(line->v2->validcount != validcount)
+    x1 = v1->dx;
+    y1 = v1->dy;
+    
+    // rotate v2 to relative viewpoint
+    if(v2->validcount != validcount)
     {
-        line->v2->clipspan = R_PointToAngle2(line->v2->x, line->v2->y, viewx, viewy);
-        line->v2->validcount = validcount;
+        x = v2->x - viewx;
+        y = v2->y - viewy;
+        
+        v2->dx = FixedMul(sin, x) - FixedMul(cos, y);
+        v2->dy = FixedMul(sin, y) + FixedMul(cos, x);
+        
+        v2->validcount = validcount;
     }
     
-    angle1 = line->v1->clipspan;
-    angle2 = line->v2->clipspan;
+    x2 = v2->dx;
+    y2 = v2->dy;
     
-    // Back side, i.e. backface culling	- read: endAngle >= startAngle!
-    if(angle2 - angle1 < ANG180 || !line->linedef)
-        return;
+    // check if viewing backside of seg
+    if(x1 < -y1 && x2 < -y2)
+        return false;
     
-    if(!R_Clipper_SafeCheckRange(angle2, angle1))
-        return;
+    // check if viewing backside of seg
+    if(y1 < x1 && y2 < x2)
+        return false;
+
+    // check if clipping the near plane
+    if(y1 <= CLIP_NEAR_Z && y2 <= CLIP_NEAR_Z)
+        return false;
     
-    if(!(line->linedef->flags & (ML_DRAWMIDTEXTURE|ML_DONTOCCLUDE)))
+    // check if 0 length
+    if(((F2INT(x2) * F2INT(y1)) -
+        (F2INT(x1) * F2INT(y2))) <= 0)
+        return false;
+    
+    
+    if(y1 < CLIP_NEAR_Z)	// drag left side over if needed
     {
-        if(line->backsector)
+        fixed_t sdiv = FixedDiv(CLIP_NEAR_Z - y1, y2 - y1);
+        fixed_t smul = FixedMul(sdiv, x2 - x1);
+        x1 += smul;
+        y1 = CLIP_NEAR_Z;
+    }
+    else if(y2 < CLIP_NEAR_Z) // drag right side over if needed
+    {
+        fixed_t sdiv = FixedDiv(CLIP_NEAR_Z - y2, y1 - y2);
+        fixed_t smul = FixedMul(sdiv, x1 - x2);
+        x2 += smul;
+        y2 = CLIP_NEAR_Z;
+    }
+    
+    // project v1 to screen space
+    left = F2INT(FixedDiv(x1, y1) * CLIPSPACE) + CLIPSPACE;
+    
+    // project v2 to screen space
+    right = F2INT(FixedDiv(x2, y2) * CLIPSPACE) + CLIPSPACE;
+    
+    // clamp left
+    if(left < 0)
+        left = 0;
+    
+    // clamp right
+    if(right > SCREENWIDTH)
+        right = SCREENWIDTH;
+    
+    if(left == right)
+        return false; // everything is off-screen
+    
+    // set occlusion table
+    occlude = occludeBuffer + left;
+    
+    i = left;
+    if(left < right)
+    {
+        do
         {
-            if((line->frontsector->ceilingpic != skyflatnum &&
-                line->frontsector->floorpic != skyflatnum) &&
-                (line->backsector->ceilingpic != skyflatnum &&
-                line->backsector->floorpic != skyflatnum))
-            {
-                if((line->backsector->floorheight == line->backsector->ceilingheight) ||
-                    line->backsector->ceilingheight <= line->frontsector->floorheight ||
-                    line->backsector->floorheight >= line->frontsector->ceilingheight)
-                    R_Clipper_SafeAddClipRange(angle2, angle1);
-            }
-        }
-        else if(!line->backsector) // sanity check
-            R_Clipper_SafeAddClipRange(angle2, angle1);
+            i++;
+            bit = *occlude;
+            occlude++;
+            if(!(bit < 1))
+                continue; // touching occluded point
+
+            occluded = false; // part of seg is visible
+
+            if(seg->linedef->validcount == validcount)
+                continue;
+
+            seg->linedef->validcount = validcount;
+            seg->linedef->flags |= ML_MAPPED; // flag as visible in automap
+            break;
+            
+        } while(i != right);
+        
+        if(occluded == true)
+            return false; // completly behind something
     }
     
-    line->linedef->flags |= ML_MAPPED;
-    line->draw = true;
+    // don't add to occlusion table if line is flagged as masking or non-occluding
+    if(seg->linedef->flags & (ML_DRAWMIDTEXTURE|ML_DONTOCCLUDE))
+        return true;
+    
+    // check sector heights
+    if(seg->backsector)
+    {
+        dboolean heightclipped = false;
+
+        if(seg->backsector->floorheight > seg->frontsector->floorheight &&
+            seg->backsector->floorheight > viewz)
+        {
+            fixed_t xpitch;
+            fixed_t ypitch;
+            int screeny;
+            fixed_t eye_y = 0;
+
+            if(y1 > y2)
+                eye_y = y1;
+            else if(y2 > y1)
+                eye_y = y2;
+
+            xpitch = FixedMul(FRACUNIT, eye_y);
+            ypitch = FixedMul(FRACUNIT, (seg->backsector->floorheight - viewz));
+
+            screeny = (F2INT(FixedDiv(ypitch, xpitch) * -CLIPSPACE) + CLIPSPACE) - 40;
+            heightclipped = !(screeny > 0 && screeny < SCREENHEIGHT);
+        }
+
+        if(!heightclipped)
+        {
+            if(frontsector->floorheight < seg->backsector->ceilingheight &&
+                seg->backsector->floorheight < frontsector->ceilingheight &&
+                seg->backsector->floorheight != seg->backsector->ceilingheight)
+                return true;
+        }
+    }
+    
+    // sanity check
+    if(!(left < right))
+        return false;
+    
+    // set occlusion table
+    occlude = occludeBuffer + left;
+    i = left;
+    
+    // mark seg into occlusion table
+    do
+    {
+        i++;
+        *occlude = 1; // anything falling on this point will be occluded
+        occlude++;
+    } while(i < right);
+    
+    return true;
 }
 
 //
@@ -135,7 +362,12 @@ void R_Subsector(int num)
     nextssect++;
 
     for(i = 0; i < sub->numlines; i++)
-        R_AddClipLine(&segs[sub->firstline + i]);
+    {
+        seg_t* seg = &segs[sub->firstline + i];
+
+        if(R_AddClipLine(seg))
+            seg->sidedef->draw = true;
+    }
 
     // Handle all things in sector.
     for(thing = sub->sector->thinglist; thing; thing = thing->snext)
@@ -145,19 +377,12 @@ void R_Subsector(int num)
         int dir1    = F2INT((x * viewsin[0]) - (y * viewcos[0]));
         int dir2    = F2INT((x * viewcos[0]) + (y * viewsin[0]));
 
-        if((-dir2 - 16) > dir1)
+        if((-dir2 - 16) > dir1 || (dir2 - 16) > dir1)
             continue;
 
-        if((dir2 - 16) > dir1)
-            continue;
-
-        if(thing->subsector != sub) // don't add sprite if it doesn't belong in this subsector
-            continue;
-
-        if(thing->flags & MF_NOSECTOR)
-            continue;
-
-        if(thing->type == MT_PLAYER && thing == players[consoleplayer].cameratarget)
+        // don't add vissprite if it doesn't meet these requirements
+        if(thing->subsector != sub || thing->flags & MF_NOSECTOR ||
+            (thing->type == MT_PLAYER && thing == players[consoleplayer].cameratarget))
             continue;
         
         if(vissprite - visspritelist >= MAXSPRITES)

@@ -1,22 +1,7 @@
 #include "tables.h"
 
-int SlopeDiv(unsigned num, unsigned den)
-{
-    unsigned ans;
-
-    if(den < 512)
-        return SLOPERANGE;
-
-    ans = (num << 3) / (den >> 8);
-
-    return ans <= SLOPERANGE ? ans : SLOPERANGE;
-}
-
-
 fixed_t     finesine[10240];
 fixed_t*    finecosine = &finesine[FINEANGLES / 4];
-
-
 
 angle_t tantoangle[2049] =
 {

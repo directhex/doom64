@@ -128,34 +128,21 @@ extern line_t** linespeciallist;
 //
 void P_InitPicAnims(void)
 {
-    //int	i = 0;
+    int i;
 
     P_InitAnimdef();
     
     animinfo = (animinfo_t*)Z_Malloc(sizeof(animinfo_t) * numanimdef, PU_STATIC, 0);
-    
-    // TODO
 
     //	Init animation
-    /*for(i = 0; i < numanimdef; i++)
+    for(i = 0; i < numanimdef; i++)
     {
         animinfo[i].delay = 0;
         animinfo[i].tic = 0;
         animinfo[i].isreverse = false;
         animinfo[i].texnum = W_GetNumForName(animdefs[i].name) - t_start;
         animinfo[i].frame = -1;
-
-        // reallocate texture pointers if they contain multiple palettes
-        // check by looking up animdefs
-
-        if(animdefs[i].palette)
-        {
-            int lump = animinfo[i].texnum;
-            
-            textureptr[lump] = (dtexture*)Z_Realloc(textureptr[lump],
-                animdefs[i].frames * sizeof(dtexture), PU_STATIC, 0);
-        }
-    }*/
+    }
 }
 
 //
@@ -164,9 +151,7 @@ void P_InitPicAnims(void)
 
 void P_CyclePicAnims(void)
 {
-    // TODO
-
-    /*animdef_t* anim = NULL;
+    animdef_t* anim = NULL;
     animinfo_t* info = NULL;
     int i = 0;
     int lastpic = 0;
@@ -197,10 +182,7 @@ void P_CyclePicAnims(void)
         else
             info->frame++;
         
-        if(anim->palette)
-            R_SetNewPalette(info->texnum, info->frame);
-        else
-            texturetranslation[info->texnum] = info->texnum + info->frame;
+        R_SetTextureFrame(info->texnum, info->frame, anim->palette);
         
         if(info->frame == lastpic)
         {
@@ -212,7 +194,7 @@ void P_CyclePicAnims(void)
             else
                 info->frame = -1;
         }
-    }*/
+    }
 }
 
 //
@@ -1913,8 +1895,7 @@ void P_UpdateSpecials (void)
     sector_t*   sector;
     
     // ANIMATE FLATS AND TEXTURES GLOBALLY
-    // TODO
-    //P_CyclePicAnims();
+    P_CyclePicAnims();
     
     // ANIMATE LINE SPECIALS
     for(i = 0; i < numlinespecials; i++)
@@ -2105,14 +2086,13 @@ void P_SpawnSpecials (void)
     //
     // [kex] reset data for animpics
     //
-    // TODO
-    /*for(i = 0; i < numanimdef; i++)
+    for(i = 0; i < numanimdef; i++)
     {
         animinfo[i].delay = 0;
         animinfo[i].frame = -1;
         animinfo[i].tic = 0;
         animinfo[i].isreverse = false;
-    }*/
+    }
     
     // Init special sectors
     // Might as well count all the secrets while we're at it..

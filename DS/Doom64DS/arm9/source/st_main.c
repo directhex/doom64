@@ -32,7 +32,7 @@ static keyflash_t flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 #define FLASHTIMES      6       /* # of times to flash new frag amount (EVEN!) */
 #define ST_HEALTHTEXTX  20
 #define ST_HEALTHTEXTY  164
-#define ST_ARMORTEXTX   200
+#define ST_ARMORTEXTX   196
 #define ST_ARMORTEXTY   164
 #define ST_KEYX         64
 #define ST_KEYY         172
@@ -56,12 +56,9 @@ static int          lump_bfontnum;
 static lumpinfo_t*  lump_bfont;
 static short*       lump_sfont;
 static short*       lump_status;
-static uint32       st_sfontparms[64];
-static uint32       st_bfontparams[NUMSYMBOLS];
-static uint32       st_statusparams[NUMSTATUSITEMS];
-static vramblock_t* st_sfontblocks[64];
-static vramblock_t* st_bfontblocks[NUMSYMBOLS];
-static vramblock_t* st_statusblocks[NUMSTATUSITEMS];
+static gfx_t        st_gfxsfont[64];
+static gfx_t        st_gfxbfont[NUMSYMBOLS];
+static gfx_t        st_gfxstatus[NUMSTATUSITEMS];
 static byte*        st_fontbuffer;
 static uint32       st_sfontpalparam;
 static uint32       st_bfontpalparam;
@@ -276,17 +273,16 @@ static void ST_DrawStatusItem(int index, int x, int y)
         fontmap->h, pw, fontmap->w, lump_status[0]);
 
     if(!I_AllocVBlock(
-        st_statusparams,
-        st_statusblocks,
+        &st_gfxstatus[index],
         st_fontbuffer,
-        index, pw * ph,
+        pw * ph,
         TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
         R_GetTextureSize(pw),
         R_GetTextureSize(ph),
         GL_RGB256))
         return;
 
-    GFX_TEX_FORMAT = st_statusparams[index];
+    GFX_TEX_FORMAT = st_gfxstatus[index].params;
     GFX_PAL_FORMAT = st_bfontpalparam;
 
     GFX_POLY_FORMAT =
@@ -328,6 +324,9 @@ static void ST_DrawKey(player_t* player, int key, int offset)
 void ST_Drawer(void)
 {
     player_t* plyr = &players[consoleplayer];
+
+    if(plyr->cheats & CF_NOCLIP)
+        return;
 
     GFX_ORTHO();
 
@@ -671,17 +670,16 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
             fontmap->h, pw, fontmap->w, width);
 
         if(!I_AllocVBlock(
-            st_bfontparams,
-            st_bfontblocks,
+            &st_gfxbfont[index],
             st_fontbuffer,
-            index, pw * ph,
+            pw * ph,
             TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
             R_GetTextureSize(pw),
             R_GetTextureSize(ph),
             GL_RGB256))
             continue;
 
-        GFX_TEX_FORMAT = st_bfontparams[index];
+        GFX_TEX_FORMAT = st_gfxbfont[index].params;
         GFX_PAL_FORMAT = st_bfontpalparam;
 
         GFX_POLY_FORMAT =
@@ -774,10 +772,8 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
                 ST_FONTWHSIZE, ST_FONTWHSIZE, ST_FONTWHSIZE, lump_sfont[0]);
 
             if(!I_AllocVBlock(
-                st_sfontparms,
-                st_sfontblocks,
+                &st_gfxsfont[start],
                 st_fontbuffer,
-                start,
                 64,
                 TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT,
                 TEXTURE_SIZE_8,
@@ -785,7 +781,7 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
                 GL_RGB256))
                 continue;
 
-            GFX_TEX_FORMAT = st_sfontparms[start];
+            GFX_TEX_FORMAT = st_gfxsfont[start].params;
             GFX_PAL_FORMAT = st_sfontpalparam;
 
             GFX_POLY_FORMAT =

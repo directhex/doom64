@@ -20,6 +20,7 @@ angle_t         viewangleoffset;
 fixed_t         viewsin[2];
 fixed_t         viewcos[2];
 int             frametic = 0;
+byte            occludeBuffer[SCREENWIDTH];
 
 // sprite info globals
 spritedef_t     *spriteinfo;
@@ -40,6 +41,11 @@ short           *spritewidth;
 short           *spriteheight;
 byte            *spritetiles;
 short           **spritetilelist;
+
+// gfx img globals
+int             g_start;
+int             g_end;
+int             numgfximgs;
 
 //
 // R_PointToAngle2
@@ -65,7 +71,7 @@ angle_t R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist)
 // Returns side 0 (front) or 1 (back).
 //
 
-int R_PointOnSide(fixed_t x, fixed_t y, node_t* node)
+int PUREFUNC R_PointOnSide(fixed_t x, fixed_t y, node_t* node)
 {
     fixed_t	dx;
     fixed_t	dy;
@@ -119,7 +125,7 @@ subsector_t* R_PointInSubsector(fixed_t x, fixed_t y)
     
     nodenum = numnodes-1;
     
-    while (! (nodenum & NF_SUBSECTOR) )
+    while (!(nodenum & NF_SUBSECTOR))
     {
         node = &nodes[nodenum];
         side = R_PointOnSide (x, y, node);
@@ -135,15 +141,12 @@ subsector_t* R_PointInSubsector(fixed_t x, fixed_t y)
 
 static void R_RenderView(void)
 {
-    angle_t an;
-
     nextssect = ssectlist;
     vissprite = visspritelist;
 
-    an = (ANG180 + ANG45);//R_FrustumAngle();
+    memset(occludeBuffer, 0, SCREENWIDTH);
+    skyvisible = false;
 
-    R_Clipper_Clear();
-    R_Clipper_SafeAddClipRange(viewangle + an, viewangle - an);
     R_RenderBSPNode(numnodes - 1);
 }
 
@@ -210,6 +213,9 @@ void R_DrawFrame(void)
     MATRIX_IDENTITY     = 0;
     MATRIX_CONTROL      = GL_MODELVIEW;
     MATRIX_IDENTITY     = 0;
+
+    if(skyvisible)
+        R_DrawSky();
 
     MATRIX_PUSH = 0;
 

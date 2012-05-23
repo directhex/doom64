@@ -25,6 +25,7 @@
 //
 
 #define PACKEDATTR __attribute__((packed))
+#define PUREFUNC __attribute__((pure))
 
 //
 // Global parameters/defines.

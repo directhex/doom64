@@ -6,6 +6,10 @@
 #include "tables.h"
 #include "p_pspr.h"
 #include "d_player.h"
+#include "w_wad.h"
+
+#define CLIPSPACE       160
+#define CLIP_NEAR_Z     (8*FRACUNIT)
 
 extern fixed_t      viewx;
 extern fixed_t      viewy;
@@ -18,6 +22,7 @@ extern angle_t      viewangleoffset;
 extern fixed_t      viewsin[2];
 extern fixed_t      viewcos[2];
 extern int          frametic;
+extern byte         occludeBuffer[SCREENWIDTH];
 
 extern int          numvertexes;
 extern vertex_t     *vertexes;
@@ -40,14 +45,6 @@ extern int          numlights;
 extern macroinfo_t  macros;
 
 //
-// R_CLIPPER
-//
-dboolean        R_Clipper_SafeCheckRange(angle_t startAngle, angle_t endAngle);
-void            R_Clipper_SafeAddClipRange(angle_t startangle, angle_t endangle);
-void            R_Clipper_Clear(void);
-angle_t         R_FrustumAngle(void);
-
-//
 // R_MAIN
 //
 
@@ -63,7 +60,7 @@ subsector_t*    R_PointInSubsector(fixed_t x, fixed_t y);
 angle_t         R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 angle_t         _R_PointToAngle(fixed_t x, fixed_t y);
 angle_t         R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist);
-int             R_PointOnSide(fixed_t x, fixed_t y, node_t* node);
+int PUREFUNC    R_PointOnSide(fixed_t x, fixed_t y, node_t* node);
 void            R_Init(void);
 void            R_DrawFrame(void);
 
@@ -80,6 +77,9 @@ extern int          swx_start;
 extern int          s_start;
 extern int          s_end;
 extern int          numgfxsprites;
+extern int          g_start;
+extern int          g_end;
+extern int          numgfximgs;
 extern uint32*      gfx_base;
 extern byte         gfx_tex_buffer[GFX_BUFFER_SIZE];
 
@@ -88,6 +88,7 @@ uint32          R_CachePalette(const char* name);
 int             R_PadTextureDims(int n);
 int             R_GetTextureSize(int size);
 void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t);
+void            R_SetTextureFrame(int texture, int frame, dboolean palette);
 dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
 void            R_InitData(void);
 byte*           R_CopyPic(byte* pic, int x, int y, int rows, int colsize,
@@ -113,6 +114,7 @@ void            R_RenderBSPNode(int bspnum);
 // Needed to store the number of the dummy sky flat.
 // Used for rendering, as well as tracking projectiles etc.
 //
+extern dboolean     skyvisible;
 extern int          skyflatnum;
 extern skydef_t*    sky;
 extern int          skypicnum;
@@ -121,6 +123,7 @@ extern dboolean     skyfadeback;
 extern fixed_t      scrollfrac;
 
 void            R_DrawScene(void);
+void            R_DrawSky(void);
 void            R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player);
 
 //

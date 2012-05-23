@@ -135,9 +135,9 @@ static word P_GetTextureHashKey(int hash)
 //
 void P_LoadVertexes(int lump)
 {
-    int                 i;
-    mapvertex_t*        ml;
-    vertex_t*           li;
+    int             i;
+    mapvertex_t*    ml;
+    vertex_t*       li;
     
     numvertexes = W_MapLumpLength(lump) / sizeof(mapvertex_t);
     
@@ -153,6 +153,8 @@ void P_LoadVertexes(int lump)
     {
         li->x = LONG(ml->x);
         li->y = LONG(ml->y);
+        li->dx = 0;
+        li->dy = 0;
         li->validcount = -1;
         li->clipspan = ANGLE_MAX;
     }
@@ -164,14 +166,14 @@ void P_LoadVertexes(int lump)
 
 void P_LoadSegs(int lump)
 {
-    int                 i;
-    mapseg_t*			ml;
-    seg_t*              li;
-    line_t*             ldef;
-    int                 linedef;
-    int                 side;
-    float               x;
-    float               y;
+    int         i;
+    mapseg_t*   ml;
+    seg_t*      li;
+    line_t*     ldef;
+    int         linedef;
+    int         side;
+    float       x;
+    float       y;
     
     numsegs = W_MapLumpLength (lump) / sizeof(mapseg_t);
     segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);
@@ -203,7 +205,28 @@ void P_LoadSegs(int lump)
         y = F2D3D(li->v1->y - li->v2->y);
 
         li->length = (fixed_t)(sqrt(x * x + y * y) * FRACUNIT);
-        li->draw = false;
+
+        if(li->frontsector == li->linedef->frontsector &&
+            li->sidedef != &sides[li->linedef->sidenum[1]])
+        {
+            li->sidedef->v1 = li->linedef->v1;
+            li->sidedef->v2 = li->linedef->v2;
+		}
+        else
+        {
+            li->sidedef->v1 = li->linedef->v2;
+            li->sidedef->v2 = li->linedef->v1;
+        }
+
+        x = F2D3D(li->sidedef->v2->x - li->sidedef->v1->x);
+        y = F2D3D(li->sidedef->v2->y - li->sidedef->v1->y);
+        li->sidedef->length = (fixed_t)(sqrt(x * x + y * y) * FRACUNIT);
+    }
+
+    for(i = 0; i < numsides; i++)
+    {
+        if(sides[i].v1 == NULL || sides[i].v2 == NULL)
+            I_Error("P_LoadSegs: missing vertex pointer for sidedef (%i)", i);
     }
 }
 
@@ -318,8 +341,7 @@ void P_LoadLights(int lump)
             ml++;
         }
     }
-    
-    // TODO - TEMP
+
     R_SetLightFactor(200);
 }
 
@@ -580,11 +602,11 @@ void P_LoadThings(int lump)
 
 void P_LoadLineDefs(int lump)
 {
-    int                 i;
-    maplinedef_t*       mld;
-    line_t*             ld;
-    vertex_t*           v1;
-    vertex_t*           v2;
+    int             i;
+    maplinedef_t*   mld;
+    line_t*         ld;
+    vertex_t*       v1;
+    vertex_t*       v2;
     
     numlines = W_MapLumpLength (lump) / sizeof(maplinedef_t);
     lines = Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);
@@ -604,8 +626,8 @@ void P_LoadLineDefs(int lump)
         
         if(ld->special & MLU_MACRO)
         {
-            //if(MACROMASK(ld->special) >= macros.macrocount)
-                //I_Error("P_LoadLineDefs: linedef %i has unknown macro", i);
+            if(MACROMASK(ld->special) >= macros.macrocount)
+                I_Error("P_LoadLineDefs: linedef %i has unknown macro", i);
         }
         
         if (!ld->dx)
@@ -682,6 +704,10 @@ void P_LoadSideDefs(int lump)
         sd->bottomtexture = P_GetTextureHashKey(msd->bottomtexture);
         sd->midtexture = P_GetTextureHashKey(msd->midtexture);
         sd->sector = &sectors[SHORT(msd->sector)];
+        sd->v1 = NULL;
+        sd->v2 = NULL;
+        sd->length = 0;
+        sd->draw = false;
     }
 }
 
@@ -1056,11 +1082,6 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
 
     if(free < 4096)
         I_Error("P_SetupLevel: not enough free memory %d", free);
-
-    I_Printf("Used memory: %d kb\n", free >> 10);
-    I_Printf("Used static memory: %d kb\n", Z_TagUsage(PU_STATIC) >> 10);
-    I_Printf("Used cached memory: %d kb\n", Z_TagUsage(PU_CACHE) >> 10);
-    I_Printf("Used level memory: %d kb\n", Z_TagUsage(PU_LEVEL) >> 10);
 }
 
 
@@ -1409,8 +1430,7 @@ static void P_InitSkyDef(void)
 void P_Init(void)
 {
     SC_Init();
-    //P_InitPicAnims();
-    //R_InitSprites(sprnames);
+    P_InitPicAnims();
     P_InitMapInfo();
     P_InitSkyDef();
 }

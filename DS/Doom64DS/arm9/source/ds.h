@@ -20,6 +20,12 @@ void I_Sleep(uint32 ms);
 int I_GetTimeTicks(void);
 void I_FinishFrame(void);
 
+typedef struct
+{
+    uint32 params;
+    vramblock_t* vram;
+} gfx_t;
+
 //
 // disable for debug/testing only
 //
@@ -34,8 +40,8 @@ dboolean (I_CheckGFX)(char* file, int line);
 #endif
 
 uint32 I_SetPalette(uint16* data, int offset, int size);
-dboolean I_AllocVBlock(uint32* user, vramblock_t** vblock, byte* data, int index, int size,
-                       int flags, int texel_w, int texel_h, int type);
+dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
+                        int flags, int texel_w, int texel_h, int type);
 
 const char* I_FilePath(const char* file);
 int I_ReadFile(char const* name, byte** buffer);
@@ -60,7 +66,7 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
 
 #define POLY_NEW_DEPTH          (1 << 11)
 #define POLY_DEPTHTEST_EQUAL    (1 << 14)
-#define COORD_PACK(u, v)        (((u << 4) & 0xFFFF) | ((v << 4) << 16))
+#define COORD_PACK(u, v)        ((((u) << 4) & 0xFFFF) | (((v) << 4) << 16))
 
 #define GFX_MTX_STACK_LEVEL     ((GFX_STATUS >> 8) & 0x1F)
 #define GFX_MTX_PROJ_STACK      (1 << 13)

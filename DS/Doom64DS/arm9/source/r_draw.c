@@ -5,15 +5,23 @@
 #include "p_local.h"
 #include "w_wad.h"
 
-int         skypicnum = -1;
-int         skybackdropnum = -1;
-int         skyflatnum = -1;
-skydef_t*   sky;
-int         thunderCounter = 0;
-int         lightningCounter = 0;
-int         thundertic = 1;
-dboolean    skyfadeback = false;
-fixed_t     scrollfrac;
+dboolean        skyvisible = false;
+int             skypicnum = -1;
+int             skybackdropnum = -1;
+int             skyflatnum = -1;
+skydef_t*       sky;
+int             thunderCounter = 0;
+int             lightningCounter = 0;
+int             thundertic = 1;
+dboolean        skyfadeback = false;
+fixed_t         scrollfrac;
+gfx_t           gfx_skydata[5];
+uint32          gfx_skypalparams[5];
+int             gfx_skylumpnums[5];
+
+static lumpinfo_t*  gfx_skylump[5];
+static int          cloud_offsetx = 0;
+static int          cloud_offsety = 0;
 
 //
 // R_DrawSwitch
@@ -108,6 +116,8 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     int r1, r2;
     int g1, g2;
     int b1, b2;
+    line_t* line;
+    side_t* side;
 
     I_CheckGFX();
 
@@ -117,6 +127,9 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     r2 = l2->active_r;
     g2 = l2->active_g;
     b2 = l2->active_b;
+
+    line = seg->linedef;
+    side = seg->sidedef;
 
     //
     // sequenced lighting is too expensive on the DS
@@ -133,7 +146,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
         b2 = MIN(b2 + (frontsector->lightlevel << 1), 255);
     }
 
-    if(seg->linedef->flags & ML_TWOSIDED)
+    if(line->flags & ML_TWOSIDED)
     {
         int height = 0;
         int sideheight1 = 0;
@@ -143,7 +156,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
 
         if(bottom != frontsector->floorheight)
         {
-            if(!(seg->linedef->flags & ML_BLENDFULLTOP))
+            if(!(line->flags & ML_BLENDFULLTOP))
             {
                 sideheight1 = seg->backsector->ceilingheight - seg->frontsector->floorheight;
                 sideheight2 = seg->frontsector->ceilingheight - seg->backsector->ceilingheight;
@@ -169,7 +182,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
                 }
             }
 
-            if(seg->linedef->flags & ML_INVERSEBLEND)
+            if(line->flags & ML_INVERSEBLEND)
             {
                 r1 = l2->active_r;
                 g1 = l2->active_g;
@@ -179,7 +192,7 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
                 b2 = l1->active_b;
             }
         }
-        else if(top != frontsector->ceilingheight && !(seg->linedef->flags & ML_BLENDFULLBOTTOM))
+        else if(top != frontsector->ceilingheight && !(line->flags & ML_BLENDFULLBOTTOM))
         {
             sideheight1 = seg->backsector->floorheight - seg->frontsector->floorheight;
             sideheight2 = seg->frontsector->ceilingheight - seg->backsector->floorheight;
@@ -206,16 +219,16 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
         }
     }
 
-    x1 = F2DSFIXED(seg->v1->x);
-    x2 = F2DSFIXED(seg->v2->x);
-    y1 = F2DSFIXED(seg->v1->y);
-    y2 = F2DSFIXED(seg->v2->y);
+    x1 = F2DSFIXED(side->v1->x);
+    x2 = F2DSFIXED(side->v2->x);
+    y1 = F2DSFIXED(side->v1->y);
+    y2 = F2DSFIXED(side->v2->y);
     z1 = F2DSFIXED(top);
     z2 = F2DSFIXED(bottom);
 
     R_LoadTexture(texture,
-        (seg->linedef->flags & ML_HMIRROR),
-        (seg->linedef->flags & ML_VMIRROR));
+        (line->flags & ML_HMIRROR),
+        (line->flags & ML_VMIRROR));
 
     if(nolights)
         r1 = r2 = g1 = g2 = b1 = b2 = 255;
@@ -296,7 +309,7 @@ static void R_DrawSeg(seg_t* seg)
     if(!linedef)
         return;
 
-    col = seg->length;
+    col = sidedef->length;
     row = sidedef->rowoffset;
 
     if(linedef->flags & ML_BLENDING)
@@ -349,8 +362,8 @@ static void R_DrawSeg(seg_t* seg)
                     sidedef->bottomtexture,
                     l1,
                     l2,
-                    (seg->offset + col) + sidedef->textureoffset,
-                    seg->offset + sidedef->textureoffset,
+                    col + sidedef->textureoffset,
+                    sidedef->textureoffset,
                     v1,
                     v2
                     );
@@ -387,8 +400,8 @@ static void R_DrawSeg(seg_t* seg)
                     sidedef->toptexture,
                     l1,
                     l2,
-                    (seg->offset + col) + sidedef->textureoffset,
-                    seg->offset + sidedef->textureoffset,
+                    col + sidedef->textureoffset,
+                    sidedef->textureoffset,
                     v1,
                     v2
                     );
@@ -496,8 +509,8 @@ static void R_DrawSeg(seg_t* seg)
             sidedef->midtexture,
             l1,
             l2,
-            (seg->offset + col) + sidedef->textureoffset,
-            seg->offset + sidedef->textureoffset,
+            col + sidedef->textureoffset,
+            sidedef->textureoffset,
             v1,
             v2
             );
@@ -611,12 +624,20 @@ static void R_DrawLeafs(subsector_t* subsector)
 
     for(i = 0; i < subsector->numleafs; i++)
     {
-        seg_t* seg;
+        seg_t* seg = leafs[subsector->leaf + i].seg;
 
-        seg = leafs[subsector->leaf + i].seg;
-        if(seg->draw)
-            R_DrawSeg(seg);
+        if(seg->sidedef)
+        {
+            if(seg->sidedef->draw)
+            {
+                R_DrawSeg(seg);
+                seg->sidedef->draw = false;
+            }
+        }
     }
+
+    if(!skyvisible && (frontsector->ceilingpic == skyflatnum || frontsector->floorpic == skyflatnum))
+        skyvisible = true;
 
     if(viewz <= frontsector->ceilingheight && frontsector->ceilingpic != skyflatnum)
     {
@@ -1022,5 +1043,171 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
             GFX_VERTEX16    = VERTEX_PACK(-4, 0);
         }
     }
+}
+
+//
+// R_DrawSkyPic
+//
+
+static void R_DrawSkyPic(int lump, int yoffset, dboolean backdrop)
+{
+    short* lumpdata;
+    int width;
+    int height;
+    int pw;
+    int ph;
+    int z;
+    byte* data;
+    int offset;
+    int index = 0;
+
+    if(lump == -1)
+        return;
+
+    if(lump == gfx_skylumpnums[0])
+        index = 0;
+    else if(lump == gfx_skylumpnums[1])
+        index = 1;
+    else if(lump == gfx_skylumpnums[2])
+        index = 2;
+    else if(lump == gfx_skylumpnums[3])
+        index = 3;
+    else if(lump == gfx_skylumpnums[4])
+        index = 4;
+
+    I_CheckGFX();
+
+    gfx_skylump[index] = &lumpinfo[lump];
+
+    if(gfx_skylump[index]->cache == NULL)
+        W_CacheLumpNum(lump, PU_CACHE);
+
+    lumpdata = (short*)gfx_skylump[index]->cache;
+    width = lumpdata[0];
+    height = lumpdata[1];
+    data = (byte*)(lumpdata + 4);
+    pw = R_PadTextureDims(width);
+    ph = R_PadTextureDims(height);
+
+    if(!I_AllocVBlock(
+        &gfx_skydata[index],
+        data,
+        pw * height,
+        TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T,
+        R_GetTextureSize(pw),
+        R_GetTextureSize(ph),
+        GL_RGB256))
+        return;
+
+    offset = -((viewangle >> 22) & 0xff);
+
+    if(backdrop)
+        z = 0xFFC;
+    else
+        z = 0x1000;
+
+    height = (ph << 5);
+    yoffset <<= 5;
+
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_TEX_FORMAT  = gfx_skydata[index].params;
+    GFX_PAL_FORMAT  = gfx_skypalparams[index];
+    GFX_COLOR       = RGB15(31, 31, 31);
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_TEX_COORD   = COORD_PACK(offset, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x1000, height - yoffset);
+    GFX_VERTEX16    = VERTEX_PACK(z, 0);
+    GFX_TEX_COORD   = COORD_PACK(256 + offset, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, height - yoffset);
+    GFX_VERTEX16    = VERTEX_PACK(z, 0);
+    GFX_TEX_COORD   = COORD_PACK(offset, ph);
+    GFX_VERTEX16    = VERTEX_PACK(-0x1000, -yoffset);
+    GFX_VERTEX16    = VERTEX_PACK(z, 0);
+    GFX_TEX_COORD   = COORD_PACK(256 + offset, ph);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, -yoffset);
+    GFX_VERTEX16    = VERTEX_PACK(z, 0);
+}
+
+//
+// R_DrawCloud
+//
+
+static void R_DrawCloud(int lump)
+{
+    short* lumpdata;
+    byte* data;
+    int offset;
+
+    if(lump == -1)
+        return;
+
+    GFX_CLEAR_COLOR = sky->skycolor[1];
+    MATRIX_PUSH = 0;
+
+    gluPerspective(45, 256.0f / 192.0f, 0.002f, 1000);
+
+    gfx_skylump[4] = &lumpinfo[lump];
+
+    if(gfx_skylump[4]->cache == NULL)
+        W_CacheLumpNum(lump, PU_CACHE);
+
+    lumpdata = (short*)gfx_skylump[4]->cache;
+    data = (byte*)(lumpdata + 4);
+
+    if(!I_AllocVBlock(
+        &gfx_skydata[4],
+        data,
+        4096,
+        TEXGEN_OFF | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T,
+        TEXTURE_SIZE_64,
+        TEXTURE_SIZE_64,
+        GL_RGB256))
+        return;
+
+    cloud_offsetx = (cloud_offsetx - (dcos(viewangle) >> 15)) & 0x3FF;
+    cloud_offsety = (cloud_offsety + (dsin(viewangle) >> 14)) & 0x3FF;
+    offset = cloud_offsetx - ((viewangle >> ANGLETOFINESHIFT) >> 1);
+
+#define CLOUD_UV_PACK(u, v) (((((u) << 4) + offset) & 0xFFFF) | ((((v) << 4) + cloud_offsety) << 16))
+
+    GFX_POLY_FORMAT = POLY_ALPHA(18) | POLY_ID(0x3F) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_TEX_FORMAT  = gfx_skydata[4].params;
+    GFX_PAL_FORMAT  = gfx_skypalparams[4];
+    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_COLOR       = sky->skycolor[0];
+    GFX_TEX_COORD   = CLOUD_UV_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x6000, 0x2000);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_TEX_COORD   = CLOUD_UV_PACK(256, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0x5000, 0x2000);
+    GFX_VERTEX16    = VERTEX_PACK(0, 0);
+    GFX_COLOR       = sky->skycolor[2];
+    GFX_TEX_COORD   = CLOUD_UV_PACK(0, 256);
+    GFX_VERTEX16    = VERTEX_PACK(-0x6000, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_TEX_COORD   = CLOUD_UV_PACK(256, 256);
+    GFX_VERTEX16    = VERTEX_PACK(0x5000, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+
+#undef CLOUD_UV_PACK
+
+    MATRIX_POP = 1;
+}
+
+//
+// R_DrawSky
+//
+
+void R_DrawSky(void)
+{
+    if(sky->flags & SKF_VOID)
+        GFX_CLEAR_COLOR = sky->skycolor[2];
+    else if(sky->flags & SKF_CLOUD)
+        R_DrawCloud(skypicnum);
+    else
+        R_DrawSkyPic(skypicnum, 0, false);
+
+    if(sky->flags & SKF_BACKGROUND)
+        R_DrawSkyPic(skybackdropnum, 64, true);
 }
 
