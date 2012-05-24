@@ -4,6 +4,10 @@
 #include "z_zone.h"
 #include "p_local.h"
 #include "w_wad.h"
+#include "s_sound.h"
+#include "sounds.h"
+
+#define FIRESKYSIZE 64
 
 dboolean        skyvisible = false;
 int             skypicnum = -1;
@@ -22,6 +26,7 @@ int             gfx_skylumpnums[5];
 static lumpinfo_t*  gfx_skylump[5];
 static int          cloud_offsetx = 0;
 static int          cloud_offsety = 0;
+static byte*        fireBuffer;
 
 //
 // R_DrawSwitch
@@ -1129,6 +1134,50 @@ static void R_DrawSkyPic(int lump, int yoffset, dboolean backdrop)
 }
 
 //
+// R_CloudThunder
+//
+
+static void R_CloudThunder(void)
+{
+    if(!(frametic & ((thunderCounter & 1) ? 1 : 3)))
+        return;
+    
+    if((thunderCounter - thundertic) > 0)
+    {
+        thunderCounter = (thunderCounter - thundertic);
+        return;
+    }
+    
+    if(lightningCounter == 0)
+    {
+        S_StartSound(NULL, sfx_thndrlow + (M_Random() & 1));
+        thundertic = (1 + (M_Random() & 1));
+    }
+    
+    if(!(lightningCounter < 6))	// Reset loop after 6 lightning flickers
+    {
+        int rand = (M_Random() & 7);
+        thunderCounter = (((rand << 4) - rand) << 2) + 60;
+        lightningCounter = 0;
+        return;
+    }
+    
+    if((lightningCounter & 1) == 0)
+    {
+        sky->skycolor[0] += RGB8(0x11, 0x11, 0);
+        sky->skycolor[2] += RGB8(0x11, 0x11, 0);
+    }
+    else
+    {
+        sky->skycolor[0] -= RGB8(0x11, 0x11, 0);
+        sky->skycolor[2] -= RGB8(0x11, 0x11, 0);
+    }
+    
+    thunderCounter = (M_Random() & 7) + 1;	// Do short delay loops for lightning flickers
+    lightningCounter++;
+}
+
+//
 // R_DrawCloud
 //
 
@@ -1195,6 +1244,89 @@ static void R_DrawCloud(int lump)
 }
 
 //
+// R_SpreadFire
+//
+
+static void R_SpreadFire(byte* src1, byte* src2, int pixel, int counter, int* rand, int width)
+{
+    int randIdx = 0;
+    byte *tmpSrc;
+    
+    if(pixel != 0)
+    {
+        randIdx = rndtable[*rand];
+        *rand = ((*rand+2) & 0xff);
+        
+        tmpSrc = (src1 + (((counter - (randIdx & 3)) + 1) & (width-1)));
+        *(byte*)(tmpSrc - width) = (pixel - ((randIdx & 1) << 4));
+    }
+    else
+        *(byte*)(src2 - width) = 0;
+}
+
+//
+// R_Fire
+//
+
+static void R_Fire(byte *buffer)
+{
+    int counter = 0;
+    int rand = 0;
+    int step = 0;
+    int pixel = 0;
+    //int i = 0;
+    const int width = FIRESKYSIZE;
+    byte *src;
+    byte *srcoffset;
+    
+    //for(i = 0; i < (width*width); i++)
+        //buffer[i] <<= 4;
+    
+    rand = (M_Random() & 0xff);
+    src = buffer;
+    counter = 0;
+    src += width;
+    
+    do	// height
+    {
+        srcoffset = (src + counter);
+        pixel = *(byte*)srcoffset;
+        
+        step = 2;
+        
+        R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
+        
+        src += width;
+        srcoffset += width;
+        
+        do	// width
+        {
+            pixel = *(byte*)srcoffset;
+            step += 2;
+            
+            R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
+            
+            pixel = *(byte*)(srcoffset + width);
+            src += width;
+            srcoffset += width;
+            
+            R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
+            
+            src += width;
+            srcoffset += width;
+            
+        } while(step != width);
+        
+        counter++;
+        src -= ((width*width)-width);
+        
+    } while(counter != width);
+    
+    //for(i = 0; i < (width*width); i++)
+        //buffer[i] >>= 4;
+}
+
+//
 // R_DrawSky
 //
 
@@ -1203,11 +1335,22 @@ void R_DrawSky(void)
     if(sky->flags & SKF_VOID)
         GFX_CLEAR_COLOR = sky->skycolor[2];
     else if(sky->flags & SKF_CLOUD)
+    {
         R_DrawCloud(skypicnum);
+
+        if(sky->flags & SKF_THUNDER)
+            R_CloudThunder();
+    }
     else
         R_DrawSkyPic(skypicnum, 0, false);
 
     if(sky->flags & SKF_BACKGROUND)
         R_DrawSkyPic(skybackdropnum, 64, true);
+
+    return;
+
+    // TODO
+    if(sky->flags & SKF_FIRE)
+        R_Fire(fireBuffer);
 }
 

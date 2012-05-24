@@ -949,7 +949,7 @@ void P_SetupSky(void)
 {
     int skyindex;
     
-    //thunderCounter      = 180;
+    thunderCounter      = 180;
     skypicnum           = -1;
     skybackdropnum      = -1;
     skyfadeback         = false;

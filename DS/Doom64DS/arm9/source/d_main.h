@@ -112,6 +112,7 @@ extern int leveltime;
 // only true if packets are broadcast
 extern dboolean netgame;
 
+extern byte         rndtable[256];
 extern	int         rndindex;
 
 extern	int         maketic;
