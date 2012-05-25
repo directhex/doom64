@@ -25,7 +25,8 @@ enum
    PU_LEVEL,   // allocation belongs to level (freed at next level load)
    PU_LEVSPEC, // used for thinker_t's (same as PU_LEVEL basically)
    PU_CACHE,   // block is cached (may be implicitly freed at any time!)
-   PU_MAX      // Must always be last -- killough
+   PU_MAX,     // Must always be last -- killough
+   PU_NEWBLOCK
 };
 
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */

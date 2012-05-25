@@ -7,17 +7,18 @@
 
 uint32* gfx_base = (uint32*)VRAM_A;
 byte    gfx_tex_buffer[GFX_BUFFER_SIZE];
+gfx_t*  gfx_images;
+uint32* gfx_imgpal_params;
 
 static int              gfx_texpal_stride = 0;
-static uint32*          gfx_texpal_params;
+static uint32**         gfx_texpal_params;
 static uint32*          gfx_sprpal_params;
 static uint32           gfx_extpal_params[NUMSPRITES][8];
 static byte             gfx_padbuffer[256 * 256];
 static gfx_t*           gfx_textures;
 static gfx_t*           gfx_sprites;
-
-extern uint32          gfx_skypalparams[5];
-extern int             gfx_skylumpnums[5];
+static short*           texturetranslation;
+static short*           palettetranslation;
 
 //
 // R_CachePalette
@@ -28,7 +29,6 @@ uint32 R_CachePalette(const char* name)
 {
     uint16* lump;
     uint16* pal;
-    int size;
     int stride;
     int width;
     int height;
@@ -37,12 +37,11 @@ uint32 R_CachePalette(const char* name)
     lump = (uint16*)W_CacheLumpName(name, PU_AUTO);
     width = lump[0];
     height = lump[1];
-    size = (256 << 1);
     pal = lump + 4 + ((width * height) >> 1);
 
-    gfx_texpal_stride += size;
+    gfx_texpal_stride += 512;
 
-    return I_SetPalette(pal, stride, size);
+    return I_SetPalette(pal, stride, 512);
 }
 
 //
@@ -77,20 +76,45 @@ byte* R_CopyPic(byte* pic, int x, int y, int rows, int colsize,
 static void R_CacheTexturePalette(int index)
 {
     byte* gfx;
-    byte* pal;
     int size;
     uint16* paldata;
+    int i;
 
     gfx = (byte*)W_CacheLumpNum(t_start + index, PU_STATIC);
     size = (((8 << gfx[0]) * (8 << gfx[1])) >> 1);
-    pal = (gfx + 4 + size);
-    size = (16 << 1);
-    paldata = (uint16*)pal;
 
-    gfx_texpal_params[index] = I_SetPalette(paldata, gfx_texpal_stride, size);
-    gfx_texpal_stride += size;
+    gfx_texpal_params[index] = (uint32*)Z_Calloc(sizeof(uint32) * gfx[2], PU_STATIC, NULL);
+
+    for(i = 0; i < gfx[2]; i++)
+    {
+        paldata = (uint16*)((gfx + 4 + size + (32 * i)));
+        gfx_texpal_params[index][i] = I_SetPalette(paldata, gfx_texpal_stride, 32);
+        gfx_texpal_stride += 32;
+    }
 
     Z_Free(gfx);
+}
+
+//
+// R_CacheImgPalette
+//
+
+static void R_CacheImgPalette(int index)
+{
+    uint16* lump;
+    uint16* pal;
+    int width;
+    int height;
+
+    lump = (uint16*)W_CacheLumpNum(g_start + index, PU_STATIC);
+    width = lump[0];
+    height = lump[1];
+    pal = lump + 4 + ((width * height) >> 1);
+
+    gfx_imgpal_params[index] = I_SetPalette(pal, gfx_texpal_stride, 512);
+    gfx_texpal_stride += 512;
+
+    Z_Free(lump);
 }
 
 //
@@ -101,7 +125,6 @@ static void R_SetupSpriteData(int spritenum)
 {
     short* gfx;
     byte* data;
-    int size;
     byte* pal;
     uint16* paldata;
 
@@ -117,11 +140,10 @@ static void R_SetupSpriteData(int spritenum)
         data = (byte*)(gfx + 5);
 
         pal = data + ((gfx[0] * gfx[1]) >> 1);
-        size = (16 << 1);
         paldata = (uint16*)pal;
 
-        gfx_sprpal_params[spritenum] = I_SetPalette(paldata, gfx_texpal_stride, size);
-        gfx_texpal_stride += size;
+        gfx_sprpal_params[spritenum] = I_SetPalette(paldata, gfx_texpal_stride, 32);
+        gfx_texpal_stride += 32;
     }
     else
         spritetiles[spritenum] = gfx[5];
@@ -155,16 +177,14 @@ static void R_CacheExternalPalette(int sprite)
         {
             byte* pal;
             uint16* paldata;
-            int size;
 
             data = (byte*)(gfx + 6 + ((sizeof(short) * gfx[5]) >> 1));
 
             pal = data + (gfx[0] * gfx[1]);
-            size = (256 << 1);
             paldata = (uint16*)pal;
 
-            gfx_extpal_params[sprite][0] = I_SetPalette(paldata, gfx_texpal_stride, size);
-            gfx_texpal_stride += size;
+            gfx_extpal_params[sprite][0] = I_SetPalette(paldata, gfx_texpal_stride, 512);
+            gfx_texpal_stride += 512;
         }
         else if(gfx[4] == 1)
         {
@@ -172,7 +192,6 @@ static void R_CacheExternalPalette(int sprite)
             {
                 int lump;
                 uint16* paldata;
-                int size;
 
                 sprintf(palname, "PAL%s%i", sprnames[sprite], i);
                 lump = W_CheckNumForName(palname);
@@ -181,10 +200,8 @@ static void R_CacheExternalPalette(int sprite)
                     continue;
 
                 paldata = (uint16*)W_CacheLumpNum(lump, PU_STATIC);
-                size = (256 << 1);
-
-                gfx_extpal_params[sprite][i] = I_SetPalette(paldata, gfx_texpal_stride, size);
-                gfx_texpal_stride += size;
+                gfx_extpal_params[sprite][i] = I_SetPalette(paldata, gfx_texpal_stride, 512);
+                gfx_texpal_stride += 512;
             }
         }
 
@@ -201,10 +218,10 @@ static void R_InitPalettes(void)
     int i;
 
     for(i = 0; i < numtextures; i++)
-    {
-        if(gfx_texpal_params[i] == 0)
-            R_CacheTexturePalette(i);
-    }
+        R_CacheTexturePalette(i);
+
+    for(i = 0; i < numgfximgs; i++)
+        R_CacheImgPalette(i);
 
     for(i = 0; i < numgfxsprites; i++)
     {
@@ -214,14 +231,6 @@ static void R_InitPalettes(void)
 
     for(i = 1; i < NUMSPRITES; i++)
         R_CacheExternalPalette(i);
-
-    ST_CachePalettes();
-
-    gfx_skypalparams[0] = R_CachePalette("SPACE");
-    gfx_skypalparams[1] = R_CachePalette("MOUNTA");
-    gfx_skypalparams[2] = R_CachePalette("MOUNTB");
-    gfx_skypalparams[3] = R_CachePalette("MOUNTC");
-    gfx_skypalparams[4] = R_CachePalette("CLOUD");
 
     if(gfx_texpal_stride >= 0x10000)
         I_Error("R_InitPalettes: palette cache overflowed by %d",
@@ -234,12 +243,22 @@ static void R_InitPalettes(void)
 
 static void R_InitTextures(void)
 {
+    int i;
+
     t_start             = W_GetNumForName("T_START") + 1;
     t_end               = W_GetNumForName("T_END") - 1;
     swx_start           = W_FindNumForName("SWX") + 1;
     numtextures         = (t_end - t_start) + 1;
+    texturetranslation  = (short*)Z_Calloc(sizeof(short) * numtextures, PU_STATIC, NULL);
+    palettetranslation  = (short*)Z_Calloc(sizeof(short) * numtextures, PU_STATIC, NULL);
     gfx_textures        = (gfx_t*)Z_Calloc(sizeof(gfx_t) * numtextures, PU_STATIC, NULL);
-    gfx_texpal_params   = (uint32*)Z_Calloc(sizeof(uint32) * numtextures, PU_STATIC, NULL);
+    gfx_texpal_params   = (uint32**)Z_Calloc(sizeof(*gfx_texpal_params) * numtextures, PU_STATIC, NULL);
+
+    for(i = 0; i < numtextures; i++)
+    {
+        texturetranslation[i] = i;
+        palettetranslation[i] = 0;
+    }
 }
 
 //
@@ -419,9 +438,11 @@ static void R_InitSprites(void)
 
 void R_InitImgs(void)
 {
-    g_start     = W_GetNumForName("G_START") + 1;
-    g_end       = W_GetNumForName("G_END") - 1;
-    numgfximgs  = (g_end - g_start) + 1;
+    g_start             = W_GetNumForName("G_START") + 1;
+    g_end               = W_GetNumForName("G_END") - 1;
+    numgfximgs          = (g_end - g_start) + 1;
+    gfx_images          = (gfx_t*)Z_Calloc(sizeof(gfx_t) * numgfximgs, PU_STATIC, NULL);
+    gfx_imgpal_params   = (uint32*)Z_Calloc(sizeof(uint32) * numgfximgs, PU_STATIC, NULL);
 }
 
 //
@@ -434,12 +455,6 @@ void R_InitData(void)
     R_InitSprites();
     R_InitImgs();
     R_InitPalettes();
-
-    gfx_skylumpnums[0] = W_GetNumForName("SPACE");
-    gfx_skylumpnums[1] = W_GetNumForName("MOUNTA");
-    gfx_skylumpnums[2] = W_GetNumForName("MOUNTB");
-    gfx_skylumpnums[3] = W_GetNumForName("MOUNTC");
-    gfx_skylumpnums[4] = W_GetNumForName("CLOUD");
 }
 
 //
@@ -500,6 +515,8 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     int size;
     lumpinfo_t* lump;
 
+    texture = texturetranslation[texture];
+
     lump = &lumpinfo[t_start + texture];
 
     if(lump->cache == NULL)
@@ -534,7 +551,7 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     }
 
     GFX_TEX_FORMAT = gfx_textures[texture].params;
-    GFX_PAL_FORMAT = gfx_texpal_params[texture];
+    GFX_PAL_FORMAT = gfx_texpal_params[texture][palettetranslation[texture]];
 }
 
 //
@@ -543,43 +560,10 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
 
 void R_SetTextureFrame(int texture, int frame, dboolean palette)
 {
-    lumpinfo_t* lump;
-    int t;
-    byte* gfx;
-    byte* data;
-    int size;
-
-    if(gfx_textures[texture].params == 0)
-        return;
-
-    if(gfx_textures[texture].vram == NULL)
-        return;
-
-    if(frametic - gfx_textures[texture].vram->prevtic > 4)
-        return;
-
     if(palette)
-        t = t_start + texture;
+        palettetranslation[texture] = frame;
     else
-        t = t_start + texture + frame;
-
-    lump = &lumpinfo[t];
-
-    if(lump->cache == NULL)
-        W_CacheLumpNum(t, PU_CACHE);
-
-    gfx = (byte*)lump->cache;
-    size = (((8 << gfx[0]) * (8 << gfx[1])) >> 1);
-
-    if(palette)
-        data = (gfx + 4 + size + (32 * frame));
-    else
-        data = gfx + 4;
-
-    if(palette)
-        I_SetPalette((uint16*)data, gfx_texpal_params[texture] << 4, 32);
-    else
-        memcpy16(gfx_textures[texture].vram->block, data, size >> 1);
+        texturetranslation[texture] = texture + frame;
 }
 
 //

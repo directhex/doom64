@@ -303,10 +303,10 @@ dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
 {
     if(gfx->params == 0)
     {
-        if(!(gfx->vram = Z_VAlloc(vramzone, size, PU_CACHE, &gfx->params)))
+        if(!(gfx->vram = Z_VAlloc(vramzone, size, PU_NEWBLOCK, &gfx->params)))
             return false;
 
-        memcpy16(gfx->vram->block, data, size >> 1);
+        swiCopy(data, gfx->vram->block, (size >> 1) | COPY_MODE_HWORD);
     }
     else
         Z_VTouch(vramzone, gfx->vram);
@@ -336,9 +336,7 @@ uint32 I_SetPalette(uint16* data, int offset, int size)
 
 void I_FinishFrame(void)
 {
-    int i;
-    byte* buff;
-    byte* vram;
+    vramblock_t* block;
     
     I_CheckGFX();
     
@@ -346,25 +344,36 @@ void I_FinishFrame(void)
     swiWaitForVBlank();
     DC_FlushAll();
 
-    buff = (byte*)gfx_tex_buffer;
-    vram = (byte*)VRAM_A;
-
     // lock banks
     vramSetBankA(VRAM_A_LCD);
     vramSetBankB(VRAM_B_LCD);
     vramSetBankC(VRAM_C_LCD);
     vramSetBankD(VRAM_D_LCD);
 
-    for(i = 0; i < 32; i++)
+    gfxdmasize = 0;
+
+    // scan through list and check for any new block that needs to be dma'ed
+    for(block = vramzone->blocklist.next; block != &vramzone->blocklist;
+        block = block->next)
     {
-        // transfer 16kb of data at a time
-        dmaCopyWords(0, (uint32*)buff, (uint32*)vram, 0x4000);
+        if(block->gfx == NULL)
+            continue;
 
-        // force scanline back at 192
-        REG_VCOUNT = 192;
+        // new block
+        if(block->tag == PU_NEWBLOCK)
+        {
+            uint32 offset;
 
-        buff += 0x4000;
-        vram += 0x4000;
+            offset = (((*(uint32*)block->gfx & 0xffff) << 3) >> 2);
+            dmaCopyWords(0, (uint32*)block->block, (uint32*)gfx_base + offset, block->size);
+
+            // force scanline back at 192
+            REG_VCOUNT = 192;
+
+            // mark this block as cache
+            block->tag = PU_CACHE;
+            gfxdmasize += block->size;
+        }
     }
 
     // unlock banks

@@ -19,14 +19,12 @@ int             lightningCounter = 0;
 int             thundertic = 1;
 dboolean        skyfadeback = false;
 fixed_t         scrollfrac;
-gfx_t           gfx_skydata[5];
-uint32          gfx_skypalparams[5];
-int             gfx_skylumpnums[5];
 
-static lumpinfo_t*  gfx_skylump[5];
-static int          cloud_offsetx = 0;
-static int          cloud_offsety = 0;
-static byte*        fireBuffer;
+static int      cloud_offsetx = 0;
+static int      cloud_offsety = 0;
+
+static int spr_polyid = 0;
+static subsector_t* spr_prevssect = NULL;
 
 //
 // R_DrawSwitch
@@ -529,7 +527,7 @@ static void R_DrawSeg(seg_t* seg)
 
 static void R_DrawSubsector(subsector_t* ss, fixed_t height,
                             dtexture texture, light_t* light,
-                            fixed_t xoffset, fixed_t yoffset)
+                            int xoffset, int yoffset)
 {
     int i;
     int x;
@@ -569,8 +567,8 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     else
         GFX_COLOR = RGB8(r, g, b);
 
-    tx      = F2INT(leafs[ss->leaf].vertex->x + xoffset) & 0x3F;
-    ty      = F2INT(leafs[ss->leaf].vertex->y - yoffset) & 0x3F;
+    tx      = F2INT(leafs[ss->leaf].vertex->x) & 0x3F;
+    ty      = F2INT(leafs[ss->leaf].vertex->y) & 0x3F;
     tsx     = leafs[ss->leaf].vertex->x;
     tsy     = leafs[ss->leaf].vertex->y;
     mapx    = 0;
@@ -585,6 +583,10 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
         GFX_PAL_FORMAT = 0;
     }
 
+#define SS_UV_PACK(u, v)                            \
+    (((((u) << 4) - (xoffset & 0x3FF)) & 0xFFFF) |  \
+    ( (((v) << 4) + (yoffset & 0x3FF)) << 16))
+
 #define DRAWSSECT(index)                    \
     v = leafs[index].vertex;                \
     length = F2INT(tsx - v->x) + mapx;      \
@@ -597,7 +599,7 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     tsy = v->y;                             \
     x = F2DSFIXED(v->x);                    \
     y = F2DSFIXED(v->y);                    \
-    GFX_TEX_COORD   = COORD_PACK(tu, tv);   \
+    GFX_TEX_COORD   = SS_UV_PACK(tu, tv);   \
     GFX_VERTEX16    = VERTEX_PACK(x, z);    \
     GFX_VERTEX16    = VERTEX_PACK(y, 0)
 
@@ -615,6 +617,7 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     }
 
 #undef DRAWSSECT
+#undef SS_UV_PACK
 }
 
 //
@@ -648,15 +651,20 @@ static void R_DrawLeafs(subsector_t* subsector)
     {
         if(frontsector->flags & MS_SCROLLCEILING)
         {
-            x = frontsector->xoffset;
-            y = frontsector->yoffset;
+            x = frontsector->xoffset >> 12;
+            y = frontsector->yoffset >> 12;
         }
         else
             x = y = 0;
 
         l = &lights[frontsector->colors[LIGHT_CEILING]];
 
-        GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
+        GFX_POLY_FORMAT =
+            POLY_ALPHA(31)  |
+            POLY_ID(0)      |
+            POLY_CULL_BACK  |
+            POLY_MODULATION |
+            POLY_FOG;
 
         R_DrawSubsector(subsector,
             frontsector->ceilingheight,
@@ -691,19 +699,52 @@ static void R_DrawLeafs(subsector_t* subsector)
     {
         if(frontsector->flags & MS_SCROLLFLOOR)
         {
-            x = frontsector->xoffset;
-            y = frontsector->yoffset;
+            x = frontsector->xoffset >> 12;
+            y = frontsector->yoffset >> 12;
         }
         else
             x = y = 0;
 
         l = &lights[frontsector->colors[LIGHT_FLOOR]];
 
-        GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_FRONT | POLY_MODULATION | POLY_FOG;
+        if(frontsector->flags & MS_LIQUIDFLOOR)
+        {
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(20)  |
+                POLY_ID(0x3F)   |
+                POLY_CULL_FRONT |
+                POLY_MODULATION |
+                POLY_FOG        |
+                POLY_DEPTHTEST_EQUAL;
 
-        R_DrawSubsector(subsector,
+            R_DrawSubsector(subsector,
             frontsector->floorheight,
-            frontsector->floorpic, l, x, y);
+            frontsector->floorpic, l, x + scrollfrac, y);
+            
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(31)  |
+                POLY_ID(3)      |
+                POLY_CULL_FRONT |
+                POLY_MODULATION |
+                POLY_FOG;
+
+            R_DrawSubsector(subsector,
+                frontsector->floorheight,
+                frontsector->floorpic + 1, l, x, y - scrollfrac);
+        }
+        else
+        {
+            GFX_POLY_FORMAT =
+                POLY_ALPHA(31)  |
+                POLY_ID(0)      |
+                POLY_CULL_FRONT |
+                POLY_MODULATION |
+                POLY_FOG;
+
+            R_DrawSubsector(subsector,
+                frontsector->floorheight,
+                frontsector->floorpic, l, x, y);
+        }
 
         //
         // create a glowing plane on top of the geometry for
@@ -716,11 +757,11 @@ static void R_DrawLeafs(subsector_t* subsector)
             if(lightlevel)
             {
                 GFX_POLY_FORMAT =
-                    POLY_ALPHA(lightlevel) |
-                    POLY_ID(2) |
-                    POLY_CULL_FRONT |
-                    POLY_MODULATION |
-                    POLY_FOG |
+                    POLY_ALPHA(lightlevel)  |
+                    POLY_ID(2)              |
+                    POLY_CULL_FRONT         |
+                    POLY_MODULATION         |
+                    POLY_FOG                |
                     POLY_DEPTHTEST_EQUAL;
 
                 R_DrawSubsector(subsector,
@@ -814,26 +855,26 @@ static void R_DrawSprite(mobj_t* thing)
 
     GFX_POLY_FORMAT =
         POLY_ALPHA(alpha)   |
-        POLY_ID(0)          |
+        POLY_ID(spr_polyid) |
         POLY_CULL_BACK      |
         POLY_MODULATION     |
         POLY_FOG            |
         POLY_NEW_DEPTH;
 
     GFX_COLOR       = color;
-    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_BEGIN       = GL_QUADS;
     GFX_TEX_COORD   = COORD_PACK(tu1, 0);
     GFX_VERTEX16    = VERTEX_PACK(x1, z2);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
     GFX_TEX_COORD   = COORD_PACK(tu2, 0);
     GFX_VERTEX16    = VERTEX_PACK(x2, z2);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-    GFX_TEX_COORD   = COORD_PACK(tu1, height);
-    GFX_VERTEX16    = VERTEX_PACK(x1, z1);
-    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
     GFX_TEX_COORD   = COORD_PACK(tu2, height);
     GFX_VERTEX16    = VERTEX_PACK(x2, z1);
     GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+    GFX_TEX_COORD   = COORD_PACK(tu1, height);
+    GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+    GFX_VERTEX16    = VERTEX_PACK(y1, 0);
 
     if(thing->subsector->sector->lightlevel && !(thing->flags & MF_MISSILE))
     {
@@ -845,23 +886,32 @@ static void R_DrawSprite(mobj_t* thing)
             GFX_PAL_FORMAT = 0;
             GFX_POLY_FORMAT =
                 POLY_ALPHA(lightlevel) |
-                POLY_ID(2) |
+                POLY_ID(spr_polyid) |
                 POLY_CULL_BACK |
                 POLY_MODULATION |
                 POLY_FOG |
                 POLY_DEPTHTEST_EQUAL;
 
             GFX_COLOR       = color;
-            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_BEGIN       = GL_QUADS;
             GFX_VERTEX16    = VERTEX_PACK(x1, z2);
             GFX_VERTEX16    = VERTEX_PACK(y1, 0);
             GFX_VERTEX16    = VERTEX_PACK(x2, z2);
             GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x1, z1);
-            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
             GFX_VERTEX16    = VERTEX_PACK(x2, z1);
             GFX_VERTEX16    = VERTEX_PACK(y2, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x1, z1);
+            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
         }
+    }
+
+    if(thing->subsector != spr_prevssect)
+    {
+        spr_prevssect = thing->subsector;
+        spr_polyid++;
+
+        if(spr_polyid > 0x3F)
+            spr_polyid = 0x3F;
     }
 }
 
@@ -939,6 +989,8 @@ void R_DrawScene(void)
         R_DrawLeafs(sub);
     }
 
+    spr_polyid = 0;
+
     for(vissprite = vissprite - 1; vissprite >= visspritelist; vissprite--)
     {
         mobj_t* mobj;
@@ -995,7 +1047,7 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     GFX_ORTHO();
 
-    polyflags = POLY_ALPHA(alpha) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    polyflags = POLY_ALPHA(alpha) | POLY_ID(0x3F) | POLY_CULL_NONE | POLY_MODULATION;
 
     //
     // hack for plasma gun sprite;
@@ -1007,18 +1059,18 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
 
     GFX_POLY_FORMAT = polyflags;
     GFX_COLOR       = color;
-    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_BEGIN       = GL_QUADS;
     GFX_TEX_COORD   = COORD_PACK(0, 0);
     GFX_VERTEX16    = VERTEX_PACK(x, y);
     GFX_VERTEX16    = VERTEX_PACK(-4, 0);
     GFX_TEX_COORD   = COORD_PACK(width, 0);
     GFX_VERTEX16    = VERTEX_PACK(width + x, y);
     GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-    GFX_TEX_COORD   = COORD_PACK(0, height);
-    GFX_VERTEX16    = VERTEX_PACK(x, height + y);
-    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
     GFX_TEX_COORD   = COORD_PACK(width, height);
     GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, height);
+    GFX_VERTEX16    = VERTEX_PACK(x, height + y);
     GFX_VERTEX16    = VERTEX_PACK(-4, 0);
 
     if(sector->lightlevel)
@@ -1037,14 +1089,14 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
                 POLY_DEPTHTEST_EQUAL;
 
             GFX_COLOR       = color;
-            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_BEGIN       = GL_QUADS;
             GFX_VERTEX16    = VERTEX_PACK(x, y);
             GFX_VERTEX16    = VERTEX_PACK(-4, 0);
             GFX_VERTEX16    = VERTEX_PACK(width + x, y);
             GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x, height + y);
-            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
             GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
+            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
+            GFX_VERTEX16    = VERTEX_PACK(x, height + y);
             GFX_VERTEX16    = VERTEX_PACK(-4, 0);
         }
     }
@@ -1064,38 +1116,29 @@ static void R_DrawSkyPic(int lump, int yoffset, dboolean backdrop)
     int z;
     byte* data;
     int offset;
+    lumpinfo_t* l;
     int index = 0;
 
     if(lump == -1)
         return;
 
-    if(lump == gfx_skylumpnums[0])
-        index = 0;
-    else if(lump == gfx_skylumpnums[1])
-        index = 1;
-    else if(lump == gfx_skylumpnums[2])
-        index = 2;
-    else if(lump == gfx_skylumpnums[3])
-        index = 3;
-    else if(lump == gfx_skylumpnums[4])
-        index = 4;
-
     I_CheckGFX();
 
-    gfx_skylump[index] = &lumpinfo[lump];
+    l = &lumpinfo[lump];
 
-    if(gfx_skylump[index]->cache == NULL)
+    if(l->cache == NULL)
         W_CacheLumpNum(lump, PU_CACHE);
 
-    lumpdata = (short*)gfx_skylump[index]->cache;
+    lumpdata = (short*)l->cache;
     width = lumpdata[0];
     height = lumpdata[1];
     data = (byte*)(lumpdata + 4);
     pw = R_PadTextureDims(width);
     ph = R_PadTextureDims(height);
+    index = lump - g_start;
 
     if(!I_AllocVBlock(
-        &gfx_skydata[index],
+        &gfx_images[index],
         data,
         pw * height,
         TEXGEN_OFF | GL_TEXTURE_COLOR0_TRANSPARENT | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T,
@@ -1115,21 +1158,21 @@ static void R_DrawSkyPic(int lump, int yoffset, dboolean backdrop)
     yoffset <<= 5;
 
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
-    GFX_TEX_FORMAT  = gfx_skydata[index].params;
-    GFX_PAL_FORMAT  = gfx_skypalparams[index];
+    GFX_TEX_FORMAT  = gfx_images[index].params;
+    GFX_PAL_FORMAT  = gfx_imgpal_params[index];
     GFX_COLOR       = RGB15(31, 31, 31);
-    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_BEGIN       = GL_QUADS;
     GFX_TEX_COORD   = COORD_PACK(offset, 0);
     GFX_VERTEX16    = VERTEX_PACK(-0x1000, height - yoffset);
     GFX_VERTEX16    = VERTEX_PACK(z, 0);
     GFX_TEX_COORD   = COORD_PACK(256 + offset, 0);
     GFX_VERTEX16    = VERTEX_PACK(0x1000, height - yoffset);
     GFX_VERTEX16    = VERTEX_PACK(z, 0);
-    GFX_TEX_COORD   = COORD_PACK(offset, ph);
-    GFX_VERTEX16    = VERTEX_PACK(-0x1000, -yoffset);
-    GFX_VERTEX16    = VERTEX_PACK(z, 0);
     GFX_TEX_COORD   = COORD_PACK(256 + offset, ph);
     GFX_VERTEX16    = VERTEX_PACK(0x1000, -yoffset);
+    GFX_VERTEX16    = VERTEX_PACK(z, 0);
+    GFX_TEX_COORD   = COORD_PACK(offset, ph);
+    GFX_VERTEX16    = VERTEX_PACK(-0x1000, -yoffset);
     GFX_VERTEX16    = VERTEX_PACK(z, 0);
 }
 
@@ -1184,27 +1227,32 @@ static void R_CloudThunder(void)
 static void R_DrawCloud(int lump)
 {
     short* lumpdata;
+    lumpinfo_t* l;
     byte* data;
     int offset;
+    int index;
 
     if(lump == -1)
         return;
+
+    I_CheckGFX();
 
     GFX_CLEAR_COLOR = sky->skycolor[1];
     MATRIX_PUSH = 0;
 
     gluPerspective(45, 256.0f / 192.0f, 0.002f, 1000);
 
-    gfx_skylump[4] = &lumpinfo[lump];
+    l = &lumpinfo[lump];
 
-    if(gfx_skylump[4]->cache == NULL)
+    if(l->cache == NULL)
         W_CacheLumpNum(lump, PU_CACHE);
 
-    lumpdata = (short*)gfx_skylump[4]->cache;
+    lumpdata = (short*)l->cache;
     data = (byte*)(lumpdata + 4);
+    index = lump - g_start;
 
     if(!I_AllocVBlock(
-        &gfx_skydata[4],
+        &gfx_images[index],
         data,
         4096,
         TEXGEN_OFF | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T,
@@ -1220,9 +1268,9 @@ static void R_DrawCloud(int lump)
 #define CLOUD_UV_PACK(u, v) (((((u) << 4) + offset) & 0xFFFF) | ((((v) << 4) + cloud_offsety) << 16))
 
     GFX_POLY_FORMAT = POLY_ALPHA(18) | POLY_ID(0x3F) | POLY_CULL_NONE | POLY_MODULATION;
-    GFX_TEX_FORMAT  = gfx_skydata[4].params;
-    GFX_PAL_FORMAT  = gfx_skypalparams[4];
-    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_TEX_FORMAT  = gfx_images[index].params;
+    GFX_PAL_FORMAT  = gfx_imgpal_params[index];
+    GFX_BEGIN       = GL_QUADS;
     GFX_COLOR       = sky->skycolor[0];
     GFX_TEX_COORD   = CLOUD_UV_PACK(0, 0);
     GFX_VERTEX16    = VERTEX_PACK(-0x6000, 0x2000);
@@ -1231,11 +1279,11 @@ static void R_DrawCloud(int lump)
     GFX_VERTEX16    = VERTEX_PACK(0x5000, 0x2000);
     GFX_VERTEX16    = VERTEX_PACK(0, 0);
     GFX_COLOR       = sky->skycolor[2];
-    GFX_TEX_COORD   = CLOUD_UV_PACK(0, 256);
-    GFX_VERTEX16    = VERTEX_PACK(-0x6000, 0);
-    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
     GFX_TEX_COORD   = CLOUD_UV_PACK(256, 256);
     GFX_VERTEX16    = VERTEX_PACK(0x5000, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
+    GFX_TEX_COORD   = CLOUD_UV_PACK(0, 256);
+    GFX_VERTEX16    = VERTEX_PACK(-0x6000, 0);
     GFX_VERTEX16    = VERTEX_PACK(-0x7FFF, 0);
 
 #undef CLOUD_UV_PACK
@@ -1265,65 +1313,109 @@ static void R_SpreadFire(byte* src1, byte* src2, int pixel, int counter, int* ra
 }
 
 //
-// R_Fire
+// R_DrawFire
 //
 
-static void R_Fire(byte *buffer)
+static void R_DrawFire(void)
 {
-    int counter = 0;
-    int rand = 0;
-    int step = 0;
-    int pixel = 0;
-    //int i = 0;
-    const int width = FIRESKYSIZE;
-    byte *src;
-    byte *srcoffset;
-    
-    //for(i = 0; i < (width*width); i++)
-        //buffer[i] <<= 4;
-    
-    rand = (M_Random() & 0xff);
-    src = buffer;
-    counter = 0;
-    src += width;
-    
-    do	// height
+    lumpinfo_t* l;
+    byte* data;
+    short* lumpdata;
+    int index;
+    int offset;
+
+    l = &lumpinfo[skypicnum];
+
+    if(l->cache == NULL)
+        W_CacheLumpNum(skypicnum, PU_CACHE);
+
+    lumpdata = (short*)l->cache;
+    data = (byte*)(lumpdata + 4);
+    index = skypicnum - g_start;
+
+    if(!I_AllocVBlock(
+        &gfx_images[index],
+        data,
+        4096,
+        TEXGEN_OFF | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T,
+        TEXTURE_SIZE_64,
+        TEXTURE_SIZE_64,
+        GL_RGB256))
+        return;
+
+    if(frametic & 1)
     {
-        srcoffset = (src + counter);
-        pixel = *(byte*)srcoffset;
+        int counter = 0;
+        int rand = 0;
+        int step = 0;
+        int pixel = 0;
+        const int width = FIRESKYSIZE;
+        byte *src;
+        byte *srcoffset;
+
+        gfx_images[index].vram->tag = PU_NEWBLOCK;
         
-        step = 2;
-        
-        R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
-        
+        rand = (M_Random() & 0xff);
+        src = (byte*)gfx_images[index].vram->block;
+        counter = 0;
         src += width;
-        srcoffset += width;
         
-        do	// width
+        do	// height
         {
+            srcoffset = (src + counter);
             pixel = *(byte*)srcoffset;
-            step += 2;
             
-            R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
-            
-            pixel = *(byte*)(srcoffset + width);
-            src += width;
-            srcoffset += width;
+            step = 2;
             
             R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
             
             src += width;
             srcoffset += width;
             
-        } while(step != width);
-        
-        counter++;
-        src -= ((width*width)-width);
-        
-    } while(counter != width);
-    
-    //for(i = 0; i < (width*width); i++)
-        //buffer[i] >>= 4;
+            do	// width
+            {
+                pixel = *(byte*)srcoffset;
+                step += 2;
+                
+                R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
+                
+                pixel = *(byte*)(srcoffset + width);
+                src += width;
+                srcoffset += width;
+                
+                R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
+                
+                src += width;
+                srcoffset += width;
+                
+            } while(step != width);
+            
+            counter++;
+            src -= ((width*width)-width);
+            
+        } while(counter != width);
+    }
+
+    offset = -((viewangle >> 22) & 0xff);
+
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_TEX_FORMAT  = gfx_images[index].params;
+    GFX_PAL_FORMAT  = gfx_imgpal_params[index];
+    GFX_COLOR       = sky->skycolor[0];
+    GFX_BEGIN       = GL_QUADS;
+    GFX_TEX_COORD   = COORD_PACK(offset, 0);
+    GFX_VERTEX16    = VERTEX_PACK(-0x1000, 0x1000);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, 0);
+    GFX_TEX_COORD   = COORD_PACK(256 + offset, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, 0x1000);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, 0);
+    GFX_COLOR       = sky->skycolor[1];
+    GFX_TEX_COORD   = COORD_PACK(256 + offset, 64);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, 0);
+    GFX_TEX_COORD   = COORD_PACK(offset, 64);
+    GFX_VERTEX16    = VERTEX_PACK(-0x1000, 0);
+    GFX_VERTEX16    = VERTEX_PACK(0x1000, 0);
 }
 
 //
@@ -1341,16 +1433,12 @@ void R_DrawSky(void)
         if(sky->flags & SKF_THUNDER)
             R_CloudThunder();
     }
+    else if(sky->flags & SKF_FIRE)
+        R_DrawFire();
     else
         R_DrawSkyPic(skypicnum, 0, false);
 
     if(sky->flags & SKF_BACKGROUND)
         R_DrawSkyPic(skybackdropnum, 64, true);
-
-    return;
-
-    // TODO
-    if(sky->flags & SKF_FIRE)
-        R_Fire(fireBuffer);
 }
 

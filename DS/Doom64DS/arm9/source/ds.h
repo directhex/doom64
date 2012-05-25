@@ -107,14 +107,14 @@ void memcpy16(void *dst, const void *src, uint wdcount) ITCM_CODE;
     MATRIX_MULT4x4      = 0x1000
 
 #define GFX_SCREENRECT()                                        \
-    GFX_BEGIN       = GL_TRIANGLE_STRIP;                        \
+    GFX_BEGIN       = GL_QUADS;                                 \
     GFX_VERTEX16    = VERTEX_PACK(0, 0);                        \
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
     GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, 0);              \
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
-    GFX_VERTEX16    = VERTEX_PACK(0, SCREENHEIGHT);             \
-    GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
     GFX_VERTEX16    = VERTEX_PACK(SCREENWIDTH, SCREENHEIGHT);   \
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);                       \
+    GFX_VERTEX16    = VERTEX_PACK(0, SCREENHEIGHT);             \
     GFX_VERTEX16    = VERTEX_PACK(-2, 0)
 
 #endif // __DS_MAIN__

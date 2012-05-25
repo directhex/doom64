@@ -24,8 +24,9 @@
 // to disk.
 //
 
-#define PACKEDATTR __attribute__((packed))
-#define PUREFUNC __attribute__((pure))
+#define PACKEDATTR  __attribute__((packed))
+#define PUREFUNC    __attribute__((pure))
+#define NOINLINE    __attribute__((noinline))
 
 //
 // Global parameters/defines.

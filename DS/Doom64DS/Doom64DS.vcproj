@@ -202,10 +202,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\arm9\source\r_clipper.c"
-					>
-				</File>
-				<File
 					RelativePath=".\arm9\source\r_data.c"
 					>
 				</File>

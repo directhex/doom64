@@ -82,6 +82,8 @@ extern int          g_end;
 extern int          numgfximgs;
 extern uint32*      gfx_base;
 extern byte         gfx_tex_buffer[GFX_BUFFER_SIZE];
+extern gfx_t*       gfx_images;
+extern uint32*      gfx_imgpal_params;
 
 void            R_PrecacheLevel(void);
 uint32          R_CachePalette(const char* name);
@@ -121,6 +123,7 @@ extern int          skypicnum;
 extern int          skybackdropnum;
 extern dboolean     skyfadeback;
 extern fixed_t      scrollfrac;
+extern int          thunderCounter;
 
 void            R_DrawScene(void);
 void            R_DrawSky(void);

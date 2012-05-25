@@ -1936,11 +1936,6 @@ void P_UpdateSpecials (void)
         
     }
     
-    // SKY TICKER
-    // TODO
-    //if(bRenderSky)
-        //R_SkyTicker();
-    
     // DO BUTTONS
     for(i = 0; i < MAXBUTTONS; i++)
     {
@@ -1973,7 +1968,7 @@ void P_UpdateSpecials (void)
         }
     }
 
-    scrollfrac += (FRACUNIT / 2);
+    scrollfrac += 6;
 }
 
 

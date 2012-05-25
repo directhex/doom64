@@ -32,7 +32,7 @@ int	checkcoord[12][4] =
 // R_CheckBBox
 //
 
-static dboolean R_CheckBBox(fixed_t* bspcoord)
+static dboolean NOINLINE R_CheckBBox(fixed_t* bspcoord)
 {
     int         boxpos;
     fixed_t     x1;
@@ -147,7 +147,7 @@ static dboolean R_CheckBBox(fixed_t* bspcoord)
 // and adds any visible pieces to the line list.
 //
 
-static dboolean R_AddClipLine(seg_t *seg)
+static dboolean NOINLINE R_AddClipLine(seg_t *seg)
 {
     vertex_t *v1;
     vertex_t *v2;
@@ -343,7 +343,7 @@ static dboolean R_AddClipLine(seg_t *seg)
 // R_Subsector
 //
 
-void R_Subsector(int num)
+static void NOINLINE R_Subsector(int num)
 {
     subsector_t	*sub;
     mobj_t* thing;

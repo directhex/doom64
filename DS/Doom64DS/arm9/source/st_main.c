@@ -292,18 +292,18 @@ static void ST_DrawStatusItem(int index, int x, int y)
         POLY_MODULATION;
 
     GFX_COLOR       = RGB15(31, 31, 31);
-    GFX_BEGIN       = GL_TRIANGLE_STRIP;
+    GFX_BEGIN       = GL_QUADS;
     GFX_TEX_COORD   = COORD_PACK(0, 0);
     GFX_VERTEX16    = VERTEX_PACK(x, y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
     GFX_TEX_COORD   = COORD_PACK(pw, 0);
     GFX_VERTEX16    = VERTEX_PACK(pw + x, y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-    GFX_TEX_COORD   = COORD_PACK(0, ph);
-    GFX_VERTEX16    = VERTEX_PACK(x, ph + y);
-    GFX_VERTEX16    = VERTEX_PACK(-2, 0);
     GFX_TEX_COORD   = COORD_PACK(pw, ph);
     GFX_VERTEX16    = VERTEX_PACK(pw + x, ph + y);
+    GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, ph);
+    GFX_VERTEX16    = VERTEX_PACK(x, ph + y);
     GFX_VERTEX16    = VERTEX_PACK(-2, 0);
 }
 
@@ -689,18 +689,18 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
             POLY_MODULATION;
 
         GFX_COLOR       = (color & 0x7FFF);
-        GFX_BEGIN       = GL_TRIANGLE_STRIP;
+        GFX_BEGIN       = GL_QUADS;
         GFX_TEX_COORD   = COORD_PACK(0, 0);
         GFX_VERTEX16    = VERTEX_PACK(x, y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
         GFX_TEX_COORD   = COORD_PACK(pw, 0);
         GFX_VERTEX16    = VERTEX_PACK(pw + x, y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-        GFX_TEX_COORD   = COORD_PACK(0, ph);
-        GFX_VERTEX16    = VERTEX_PACK(x, ph + y + dy);
-        GFX_VERTEX16    = VERTEX_PACK(-2, 0);
         GFX_TEX_COORD   = COORD_PACK(pw, ph);
         GFX_VERTEX16    = VERTEX_PACK(pw + x, ph + y + dy);
+        GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+        GFX_TEX_COORD   = COORD_PACK(0, ph);
+        GFX_VERTEX16    = VERTEX_PACK(x, ph + y + dy);
         GFX_VERTEX16    = VERTEX_PACK(-2, 0);
 
         x += fontmap->w + 1;
@@ -791,18 +791,18 @@ int ST_DrawMessage(int x, int y, rcolor color, const char* string, ...)
                 POLY_MODULATION;
 
             GFX_COLOR       = (color & 0x7FFF);
-            GFX_BEGIN       = GL_TRIANGLE_STRIP;
+            GFX_BEGIN       = GL_QUADS;
             GFX_TEX_COORD   = COORD_PACK(0, 0);
             GFX_VERTEX16    = VERTEX_PACK(x, y);
             GFX_VERTEX16    = VERTEX_PACK(-2, 0);
             GFX_TEX_COORD   = COORD_PACK(ST_FONTWHSIZE, 0);
             GFX_VERTEX16    = VERTEX_PACK(ST_FONTWHSIZE + x, y);
             GFX_VERTEX16    = VERTEX_PACK(-2, 0);
-            GFX_TEX_COORD   = COORD_PACK(0, ST_FONTWHSIZE);
-            GFX_VERTEX16    = VERTEX_PACK(x, ST_FONTWHSIZE + y);
-            GFX_VERTEX16    = VERTEX_PACK(-2, 0);
             GFX_TEX_COORD   = COORD_PACK(ST_FONTWHSIZE, ST_FONTWHSIZE);
             GFX_VERTEX16    = VERTEX_PACK(ST_FONTWHSIZE + x, ST_FONTWHSIZE + y);
+            GFX_VERTEX16    = VERTEX_PACK(-2, 0);
+            GFX_TEX_COORD   = COORD_PACK(0, ST_FONTWHSIZE);
+            GFX_VERTEX16    = VERTEX_PACK(x, ST_FONTWHSIZE + y);
             GFX_VERTEX16    = VERTEX_PACK(-2, 0);
 
             x += ST_FONTWHSIZE;
@@ -876,18 +876,6 @@ void ST_DrawNumber(int x, int y, int num, int type, rcolor c)
 }
 
 //
-// ST_CachePalettes
-//
-
-void ST_CachePalettes(void)
-{
-    st_bfontpalparam = R_CachePalette("SYMBOLS");
-    st_sfontpalparam = R_CachePalette("SFONT");
-
-    dmaCopy(VRAM_E + (st_bfontpalparam << 3), BG_PALETTE, 512);
-}
-
-//
 // ST_Init
 //
 
@@ -900,6 +888,9 @@ void ST_Init(void)
 
     lump_bfontnum = W_GetNumForName("SYMBOLS");
     lump_bfont = &lumpinfo[lump_bfontnum];
+
+    st_bfontpalparam = R_CachePalette("SYMBOLS");
+    st_sfontpalparam = R_CachePalette("SFONT");
     
     // setup keycards
     

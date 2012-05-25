@@ -97,6 +97,7 @@ extern dboolean     nolights;
 extern dboolean     devparm;
 extern int          dsvertices;
 extern int          dspolygons;
+extern int          gfxdmasize;
 
 extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];

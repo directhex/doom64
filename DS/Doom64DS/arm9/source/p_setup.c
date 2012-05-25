@@ -964,12 +964,11 @@ void P_SetupSky(void)
 
     if(sky->pic[0])
         skypicnum = W_GetNumForName(sky->pic);
+    else if(sky->flags & SKF_FIRE)
+        skypicnum = W_GetNumForName("FIRE");
 
     if(sky->backdrop[0])
         skybackdropnum = W_GetNumForName(sky->backdrop);
-
-    //if(sky->flags & SKF_FIRE)
-        //R_InitFire();
 }
 
 /*

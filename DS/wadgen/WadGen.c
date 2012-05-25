@@ -191,24 +191,35 @@ void WGen_Process(void)
     Wad_AddOutputLump("G_START", 0, NULL);
 
     for(i = 0; gfxEx[i].data; i++)
+    {
+        char tmp[9];
+
+        strncpy(tmp, romWadFile.lump[gfxEx[i].lumpRef].name, 8);
+        tmp[0] -= (char)0x80;
+        tmp[8] = 0;
+
+        if(!strncmp(tmp, "SYMBOLS", 8))
+            continue;
+
         Wad_AddOutputGfx(&gfxEx[i]);
+    }
     
     // Hud Sprites
     for(i = spriteExCount; i < spriteExCount+hudSpriteExCount; i++)
+    {
+        char tmp[9];
+
+        strncpy(tmp, romWadFile.lump[exSpriteLump[i].lumpRef].name, 8);
+        tmp[0] -= (char)0x80;
+        tmp[8] = 0;
+
+        if(!strncmp(tmp, "SFONT", 8) || !strncmp(tmp, "STATUS", 8))
+            continue;
+
         Wad_AddOutputHudSprite(&exSpriteLump[i]);
-    
-    WGen_AddLumpFile("FANCRED.PNG");
-    WGen_AddLumpFile("CRSHAIRS.PNG");
-    WGen_AddLumpFile("BUTTONS.PNG");
-    WGen_AddLumpFile("CONFONT.PNG");
+    }
     
     Wad_AddOutputLump("G_END", 0, NULL);
-    
-#ifndef USE_SOUNDFONTS
-    // Sounds
-    //Wad_AddOutputLump("DOOMSND", sn64size, (byte*)sn64);
-    //Wad_AddOutputLump("DOOMSEQ", sseqsize, (byte*)sseq);
-#endif
     
     // Midi tracks
     Wad_AddOutputLump("DS_START", 0, NULL);
@@ -226,6 +237,32 @@ void WGen_Process(void)
         //Wad_AddOutputLump(name, sfx[i].wavsize, wavtabledata[i]);
     }
 #endif
+
+    for(i = 0; gfxEx[i].data; i++)
+    {
+        char tmp[9];
+
+        strncpy(tmp, romWadFile.lump[gfxEx[i].lumpRef].name, 8);
+        tmp[0] -= (char)0x80;
+        tmp[8] = 0;
+
+        if(strncmp(tmp, "SYMBOLS", 8))
+            continue;
+
+        Wad_AddOutputGfx(&gfxEx[i]);
+    }
+
+    for(i = spriteExCount; i < spriteExCount+hudSpriteExCount; i++)
+    {
+        char tmp[9];
+
+        strncpy(tmp, romWadFile.lump[exSpriteLump[i].lumpRef].name, 8);
+        tmp[0] -= (char)0x80;
+        tmp[8] = 0;
+
+        if(!strncmp(tmp, "SFONT", 8) || !strncmp(tmp, "STATUS", 8))
+            Wad_AddOutputHudSprite(&exSpriteLump[i]);
+    }
     
     // Maps
     for(i = 0; i < MAXLEVELWADS; i++)
@@ -233,11 +270,6 @@ void WGen_Process(void)
         sprintf(name, "MAP%02d", i+1);
         Wad_AddOutputLump(name, levelSize[i], levelData[i]);
     }
-    
-    // Demo lumps
-    //WGen_AddLumpFile("DEMO1LMP.LMP");
-    //WGen_AddLumpFile("DEMO2LMP.LMP");
-    //WGen_AddLumpFile("DEMO3LMP.LMP");
 
     WGen_AddLumpFile("MAPINFO.TXT");
     WGen_AddLumpFile("ANIMDEFS.TXT");

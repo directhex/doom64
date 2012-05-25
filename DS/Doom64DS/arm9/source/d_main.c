@@ -37,6 +37,7 @@ dboolean        nolights        = false;
 dboolean        devparm         = false;
 int             dsvertices      = 0;
 int             dspolygons      = 0;
+int             gfxdmasize      = 0;
 
 player_t players[MAXPLAYERS];
 dboolean playeringame[MAXPLAYERS];
@@ -390,6 +391,7 @@ static void D_PrintDevStats(void)
     I_Printf("Memory: %ikb\n", Z_FreeMemory() >> 10);
     I_Printf("Static: %ikb\n", Z_TagUsage(PU_STATIC) >> 10);
     I_Printf("Cache: %ikb\n", Z_TagUsage(PU_CACHE) >> 10);
+    I_Printf("DMA: %ikb\n", gfxdmasize >> 10);
     I_Printf("Vertex: %i\n", dsvertices);
     I_Printf("Tris: %i\n", dspolygons);
     I_Printf("Frame: %i\n", I_GetTimeTicks() - rendertime);
