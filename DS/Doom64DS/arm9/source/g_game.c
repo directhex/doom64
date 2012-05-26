@@ -158,6 +158,8 @@ void G_DoLoadLevel (void)
     int i;
     mapdef_t* map;
     
+    P_LoadingPlaque();
+
     for(i = 0; i < MAXPLAYERS; i++)
     {
         if(playeringame[i] && players[i].playerstate == PST_DEAD)
@@ -190,6 +192,8 @@ void G_DoLoadLevel (void)
     gameaction = ga_nothing;
     buttons = 0;
     sendpause = paused = false;
+
+    P_ClearLoadingPlaque();
 }
 
 

@@ -263,6 +263,8 @@ void WGen_Process(void)
         if(!strncmp(tmp, "SFONT", 8) || !strncmp(tmp, "STATUS", 8))
             Wad_AddOutputHudSprite(&exSpriteLump[i]);
     }
+
+    WGen_AddLumpFile("LOADING.BIN");
     
     // Maps
     for(i = 0; i < MAXLEVELWADS; i++)

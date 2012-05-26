@@ -58,6 +58,8 @@ extern fixed_t		bmaporgy;	// origin of block map
 extern mobj_t**		blocklinks;	// for thing chains
 
 void P_SetupLevel(int map, int playermask, skill_t skill);
+void P_LoadingPlaque(void);
+void P_ClearLoadingPlaque(void);
 void P_Init (void);
 
 //

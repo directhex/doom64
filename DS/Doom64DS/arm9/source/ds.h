@@ -39,6 +39,7 @@ dboolean (I_CheckGFX)(char* file, int line);
 #define I_CheckGFX() if(!(I_CheckGFX)(__FILE__, __LINE__)) return
 #endif
 
+byte* I_GetBackground(void);
 uint32 I_SetPalette(uint16* data, int offset, int size);
 dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
                         int flags, int texel_w, int texel_h, int type);

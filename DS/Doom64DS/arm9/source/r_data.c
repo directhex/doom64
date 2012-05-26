@@ -451,10 +451,12 @@ void R_InitImgs(void)
 
 void R_InitData(void)
 {
+    P_LoadingPlaque();
     R_InitTextures();
     R_InitSprites();
     R_InitImgs();
     R_InitPalettes();
+    P_ClearLoadingPlaque();
 }
 
 //
@@ -504,7 +506,7 @@ int R_PadTextureDims(int n)
 // R_LoadTexture
 //
 
-void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
+void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t, dboolean masked)
 {
     byte* gfx;
     int w, dw;
@@ -532,9 +534,9 @@ void R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t)
     size = ((w * h) >> 1);
     pal = (short*)(gfx + 4 + size);
 
-    flags = TEXGEN_OFF|GL_TEXTURE_WRAP_S|GL_TEXTURE_WRAP_T;
+    flags = TEXGEN_OFF | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T;
         
-    if(pal[0] == 0)
+    if(pal[0] == 0 && masked)
         flags |= GL_TEXTURE_COLOR0_TRANSPARENT;
 
     if(flip_s)

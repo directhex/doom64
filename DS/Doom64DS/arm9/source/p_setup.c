@@ -940,6 +940,60 @@ void P_GroupLines (void)
     
 }
 
+//
+// P_LoadingPlaque
+//
+
+#define LOADING_W   66
+#define LOADING_H   21
+#define LOADING_X   96
+#define LOADING_Y   92
+
+void P_LoadingPlaque(void)
+{
+    int i;
+    int size;
+    int lump;
+    uint16* pal;
+    byte* data;
+
+    lump = W_GetNumForName("LOADING");
+    data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    size = LOADING_W * LOADING_H;
+    pal = (uint16*)(data + size + ((4 - (size & 3)) & 3));
+
+    for(i = 0; i < LOADING_H; i++)
+    {
+        byte* src;
+        byte* dst;
+        byte* bg = I_GetBackground();
+
+        src = &data[i * LOADING_W];
+        dst = &bg[((i + LOADING_Y) * 256) + LOADING_X];
+
+        swiCopy(src, dst, (LOADING_W >> 1) | COPY_MODE_HWORD);
+    }
+
+    swiCopy(pal, BG_PALETTE, (64 >> 2) | COPY_MODE_WORD);
+
+    Z_Free(data);
+}
+
+//
+// P_ClearLoadingPlaque
+//
+
+void P_ClearLoadingPlaque(void)
+{
+    byte* bg;
+    int fill;
+
+    bg = I_GetBackground();
+    fill = 0;
+
+    swiCopy(&fill, bg, (256 * 256) | COPY_MODE_FILL);
+}
+
 
 //
 // P_SetupSky

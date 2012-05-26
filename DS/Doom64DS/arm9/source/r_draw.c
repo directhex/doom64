@@ -49,6 +49,9 @@ static void R_DrawSwitch(seg_t* seg, dtexture texture, fixed_t top, fixed_t bott
     int g;
     int b;
 
+    if(texture <= 0)
+        return;
+
     I_CheckGFX();
 
     light = &lights[frontsector->colors[LIGHT_THING]];
@@ -87,7 +90,7 @@ static void R_DrawSwitch(seg_t* seg, dtexture texture, fixed_t top, fixed_t bott
     z1      = F2DSFIXED(top);
     z2      = F2DSFIXED(bottom);
 
-    R_LoadTexture(texture, false, false);
+    R_LoadTexture(texture, false, false, false);
 
     GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_BACK | POLY_MODULATION | POLY_FOG;
     GFX_BEGIN       = GL_TRIANGLE_STRIP;
@@ -231,7 +234,8 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
 
     R_LoadTexture(texture,
         (line->flags & ML_HMIRROR),
-        (line->flags & ML_VMIRROR));
+        (line->flags & ML_VMIRROR),
+        (line->flags & ML_DRAWMIDTEXTURE));
 
     if(nolights)
         r1 = r2 = g1 = g2 = b1 = b2 = 255;
@@ -576,7 +580,7 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     z       = F2DSFIXED(height);
 
     if(texture >= 0)
-        R_LoadTexture(texture, false, false);
+        R_LoadTexture(texture, false, false, true ^ (ss->sector->flags & MS_LIQUIDFLOOR));
     else
     {
         GFX_TEX_FORMAT = 0;

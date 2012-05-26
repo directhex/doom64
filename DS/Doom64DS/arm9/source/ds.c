@@ -214,6 +214,15 @@ void I_Init(void)
 }
 
 //
+// I_GetBackground
+//
+
+byte* I_GetBackground(void)
+{
+    return (byte*)bgGetGfxPtr(bg_id);
+}
+
+//
 // I_CheckGFX
 //
 
@@ -385,6 +394,13 @@ void I_FinishFrame(void)
     frametic++;
 
     GFX_FLUSH = 1;
+
+    // if lots of large sprites on screen was dma'ed at once
+    // (rougly 20kb) this means that the vramzone
+    // will quickly start thrashing on other blocks. reset
+    // the rover back to start of the blocklist to minimize this.
+    if(gfxdmasize >= 0x5000)
+        Z_SetVAllocList(vramzone);
 }
 
 //

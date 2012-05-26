@@ -392,6 +392,7 @@ static void D_PrintDevStats(void)
     I_Printf("Static: %ikb\n", Z_TagUsage(PU_STATIC) >> 10);
     I_Printf("Cache: %ikb\n", Z_TagUsage(PU_CACHE) >> 10);
     I_Printf("DMA: %ikb\n", gfxdmasize >> 10);
+    I_Printf("Vram: %ikb\n", Z_FreeVMemory(vramzone) >> 10);
     I_Printf("Vertex: %i\n", dsvertices);
     I_Printf("Tris: %i\n", dspolygons);
     I_Printf("Frame: %i\n", I_GetTimeTicks() - rendertime);

@@ -702,7 +702,7 @@ vramblock_t* Z_VAlloc(vramzone_t* vram, int size, int tag, void* gfx)
 	
         if(rover->tag != PU_FREE)
         {
-            if(rover->prevtic < frametic &&
+            if(frametic - rover->prevtic >= 2 &&
                 rover->tag == PU_CACHE)
             {
                 base = base->prev;
@@ -789,10 +789,8 @@ int Z_FreeVMemory(vramzone_t* vram)
         block != &vram->blocklist;
         block = block->next)
     {
-        int free = block->block - gfx_tex_buffer;
-
-        if(free > vram->free)
-            vram->free = free;
+        if(block->tag == PU_CACHE)
+            vram->free += block->size;
     }
     
     return vram->free;
