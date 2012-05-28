@@ -186,6 +186,12 @@ void R_DrawFrame(void)
     player_t* player;
     pspdef_t* psp;
 
+    if(automapactive)
+    {
+        GFX_CLEAR_COLOR = 0x1F0000;
+        return;
+    }
+
     //
     // setup view rotation/position
     //

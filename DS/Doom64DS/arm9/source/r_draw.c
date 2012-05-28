@@ -1241,7 +1241,6 @@ static void R_DrawCloud(int lump)
 
     I_CheckGFX();
 
-    GFX_CLEAR_COLOR = sky->skycolor[1];
     MATRIX_PUSH = 0;
 
     gluPerspective(45, 256.0f / 192.0f, 0.002f, 1000);
@@ -1428,9 +1427,7 @@ static void R_DrawFire(void)
 
 void R_DrawSky(void)
 {
-    if(sky->flags & SKF_VOID)
-        GFX_CLEAR_COLOR = sky->skycolor[2];
-    else if(sky->flags & SKF_CLOUD)
+    if(sky->flags & SKF_CLOUD)
     {
         R_DrawCloud(skypicnum);
 

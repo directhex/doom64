@@ -9,6 +9,7 @@
 
 static char msg[256];
 static int bg_id = 0;
+byte bg_buffer[BGMAIN_WIDTH * BGMAIN_HEIGHT];
 
 //
 // I_Error
@@ -178,12 +179,12 @@ void I_Init(void)
     vramSetBankC(VRAM_C_LCD);
     vramSetBankD(VRAM_D_LCD);
     vramSetBankE(VRAM_E_LCD);
-    vramSetBankF(VRAM_F_MAIN_BG);
+    vramSetBankF(VRAM_F_MAIN_BG_0x06000000);
     vramSetBankG(VRAM_G_MAIN_BG_0x06004000);
     vramSetBankH(VRAM_H_SUB_BG);
     vramSetBankI(VRAM_I_SUB_BG_0x06208000);
 
-    bg_id = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0,0);
+    bg_id = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
     bgSetPriority(0, 1);
 
     while(GFX_BUSY);
@@ -220,6 +221,32 @@ void I_Init(void)
 byte* I_GetBackground(void)
 {
     return (byte*)bgGetGfxPtr(bg_id);
+}
+
+
+//
+// I_RefreshBG
+//
+
+void I_RefreshBG(void)
+{
+    int size = 0x8000;
+
+    if(I_DmaBGBusy())
+        return;
+
+    DC_FlushRange(bg_buffer, size);
+    dmaCopyWordsAsynch(3, bg_buffer, BG_GFX, size);
+    memset(bg_buffer, 0, size);
+}
+
+//
+// I_DmaBGBusy
+//
+
+dboolean I_DmaBGBusy(void)
+{
+    return dmaBusy(3);
 }
 
 //
@@ -312,10 +339,17 @@ dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
 {
     if(gfx->params == 0)
     {
+        int copyflag;
+
         if(!(gfx->vram = Z_VAlloc(vramzone, size, PU_NEWBLOCK, &gfx->params)))
             return false;
 
-        swiCopy(data, gfx->vram->block, (size >> 1) | COPY_MODE_HWORD);
+        if(((int)data | (int)gfx->vram->block | size) & 3)
+            copyflag = (size >> 1) | COPY_MODE_HWORD;
+        else
+            copyflag = (size >> 2) | COPY_MODE_WORD;
+
+        swiCopy(data, gfx->vram->block, copyflag);
     }
     else
         Z_VTouch(vramzone, gfx->vram);
@@ -351,7 +385,6 @@ void I_FinishFrame(void)
     
     // wait for vblank before flushing cache
     swiWaitForVBlank();
-    DC_FlushAll();
 
     // lock banks
     vramSetBankA(VRAM_A_LCD);
@@ -374,6 +407,7 @@ void I_FinishFrame(void)
             uint32 offset;
 
             offset = (((*(uint32*)block->gfx & 0xffff) << 3) >> 2);
+            DC_FlushRange(block->block, block->size);
             dmaCopyWords(0, (uint32*)block->block, (uint32*)gfx_base + offset, block->size);
 
             // force scanline back at 192
@@ -394,13 +428,6 @@ void I_FinishFrame(void)
     frametic++;
 
     GFX_FLUSH = 1;
-
-    // if lots of large sprites on screen was dma'ed at once
-    // (rougly 20kb) this means that the vramzone
-    // will quickly start thrashing on other blocks. reset
-    // the rover back to start of the blocklist to minimize this.
-    if(gfxdmasize >= 0x5000)
-        Z_SetVAllocList(vramzone);
 }
 
 //
@@ -424,6 +451,13 @@ void I_StartTic(void)
     if((keys = keysUp()))
     {
         ev.type = ev_btnup;
+        ev.data = keys;
+        D_PostEvent(&ev);
+    }
+
+    if((keys = keysHeld()))
+    {
+        ev.type = ev_btnheld;
         ev.data = keys;
         D_PostEvent(&ev);
     }

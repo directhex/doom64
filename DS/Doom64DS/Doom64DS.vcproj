@@ -28,7 +28,7 @@
 				CleanCommandLine="make clean"
 				Output="$(ProjectName).nds"
 				PreprocessorDefinitions="ARM9; ARM7"
-				IncludeSearchPath="E:\sources\devkitPro\libnds\include"
+				IncludeSearchPath="E:\sources\devkitPro\libnds\include;E:\sources\Doom64EX\DS\Doom64DS\arm9\source\"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -105,6 +105,10 @@
 			<Filter
 				Name="source"
 				>
+				<File
+					RelativePath=".\arm9\source\am_main.c"
+					>
+				</File>
 				<File
 					RelativePath=".\arm9\source\d_main.c"
 					>

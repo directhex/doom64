@@ -968,6 +968,9 @@ void P_LoadingPlaque(void)
         byte* dst;
         byte* bg = I_GetBackground();
 
+        if(bg == NULL)
+            return;
+
         src = &data[i * LOADING_W];
         dst = &bg[((i + LOADING_Y) * 256) + LOADING_X];
 
@@ -989,6 +992,10 @@ void P_ClearLoadingPlaque(void)
     int fill;
 
     bg = I_GetBackground();
+
+    if(bg == NULL)
+        return;
+
     fill = 0;
 
     swiCopy(&fill, bg, (256 * 256) | COPY_MODE_FILL);
@@ -1023,6 +1030,13 @@ void P_SetupSky(void)
 
     if(sky->backdrop[0])
         skybackdropnum = W_GetNumForName(sky->backdrop);
+
+    if(sky->flags & SKF_CLOUD)
+        GFX_CLEAR_COLOR = sky->skycolor[1];
+    else if(sky->flags & SKF_VOID)
+        GFX_CLEAR_COLOR = sky->skycolor[2];
+    else
+        GFX_CLEAR_COLOR = 0x1F0000;
 }
 
 /*

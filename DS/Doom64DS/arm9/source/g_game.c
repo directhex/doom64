@@ -137,16 +137,6 @@ void G_BuildTiccmd(ticcmd_t* cmd)
     
     cmd->forwardmove -= forward;
     cmd->sidemove -= side;
-
-    // TODO TEMP
-    if(buttons & KEY_SELECT)
-        players[0].cheats |= CF_NOCLIP;
-    else
-        players[0].cheats &= ~CF_NOCLIP;
-
-    if(buttons & KEY_START)
-        nolights ^= 1;
-    
 }
 
 //
@@ -204,44 +194,6 @@ void G_DoLoadLevel (void)
 
 dboolean G_Responder(event_t* ev)
 {
-    // Handle level specific ticcmds
-    if(gamestate == GS_LEVEL)
-    {
-        if(demoplayback && gameaction == ga_nothing)
-        {
-            if(ev->type == ev_btndown)
-            {
-                G_CheckDemoStatus();
-                gameaction = ga_warpquick;
-                return true;
-            }
-            else
-                return false;
-        }
-        
-        // TODO
-        /*if(ST_Responder(ev))
-            return true;	// status window ate it
-
-        if(AM_Responder(ev))
-            return true;	// automap ate it
-            */
-    }
-
-    // Handle screen specific ticcmds
-    if(gamestate == GS_SKIPPABLE)
-    {
-        if(gameaction == ga_nothing)
-        {
-            if(ev->type == ev_btndown)
-            {
-                gameaction = ga_title;
-                return true;
-            }
-            return false;
-        }
-    }
-    
     switch(ev->type)
     {
     case ev_btndown:
@@ -260,6 +212,54 @@ dboolean G_Responder(event_t* ev)
 
     case ev_btnheld:
         break;
+    }
+
+    // Handle level specific ticcmds
+    if(gamestate == GS_LEVEL)
+    {
+        // TODO TEMP
+        if(ev->type == ev_btndown)
+        {
+            if(ev->data & KEY_SELECT)
+                players[0].cheats |= CF_NOCLIP;
+        }
+        else if(ev->type == ev_btnup)
+        {
+            if(ev->data & KEY_SELECT)
+                players[0].cheats &= ~CF_NOCLIP;
+        }
+
+        if(buttons & KEY_START)
+            nolights ^= 1;
+
+        if(demoplayback && gameaction == ga_nothing)
+        {
+            if(ev->type == ev_btndown)
+            {
+                G_CheckDemoStatus();
+                gameaction = ga_warpquick;
+                return true;
+            }
+            else
+                return false;
+        }
+
+        if(AM_Responder(ev))
+            return true;    // automap ate it
+    }
+
+    // Handle screen specific ticcmds
+    if(gamestate == GS_SKIPPABLE)
+    {
+        if(gameaction == ga_nothing)
+        {
+            if(ev->type == ev_btndown)
+            {
+                gameaction = ga_title;
+                return true;
+            }
+            return false;
+        }
     }
     
     return false;

@@ -149,4 +149,11 @@ static inline float D_fabs(float x)
     return x < 0 ? -x : x;
 }
 
+extern dboolean automapactive;
+
+void AM_Start(void);
+void AM_Ticker(void);
+void AM_Drawer(void);
+dboolean AM_Responder(event_t* ev);
+
 #endif // __D_MAIN__

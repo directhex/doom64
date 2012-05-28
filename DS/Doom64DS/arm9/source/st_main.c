@@ -341,40 +341,40 @@ void ST_Drawer(void)
                 ARGB16(alpha, 31, 31, 31), st_msg);
         }
     }
+    else if(automapactive)
+    {
+        char name[64];
 
-    // health text
-    ST_DrawStatusItem(0, ST_HEALTHTEXTX, ST_HEALTHTEXTY);
+        sprintf(name, "Level %i: %s", gamemap, P_GetMapInfo(gamemap)->mapname);
+        ST_DrawMessage(10, 10, ARGB16(31, 31, 31, 31), name);
+    }
 
-    // armor text
-    ST_DrawStatusItem(1, ST_ARMORTEXTX, ST_ARMORTEXTY);
-
-    // blue card
-    ST_DrawKey(plyr, it_bluecard, 0);
-
-    // yellow card
-    ST_DrawKey(plyr, it_yellowcard, 10);
-
-    // red card
-    ST_DrawKey(plyr, it_redcard, 20);
-
-    // blue skull
-    ST_DrawKey(plyr, it_blueskull, 0);
-
-    // yellow skull
-    ST_DrawKey(plyr, it_yellowskull, 10);
-
-    // red skull
-    ST_DrawKey(plyr, it_redskull, 20);
-
-    // health value
-    ST_DrawNumber(40, 172, plyr->health, 0, ST_HUDCOLOR);
-
-    // armor value
-    ST_DrawNumber(216, 172, plyr->armorpoints, 0, ST_HUDCOLOR);
-
-    // ammo counter
-    if(weaponinfo[plyr->readyweapon].ammo != am_noammo)
-        ST_DrawNumber(128, 172, plyr->ammo[weaponinfo[plyr->readyweapon].ammo], 0, ST_HUDCOLOR);
+    if(!automapactive)
+    {
+        // health text
+        ST_DrawStatusItem(0, ST_HEALTHTEXTX, ST_HEALTHTEXTY);
+        // armor text
+        ST_DrawStatusItem(1, ST_ARMORTEXTX, ST_ARMORTEXTY);
+        // blue card
+        ST_DrawKey(plyr, it_bluecard, 0);
+        // yellow card
+        ST_DrawKey(plyr, it_yellowcard, 10);
+        // red card
+        ST_DrawKey(plyr, it_redcard, 20);
+        // blue skull
+        ST_DrawKey(plyr, it_blueskull, 0);
+        // yellow skull
+        ST_DrawKey(plyr, it_yellowskull, 10);
+        // red skull
+        ST_DrawKey(plyr, it_redskull, 20);
+        // health value
+        ST_DrawNumber(40, 172, plyr->health, 0, ST_HUDCOLOR);
+        // armor value
+        ST_DrawNumber(216, 172, plyr->armorpoints, 0, ST_HUDCOLOR);
+        // ammo counter
+        if(weaponinfo[plyr->readyweapon].ammo != am_noammo)
+            ST_DrawNumber(128, 172, plyr->ammo[weaponinfo[plyr->readyweapon].ammo], 0, ST_HUDCOLOR);
+    }
 
     // flash overlay
     if(st_flashcolor && st_flashalpha)

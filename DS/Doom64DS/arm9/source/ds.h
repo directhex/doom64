@@ -26,6 +26,9 @@ typedef struct
     vramblock_t* vram;
 } gfx_t;
 
+#define BGMAIN_WIDTH     256
+#define BGMAIN_HEIGHT    128
+
 //
 // disable for debug/testing only
 //
@@ -39,7 +42,16 @@ dboolean (I_CheckGFX)(char* file, int line);
 #define I_CheckGFX() if(!(I_CheckGFX)(__FILE__, __LINE__)) return
 #endif
 
+extern byte bg_buffer[BGMAIN_WIDTH * BGMAIN_HEIGHT];
+
+static inline void I_PlotSubBGPixel(int x, int y, int c)
+{
+    bg_buffer[(y * BGMAIN_WIDTH) + x] = c;
+}
+
 byte* I_GetBackground(void);
+void I_RefreshBG(void);
+dboolean I_DmaBGBusy(void);
 uint32 I_SetPalette(uint16* data, int offset, int size);
 dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
                         int flags, int texel_w, int texel_h, int type);

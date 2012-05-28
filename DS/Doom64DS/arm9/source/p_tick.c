@@ -175,8 +175,8 @@ void P_Start(void)
     }
 
     // turn off/clear some things
-    //AM_Reset(); // TODO
-    //AM_Stop(); // TODO
+    AM_Stop();
+    AM_Start();
     M_ClearRandom();
 
     // do a nice little fade in effect
@@ -223,8 +223,8 @@ void P_Stop(void)
     Z_FreeTags(PU_LEVEL, PU_PURGELEVEL-1);
 
     // TODO
-    /*if(automapactive)
-        AM_Stop();*/
+    if(automapactive)
+        AM_Stop();
 
     // music continues on exit if defined
     if(!P_GetMapInfo(gamemap)->contmusexit)
@@ -262,9 +262,14 @@ void P_Drawer(void)
     if(!leveltime)
         return;
 
+    if(!I_DmaBGBusy() && automapactive)
+        AM_Drawer();
+
     R_DrawFrame();
-    //AM_Drawer();  // TODO
     ST_Drawer();
+
+    if(automapactive)
+        I_RefreshBG();
 }
 
 //
@@ -303,7 +308,7 @@ int P_Ticker(void)
     P_RunMacros();
     
     ST_Ticker();
-    /*AM_Ticker();*/
+    AM_Ticker();
     
     // for par times
     leveltime++;
