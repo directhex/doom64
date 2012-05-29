@@ -65,11 +65,11 @@ static void R_DrawSwitch(seg_t* seg, dtexture texture, fixed_t top, fixed_t bott
     // instead of creating a glowing plane, just amplify the
     // RGB values
     //
-    if(frontsector->lightlevel && frontsector->special == 205)
+    if(frontsector->lightlevel)
     {
-        r = MIN(r + (frontsector->lightlevel << 1), 255);
-        g = MIN(g + (frontsector->lightlevel << 1), 255);
-        b = MIN(b + (frontsector->lightlevel << 1), 255);
+        r = MIN(r + frontsector->lightlevel, 255);
+        g = MIN(g + frontsector->lightlevel, 255);
+        b = MIN(b + frontsector->lightlevel, 255);
     }
 
     if(nolights)
@@ -142,14 +142,14 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     // instead of creating a glowing plane, just amplify the
     // RGB values
     //
-    if(frontsector->lightlevel && frontsector->special == 205)
+    if(frontsector->lightlevel)
     {
-        r1 = MIN(r1 + (frontsector->lightlevel << 1), 255);
-        g1 = MIN(g1 + (frontsector->lightlevel << 1), 255);
-        b1 = MIN(b1 + (frontsector->lightlevel << 1), 255);
-        r2 = MIN(r2 + (frontsector->lightlevel << 1), 255);
-        g2 = MIN(g2 + (frontsector->lightlevel << 1), 255);
-        b2 = MIN(b2 + (frontsector->lightlevel << 1), 255);
+        r1 = MIN(r1 + frontsector->lightlevel, 255);
+        g1 = MIN(g1 + frontsector->lightlevel, 255);
+        b1 = MIN(b1 + frontsector->lightlevel, 255);
+        r2 = MIN(r2 + frontsector->lightlevel, 255);
+        g2 = MIN(g2 + frontsector->lightlevel, 255);
+        b2 = MIN(b2 + frontsector->lightlevel, 255);
     }
 
     if(line->flags & ML_TWOSIDED)
@@ -256,40 +256,6 @@ static void R_DrawLine(seg_t* seg, fixed_t top, fixed_t bottom,
     GFX_TEX_COORD   = COORD_PACK(F2INT(u2), F2INT(v2));
     GFX_VERTEX16    = VERTEX_PACK(x1, z2);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-
-    //
-    // create a glowing plane on top of the geometry for
-    // specialized sectors
-    //
-    if(frontsector->lightlevel && frontsector->special != 205)
-    {
-        int lightlevel = ((frontsector->lightlevel << 1) >> 3);
-
-        if(lightlevel)
-        {
-            GFX_TEX_FORMAT = 0;
-            GFX_PAL_FORMAT = 0;
-            GFX_POLY_FORMAT =
-                POLY_ALPHA(lightlevel) |
-                POLY_ID(2) |
-                POLY_CULL_BACK |
-                POLY_MODULATION |
-                POLY_FOG |
-                POLY_DEPTHTEST_EQUAL;
-
-            GFX_BEGIN       = GL_TRIANGLE_STRIP;
-            GFX_COLOR       = RGB8(r1, g1, b1);
-            GFX_VERTEX16    = VERTEX_PACK(x2, z1);
-            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x1, z1);
-            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-            GFX_COLOR       = RGB8(r2, g2, b2);
-            GFX_VERTEX16    = VERTEX_PACK(x2, z2);
-            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x1, z2);
-            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-        }
-    }
 }
 
 //
@@ -559,11 +525,11 @@ static void R_DrawSubsector(subsector_t* ss, fixed_t height,
     // instead of creating a glowing plane, just amplify the
     // RGB values
     //
-    if(frontsector->lightlevel && frontsector->special == 205)
+    if(frontsector->lightlevel)
     {
-        r = MIN(r + (frontsector->lightlevel << 1), 255);
-        g = MIN(g + (frontsector->lightlevel << 1), 255);
-        b = MIN(b + (frontsector->lightlevel << 1), 255);
+        r = MIN(r + frontsector->lightlevel, 255);
+        g = MIN(g + frontsector->lightlevel, 255);
+        b = MIN(b + frontsector->lightlevel, 255);
     }
 
     if(nolights)
@@ -673,30 +639,6 @@ static void R_DrawLeafs(subsector_t* subsector)
         R_DrawSubsector(subsector,
             frontsector->ceilingheight,
             frontsector->ceilingpic, l, x, y);
-
-        //
-        // create a glowing plane on top of the geometry for
-        // specialized sectors
-        //
-        if(frontsector->lightlevel && frontsector->special != 205)
-        {
-            int lightlevel = ((frontsector->lightlevel << 1) >> 3);
-
-            if(lightlevel)
-            {
-                GFX_POLY_FORMAT =
-                    POLY_ALPHA(lightlevel) |
-                    POLY_ID(2) |
-                    POLY_CULL_BACK |
-                    POLY_MODULATION |
-                    POLY_FOG |
-                    POLY_DEPTHTEST_EQUAL;
-
-                R_DrawSubsector(subsector,
-                    frontsector->ceilingheight,
-                    -1, l, 0, 0);
-            }
-        }
     }
 
     if(viewz >= frontsector->floorheight && frontsector->floorpic != skyflatnum)
@@ -748,30 +690,6 @@ static void R_DrawLeafs(subsector_t* subsector)
             R_DrawSubsector(subsector,
                 frontsector->floorheight,
                 frontsector->floorpic, l, x, y);
-        }
-
-        //
-        // create a glowing plane on top of the geometry for
-        // specialized sectors
-        //
-        if(frontsector->lightlevel && frontsector->special != 205)
-        {
-            int lightlevel = ((frontsector->lightlevel << 1) >> 3);
-
-            if(lightlevel)
-            {
-                GFX_POLY_FORMAT =
-                    POLY_ALPHA(lightlevel)  |
-                    POLY_ID(2)              |
-                    POLY_CULL_FRONT         |
-                    POLY_MODULATION         |
-                    POLY_FOG                |
-                    POLY_DEPTHTEST_EQUAL;
-
-                R_DrawSubsector(subsector,
-                    frontsector->floorheight,
-                    -1, l, 0, 0);
-            }
         }
     }
 }
@@ -828,9 +746,24 @@ static void R_DrawSprite(mobj_t* thing)
     else
     {
         light_t *light;
+        int r;
+        int g;
+        int b;
 
         light = &lights[thing->subsector->sector->colors[LIGHT_THING]];
-        color = RGB8(light->active_r, light->active_g, light->active_b);
+
+        r = light->active_r;
+        g = light->active_g;
+        b = light->active_b;
+
+        if(thing->subsector->sector->lightlevel)
+        {
+            r = MIN(r + frontsector->lightlevel, 255);
+            g = MIN(g + frontsector->lightlevel, 255);
+            b = MIN(b + frontsector->lightlevel, 255);
+        }
+
+        color = RGB8(r, g, b);
     }
 
     if(sprframe->flip[rot])
@@ -879,35 +812,6 @@ static void R_DrawSprite(mobj_t* thing)
     GFX_TEX_COORD   = COORD_PACK(tu1, height);
     GFX_VERTEX16    = VERTEX_PACK(x1, z1);
     GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-
-    if(thing->subsector->sector->lightlevel && !(thing->flags & MF_MISSILE))
-    {
-        int lightlevel = ((thing->subsector->sector->lightlevel << 1) >> 3);
-
-        if(lightlevel)
-        {
-            GFX_TEX_FORMAT = 0;
-            GFX_PAL_FORMAT = 0;
-            GFX_POLY_FORMAT =
-                POLY_ALPHA(lightlevel) |
-                POLY_ID(spr_polyid) |
-                POLY_CULL_BACK |
-                POLY_MODULATION |
-                POLY_FOG |
-                POLY_DEPTHTEST_EQUAL;
-
-            GFX_COLOR       = color;
-            GFX_BEGIN       = GL_QUADS;
-            GFX_VERTEX16    = VERTEX_PACK(x1, z2);
-            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x2, z2);
-            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x2, z1);
-            GFX_VERTEX16    = VERTEX_PACK(y2, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x1, z1);
-            GFX_VERTEX16    = VERTEX_PACK(y1, 0);
-        }
-    }
 
     if(thing->subsector != spr_prevssect)
     {
@@ -1044,9 +948,24 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     else
     {
         light_t *light;
+        int r;
+        int g;
+        int b;
 
         light = &lights[sector->colors[LIGHT_THING]];
-        color = RGB8(light->active_r, light->active_g, light->active_b);
+
+        r = light->active_r;
+        g = light->active_g;
+        b = light->active_b;
+
+        if(sector->lightlevel)
+        {
+            r = MIN(r + sector->lightlevel, 255);
+            g = MIN(g + sector->lightlevel, 255);
+            b = MIN(b + sector->lightlevel, 255);
+        }
+
+        color = RGB8(r, g, b);
     }
 
     GFX_ORTHO();
@@ -1076,34 +995,6 @@ void R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player)
     GFX_TEX_COORD   = COORD_PACK(0, height);
     GFX_VERTEX16    = VERTEX_PACK(x, height + y);
     GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-
-    if(sector->lightlevel)
-    {
-        int lightlevel = ((sector->lightlevel << 1) >> 3);
-
-        if(lightlevel)
-        {
-            GFX_TEX_FORMAT = 0;
-            GFX_PAL_FORMAT = 0;
-            GFX_POLY_FORMAT =
-                POLY_ALPHA(lightlevel) |
-                POLY_ID(2) |
-                POLY_CULL_NONE |
-                POLY_MODULATION |
-                POLY_DEPTHTEST_EQUAL;
-
-            GFX_COLOR       = color;
-            GFX_BEGIN       = GL_QUADS;
-            GFX_VERTEX16    = VERTEX_PACK(x, y);
-            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-            GFX_VERTEX16    = VERTEX_PACK(width + x, y);
-            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-            GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
-            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-            GFX_VERTEX16    = VERTEX_PACK(x, height + y);
-            GFX_VERTEX16    = VERTEX_PACK(-4, 0);
-        }
-    }
 }
 
 //

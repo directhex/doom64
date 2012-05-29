@@ -30,7 +30,7 @@ P_AproxDistance
 // P_PointOnLineSide
 // Returns 0 or 1
 //
-int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
+int PUREFUNC P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
 {
   return
     !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
@@ -46,7 +46,7 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
 // Considers the line to be infinite
 // Returns side 0 or 1, -1 if box crosses the line.
 //
-int
+int PUREFUNC
 P_BoxOnLineSide
 ( fixed_t*	tmbox,
   line_t*	ld )
@@ -97,7 +97,7 @@ P_BoxOnLineSide
 // P_PointOnDivlineSide
 // Returns 0 or 1.
 //
-int
+int PUREFUNC
 P_PointOnDivlineSide
 ( fixed_t	x,
   fixed_t	y,
@@ -165,7 +165,7 @@ P_MakeDivline
 // This is only called by the addthings
 // and addlines traversers.
 //
-fixed_t
+fixed_t PUREFUNC
 P_InterceptVector
 ( divline_t*	v2,
   divline_t*	v1 )

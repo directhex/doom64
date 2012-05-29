@@ -292,7 +292,6 @@ void I_ClearFrame(void)
     GFX_CONTROL         = GL_FOG | GL_BLEND | GL_TEXTURE_2D | GL_ALPHA_TEST;
     GFX_ALPHA_TEST      = 0;
     GFX_CUTOFF_DEPTH    = GL_MAX_DEPTH;
-    GFX_CLEAR_COLOR     = 0x1F0000;
     GFX_CLEAR_DEPTH     = GL_MAX_DEPTH;
     GFX_VIEWPORT        = 0xBFFF0000;
     GFX_TEX_FORMAT      = 0;

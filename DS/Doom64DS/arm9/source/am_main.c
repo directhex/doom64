@@ -676,8 +676,6 @@ void AM_Start(void)
     f_x = f_y = 0;
     f_w = BGMAIN_WIDTH;
     f_h = BGMAIN_HEIGHT;
-    m_x = plr->mo->x - m_w/2;
-    m_y = plr->mo->y - m_h/2;
 
     AM_FindMinMaxBoundaries();
 

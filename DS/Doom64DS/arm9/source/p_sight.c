@@ -19,7 +19,7 @@ fixed_t     t2y;
 // PTR_SightTraverse
 //
 
-dboolean PTR_SightTraverse(intercept_t *in)
+static dboolean PTR_SightTraverse(intercept_t *in)
 {
     line_t	*li;
     fixed_t	slope;
@@ -59,7 +59,7 @@ dboolean PTR_SightTraverse(intercept_t *in)
 // P_SightBlockLinesIterator
 //
 
-dboolean P_SightBlockLinesIterator(int x, int y)
+static dboolean P_SightBlockLinesIterator(int x, int y)
 {
     int         offset;
     short       *list;
@@ -110,7 +110,7 @@ dboolean P_SightBlockLinesIterator(int x, int y)
 // P_SightTraverseIntercepts
 //
 
-dboolean P_SightTraverseIntercepts(void)
+static dboolean P_SightTraverseIntercepts(void)
 {
     int             count;
     fixed_t         dist;
@@ -159,7 +159,7 @@ dboolean P_SightTraverseIntercepts(void)
 // P_SightPathTraverse
 //
 
-dboolean P_SightPathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
+static dboolean P_SightPathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 {
     fixed_t	xt1;
     fixed_t yt1;

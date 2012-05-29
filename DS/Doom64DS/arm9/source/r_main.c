@@ -191,6 +191,17 @@ void R_DrawFrame(void)
         GFX_CLEAR_COLOR = 0x1F0000;
         return;
     }
+    else if(sky != NULL)
+    {
+        if(sky->flags & SKF_CLOUD)
+            GFX_CLEAR_COLOR = sky->skycolor[1];
+        else if(sky->flags & SKF_VOID)
+            GFX_CLEAR_COLOR = sky->skycolor[2];
+        else
+            GFX_CLEAR_COLOR = 0x1F0000;
+    }
+    else
+        GFX_CLEAR_COLOR = 0x1F0000;
 
     //
     // setup view rotation/position

@@ -152,6 +152,7 @@ static inline float D_fabs(float x)
 extern dboolean automapactive;
 
 void AM_Start(void);
+void AM_Stop(void);
 void AM_Ticker(void);
 void AM_Drawer(void);
 dboolean AM_Responder(event_t* ev);

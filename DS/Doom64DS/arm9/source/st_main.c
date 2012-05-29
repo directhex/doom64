@@ -343,10 +343,16 @@ void ST_Drawer(void)
     }
     else if(automapactive)
     {
-        char name[64];
-
-        sprintf(name, "Level %i: %s", gamemap, P_GetMapInfo(gamemap)->mapname);
-        ST_DrawMessage(10, 10, ARGB16(31, 31, 31, 31), name);
+        ST_DrawMessage(10, 10, ARGB16(31, 31, 31, 31),
+            "Level %i: %s", gamemap, P_GetMapInfo(gamemap)->mapname);
+        ST_DrawMessage(10, 20, ARGB16(31, 31, 31, 31),
+            "Monsters:  %i / %i", plyr->killcount, totalkills);
+        ST_DrawMessage(10, 30, ARGB16(31, 31, 31, 31),
+            "Items:     %i / %i", plyr->itemcount, totalitems);
+        ST_DrawMessage(10, 40, ARGB16(31, 31, 31, 31),
+            "Secrets:   %i / %i", plyr->secretcount, totalsecret);
+        ST_DrawMessage(10, 50, ARGB16(31, 31, 31, 31),
+            "Time:      %2.2d:%2.2d", (leveltime / TICRATE) / 60, (leveltime / TICRATE) % 60);
     }
 
     if(!automapactive)
