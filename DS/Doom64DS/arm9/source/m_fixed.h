@@ -6,7 +6,7 @@
 //
 #define FRACBITS		16
 #define FRACUNIT		(1<<FRACBITS)
-
+#define FRACROUNDOFF(x) ((x & 0xFFFE0000) | FRACUNIT)
 #define INT2F(x)		((x)<<FRACBITS)
 #define F2INT(x)		((x)>>FRACBITS)
 #define F2D3D(x) 		(((float)(x))/FRACUNIT)

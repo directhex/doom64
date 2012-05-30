@@ -295,8 +295,6 @@ dboolean P_CheckSight(mobj_t *t1, mobj_t *t2)
     int s1;
     int s2;
     int pnum;
-    int bytenum;
-    int bitnum;
 
     //
     // check for trivial rejection
@@ -304,10 +302,8 @@ dboolean P_CheckSight(mobj_t *t1, mobj_t *t2)
     s1 = (t1->subsector->sector - sectors);
     s2 = (t2->subsector->sector - sectors);
     pnum = s1*numsectors + s2;
-    bytenum = pnum >> 3;
-    bitnum = 1 << (pnum & 7);
 
-    if(rejectmatrix[bytenum] & bitnum)
+    if(rejectmatrix[pnum >> 3] & (1 << (pnum & 7)))
         return false;   // can't possibly be connected
 
     //
@@ -327,30 +323,41 @@ dboolean P_CheckSight(mobj_t *t1, mobj_t *t2)
 // mobj action routines
 //
 
+static int latetics = 0;
+
 void P_ScanSights(void)
 {
-    mobj_t* mobj;
+    if(latetics <= 1 || netgame)
+    {
+        mobj_t* mobj;
 
-	for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
-	{
-        // must be killable
-        if(!(mobj->flags & MF_COUNTKILL))
-            continue;
+        latetics = I_GetTimeTicks();
 
-        // must have longer tics
-        if(mobj->tics == 1)
-            continue;
+	    for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
+	    {
+            // must be killable
+            if(!(mobj->flags & MF_COUNTKILL))
+                continue;
 
-        mobj->flags &= ~MF_SEETARGET;
+            // must have longer tics
+            if(mobj->tics == 1)
+                continue;
 
-        // must have a target
-        if(!mobj->target)
-            continue;
+            mobj->flags &= ~MF_SEETARGET;
 
-        if(!P_CheckSight(mobj, mobj->target))
-            continue;
+            // must have a target
+            if(!mobj->target)
+                continue;
 
-        mobj->flags |= MF_SEETARGET;
+            if(!P_CheckSight(mobj, mobj->target))
+                continue;
+
+            mobj->flags |= MF_SEETARGET;
+        }
+
+        latetics = (I_GetTimeTicks() - latetics);
     }
+    else
+        latetics--;
 }
 
