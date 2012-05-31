@@ -12,6 +12,7 @@
 #include "info.h"
 #include "r_local.h"
 #include "s_sound.h"
+#include "p_spec.h"
 
 #define DEMOMARKER      0x80
 #define MAXPLMOVE       (forwardmove[1])
@@ -575,8 +576,7 @@ void G_ExitLevel(void)
     memset(&junk, 0, sizeof(line_t));
     junk.tag = map->exitdelay;
     
-    // TODO
-    //P_SpawnDelayTimer(&junk, G_CompleteLevel);
+    P_SpawnDelayTimer(&junk, G_CompleteLevel);
     
     nextmap = gamemap + 1;
 }
@@ -595,8 +595,7 @@ void G_SecretExitLevel(int map)
     memset(&junk, 0, sizeof(line_t));
     junk.tag = mapdef->exitdelay;
     
-    // TODO
-    //P_SpawnDelayTimer(&junk, G_CompleteLevel);
+    P_SpawnDelayTimer(&junk, G_CompleteLevel);
     
     nextmap = map;
 }
@@ -619,8 +618,7 @@ void G_RunTitleMap(void)
 
     G_DoLoadLevel();
 
-    // TODO
-    //D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
+    D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
 }
 
 //
@@ -745,7 +743,7 @@ void G_InitNew(skill_t skill, int map)
     usergame		= true;				// will be set false if a demo
     paused			= false;
     demoplayback	= false;
-    //automapactive	= false;    // TODO
+    automapactive	= false;
     gamemap			= map;
     gameskill		= skill;
 

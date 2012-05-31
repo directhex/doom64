@@ -570,7 +570,7 @@ int ST_CenterString(const char* string)
         }
     }
     
-    return (160 - (width / 2));
+    return (128 - (width / 2));
 }
 
 //

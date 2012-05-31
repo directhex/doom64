@@ -4,6 +4,12 @@
 #include "r_local.h"
 #include "d_main.h"
 
+// the original Doom64 game uses BSP traversing for sight checking
+// but due to the limiting DS CPU cache, traversal functions are
+// extremly expensive. This version uses path traversing methods
+// based off of eariler versions of Doom ~1.2 which is much cheaper
+// to execute but can still result in high CPU cache overhead
+
 //
 // P_CheckSight
 //
@@ -327,10 +333,20 @@ static int latetics = 0;
 
 void P_ScanSights(void)
 {
-    if(latetics <= 1 || netgame)
+    // when drawing a scene, depending on the complexity
+    // of BSP traversal can lead to serious performance
+    // issues when doing sight checking... even when using
+    // the old path traverse methods. to lighten the cpu
+    // cache overhead, sight checking may need to be skipped
+    // a tic or two. unfortuently this is problematic for
+    // network games because this check can only be done locally
+    // so we'll just have to live with that for wifi games
+
+    if(latetics <= 0 || netgame)
     {
         mobj_t* mobj;
 
+        // get current tic
         latetics = I_GetTimeTicks();
 
 	    for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
@@ -355,9 +371,10 @@ void P_ScanSights(void)
             mobj->flags |= MF_SEETARGET;
         }
 
+        // determine how long it took to do sight checking
         latetics = (I_GetTimeTicks() - latetics);
     }
     else
-        latetics--;
+        latetics--; // skip tic until ready to check sights again
 }
 

@@ -659,11 +659,6 @@ drawframe:
     return action;
 }
 
-void P_Start(void);
-void P_Drawer(void);
-void P_Stop(void);
-int P_Ticker(void);
-
 //
 // D_DoomMain
 //
@@ -798,6 +793,7 @@ void D_DoomMain(void)
         G_DoLoadLevel();
         players[0].cheats |= CF_GODMODE;
         D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
+        D_MiniLoop(WI_Start, WI_Stop, WI_Drawer, WI_Ticker);
     }
 }
 

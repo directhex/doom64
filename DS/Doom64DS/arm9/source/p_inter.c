@@ -751,14 +751,13 @@ void P_KillMobj(mobj_t* source, mobj_t* target)
 
 		deathmocktics = gametic;
 
-        // TODO
-		/*if (target->player == &players[consoleplayer]
+		if (target->player == &players[consoleplayer]
 			&& automapactive)
 		{
 			// don't die in auto map,
 			// switch view prior to dying
-			AM_Stop ();
-		}*/
+			AM_Stop();
+		}
 
 	}
 

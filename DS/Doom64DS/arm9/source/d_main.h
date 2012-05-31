@@ -149,6 +149,9 @@ static inline float D_fabs(float x)
     return x < 0 ? -x : x;
 }
 
+//
+// AUTOMAP
+//
 extern dboolean automapactive;
 
 void AM_Start(void);
@@ -156,5 +159,21 @@ void AM_Stop(void);
 void AM_Ticker(void);
 void AM_Drawer(void);
 dboolean AM_Responder(event_t* ev);
+
+//
+// PLAY
+//
+void P_Start(void);
+void P_Stop(void);
+void P_Drawer(void);
+int P_Ticker(void);
+
+//
+// INTERMISSION
+//
+void WI_Start(void);
+void WI_Drawer(void);
+void WI_Stop(void);
+int WI_Ticker(void);
 
 #endif // __D_MAIN__

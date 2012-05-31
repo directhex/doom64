@@ -1331,6 +1331,63 @@ void R_DrawSky(void)
         R_DrawSkyPic(skypicnum, 0, false);
 
     if(sky->flags & SKF_BACKGROUND)
-        R_DrawSkyPic(skybackdropnum, 64, true);
+        R_DrawSkyPic(skybackdropnum, 80, true);
 }
+
+//
+// R_SlamBackground
+//
+
+void R_SlamBackground(const char* name, int x, int y)
+{
+    int width;
+    int height;
+    int pw;
+    int ph;
+    int index;
+    short* lumpdata;
+    byte* data;
+    int lump;
+
+    I_CheckGFX();
+
+    lump = W_GetNumForName(name);
+
+    lumpdata = (short*)W_CacheLumpNum(lump, PU_CACHE);
+    width = lumpdata[0];
+    height = lumpdata[1];
+    data = (byte*)(lumpdata + 4);
+    pw = R_PadTextureDims(width);
+    ph = R_PadTextureDims(height);
+    index = lump - g_start;
+
+    if(!I_AllocVBlock(
+        &gfx_images[index],
+        R_CopyPic(data, 0, 0, height, pw, width, width),
+        pw * ph,
+        TEXGEN_OFF,
+        R_GetTextureSize(pw),
+        R_GetTextureSize(ph),
+        GL_RGB256))
+        return;
+
+    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_TEX_FORMAT  = gfx_images[index].params;
+    GFX_PAL_FORMAT  = gfx_imgpal_params[index];
+    GFX_COLOR       = RGB15(31, 31, 31);
+    GFX_BEGIN       = GL_QUADS;
+    GFX_TEX_COORD   = COORD_PACK(0, 0);
+    GFX_VERTEX16    = VERTEX_PACK(x, y);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
+    GFX_TEX_COORD   = COORD_PACK(width, 0);
+    GFX_VERTEX16    = VERTEX_PACK(width + x, y);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
+    GFX_TEX_COORD   = COORD_PACK(width, height);
+    GFX_VERTEX16    = VERTEX_PACK(width + x, height + y);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
+    GFX_TEX_COORD   = COORD_PACK(0, height);
+    GFX_VERTEX16    = VERTEX_PACK(x, height + y);
+    GFX_VERTEX16    = VERTEX_PACK(-4, 0);
+}
+
 
