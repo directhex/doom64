@@ -391,23 +391,9 @@ void ST_Drawer(void)
 
         GFX_POLY_FORMAT =
             POLY_ALPHA(st_flashalpha)   |
-            POLY_ID(1)                  |
+            POLY_ID(63)                 |
             POLY_CULL_NONE              |
-            POLY_MODULATION             |
-            POLY_NEW_DEPTH;
-
-        GFX_TEX_FORMAT  = 0;
-        GFX_PAL_FORMAT  = 0;
-        GFX_COLOR       = st_flashcolor;
-        GFX_SCREENRECT();
-
-        GFX_POLY_FORMAT =
-            POLY_ALPHA(st_flashalpha)   |
-            POLY_ID(1)                  |
-            POLY_CULL_NONE              |
-            POLY_MODULATION             |
-            POLY_NEW_DEPTH              |
-            POLY_DEPTHTEST_EQUAL;
+            POLY_MODULATION;
 
         GFX_TEX_FORMAT  = 0;
         GFX_PAL_FORMAT  = 0;
@@ -586,6 +572,7 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
     int width;
     int i;
     int c;
+    uint32 flags;
 
     I_CheckGFX();
 
@@ -599,6 +586,11 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
 
     width   = lumpdata[0];
     data    = (byte*)(lumpdata + 4);
+
+    flags = POLY_ALPHA(color >> 15) |
+            POLY_ID(0)              |
+            POLY_CULL_NONE          |
+            POLY_MODULATION;
 
     for(i = 0; i < strlen(string); i++)
     {
@@ -664,6 +656,7 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
                     // thermcursor
                 case 's':
                     index = ST_THERMO + 1;
+                    flags |= POLY_DEPTHTEST_EQUAL;
                     break;
                 default:
                     return 0;
@@ -691,12 +684,7 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
         GFX_TEX_FORMAT = st_gfxbfont[index].params;
         GFX_PAL_FORMAT = st_bfontpalparam;
 
-        GFX_POLY_FORMAT =
-            POLY_ALPHA(color >> 15) |
-            POLY_ID(0)              |
-            POLY_CULL_NONE          |
-            POLY_MODULATION;
-
+        GFX_POLY_FORMAT = flags;
         GFX_COLOR       = (color & 0x7FFF);
         GFX_BEGIN       = GL_QUADS;
         GFX_TEX_COORD   = COORD_PACK(0, 0);

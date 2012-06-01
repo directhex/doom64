@@ -152,6 +152,7 @@ static inline float D_fabs(float x)
 //
 // AUTOMAP
 //
+extern int amCheating;
 extern dboolean automapactive;
 
 void AM_Start(void);

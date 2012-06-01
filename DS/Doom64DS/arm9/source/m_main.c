@@ -14,7 +14,6 @@ typedef struct
     char* name;
     int x;
     int y;
-    void(*exec)(void);
 } menuitem_t;
 
 static void(*menudrawfunc)(void) = NULL;
@@ -27,9 +26,6 @@ static dboolean showfullitemvalue[2] = { false, false };
 
 dboolean menuactive = false;
 int menuskullcounter = 0;
-
-static void M_GenericHandler(void);
-static void M_DebugHandler(void);
 
 enum
 {
@@ -52,8 +48,15 @@ enum
     menu_noclip,
     menu_allkeys,
     menu_allweapons,
+    menu_mapall,
     menu_lockmonsters,
     menu_returnpaused2,
+    menu_brightness,
+    menu_swapscreens,
+    menu_messages,
+    menu_statusbar,
+    menu_displaydefault,
+    menu_returndisplay,
     NUM_MENU_ITEMS
 };
 
@@ -63,30 +66,38 @@ enum
 #define MENU_QUITTOMAIN     menu_quitmain_yes
 #define MENU_RESTARTLEVEL   menu_restart_yes
 #define MENU_DEBUGMENU      menu_nolights
+#define MENU_DISPLAY        menu_brightness
 
 static menuitem_t menulist[NUM_MENU_ITEMS] =
 {
-    { "New Game", 82, 144, NULL },
-    { "Options", 82, 162, NULL },
-    { "Options", 82, 64, M_GenericHandler },
-    { "Main Menu", 82, 82, M_GenericHandler },
-    { "Restart Level", 82, 100, M_GenericHandler },
-    { "Debug", 82, 118, M_GenericHandler },
-    { "Controls", 82, 64, NULL },
-    { "Volume", 82, 82, NULL },
-    { "Display", 82, 100, NULL },
-    { "/r Return", 82, 118, M_GenericHandler },
-    { "Yes", 108, 80, NULL },
-    { "No", 108, 98, M_GenericHandler },
-    { "Yes", 108, 80, NULL },
-    { "No", 108, 98, M_GenericHandler },
-    { "No Lights", 32, 40, M_DebugHandler },
-    { "God Mode", 32, 52, M_DebugHandler },
-    { "No Clip", 32, 64, M_DebugHandler },
-    { "All Keys", 32, 76, M_DebugHandler },
-    { "All Weapons", 32, 88, M_DebugHandler },
-    { "Lock Monsters", 32, 100, M_DebugHandler },
-    { "Return", 32, 112, M_GenericHandler }
+    { "New Game", 82, 144 },
+    { "Options", 82, 162 },
+    { "Options", 82, 64 },
+    { "Main Menu", 82, 82 },
+    { "Restart Level", 82, 100 },
+    { "Debug", 82, 118 },
+    { "Controls", 82, 64 },
+    { "Volume", 82, 82 },
+    { "Display", 82, 100 },
+    { "/r Return", 82, 118 },
+    { "Yes", 108, 80 },
+    { "No", 108, 98 },
+    { "Yes", 108, 80 },
+    { "No", 108, 98 },
+    { "No Lights", 32, 40 },
+    { "God Mode", 32, 52 },
+    { "No Clip", 32, 64 },
+    { "All Keys", 32, 76 },
+    { "All Weapons", 32, 88 },
+    { "Map Everything", 32, 100 },
+    { "Lock Monsters", 32, 112 },
+    { "Return", 32, 124 },
+    { "Brightness", 40, 48 },
+    { "Swap Screen:", 40, 84 },
+    { "Messages:", 40, 102 },
+    { "Status Bar:", 40, 120 },
+    { "Default", 40, 138 },
+    { "/r Return", 40, 156 }
 };
 
 //
@@ -144,131 +155,79 @@ static void M_GenericDrawer(void)
 }
 
 //
+// M_DisplayDrawer
+//
+
+static void M_DisplayDrawer(void)
+{
+    int i;
+
+    ST_DrawBigFont(-1, 16, MENUFONTRED, "Display");
+    ST_DrawBigFont(menu[0].x, menu[0].y, MENUFONTRED, menu[0].name);
+    ST_DrawBigFont(menu[0].x, menu[0].y + 18, MENUFONTWHITE, "/t");
+    ST_DrawBigFont(menu[0].x, menu[0].y + 18, MENUFONTWHITE, "/s");
+
+    for(i = 1; i < m_menuitems; i++)
+        ST_DrawBigFont(menu[i].x, menu[i].y, MENUFONTRED, menu[i].name);
+
+    ST_DrawBigFont(menulist[menu_swapscreens].x + 160, menulist[menu_swapscreens].y,
+        MENUFONTRED, "Off");
+    ST_DrawBigFont(menulist[menu_messages].x + 160, menulist[menu_messages].y,
+        MENUFONTRED, "On");
+    ST_DrawBigFont(menulist[menu_statusbar].x + 160, menulist[menu_statusbar].y,
+        MENUFONTRED, "On");
+
+    ST_DrawBigFont(menu[m_itemOn].x - 34, menu[m_itemOn].y - 8, 0xFFFFF, "*");
+}
+
+//
 // M_DebugDrawer
 //
 
 static void M_DebugDrawer(void)
 {
     int i;
-    char str[8];
 
      ST_DrawBigFont(-1, 16, MENUFONTRED, "Debug");
 
     for(i = 0; i < m_menuitems; i++)
         ST_DrawMessage(menu[i].x, menu[i].y, MENUFONTWHITE, menu[i].name);
 
-    if(nolights)
-        sprintf(str, ":On");
-    else
-        sprintf(str, ":Off");
+    ST_DrawMessage(menulist[menu_nolights].x + 160, menulist[menu_nolights].y,
+        MENUFONTWHITE, nolights ? ":On" : ":Off");
 
-    ST_DrawMessage(menulist[menu_nolights].x + 160, menulist[menu_nolights].y, MENUFONTWHITE, str);
+    ST_DrawMessage(menulist[menu_godmode].x + 160, menulist[menu_godmode].y,
+        MENUFONTWHITE, players[consoleplayer].cheats & CF_GODMODE ? ":On" : ":Off");
 
-    if(players[consoleplayer].cheats & CF_GODMODE)
-        sprintf(str, ":On");
-    else
-        sprintf(str, ":Off");
+    ST_DrawMessage(menulist[menu_noclip].x + 160, menulist[menu_noclip].y,
+        MENUFONTWHITE, players[consoleplayer].cheats & CF_NOCLIP ? ":On" : ":Off");
 
-    ST_DrawMessage(menulist[menu_godmode].x + 160, menulist[menu_godmode].y, MENUFONTWHITE, str);
+    ST_DrawMessage(menulist[menu_allkeys].x + 160, menulist[menu_allkeys].y,
+        MENUFONTWHITE, showfullitemvalue[0] ? ":100%%" : ":-");
 
-    if(players[consoleplayer].cheats & CF_NOCLIP)
-        sprintf(str, ":On");
-    else
-        sprintf(str, ":Off");
+    ST_DrawMessage(menulist[menu_allweapons].x + 160, menulist[menu_allweapons].y,
+        MENUFONTWHITE, showfullitemvalue[1] ? ":100%%" : ":-");
 
-    ST_DrawMessage(menulist[menu_noclip].x + 160, menulist[menu_noclip].y, MENUFONTWHITE, str);
+    ST_DrawMessage(menulist[menu_mapall].x + 160, menulist[menu_mapall].y,
+        MENUFONTWHITE, amCheating ? ":On" : ":Off");
 
-    if(showfullitemvalue[0])
-        sprintf(str, ":100%%");
-    else
-        sprintf(str, ":-");
-
-    ST_DrawMessage(menulist[menu_allkeys].x + 160, menulist[menu_allkeys].y, MENUFONTWHITE, str);
-
-    if(showfullitemvalue[1])
-        sprintf(str, ":100%%");
-    else
-        sprintf(str, ":-");
-
-    ST_DrawMessage(menulist[menu_allweapons].x + 160, menulist[menu_allweapons].y, MENUFONTWHITE, str);
-
-    if(lockmonsters)
-        sprintf(str, ":On");
-    else
-        sprintf(str, ":Off");
-
-    ST_DrawMessage(menulist[menu_lockmonsters].x + 160, menulist[menu_lockmonsters].y, MENUFONTWHITE, str);
+    ST_DrawMessage(menulist[menu_lockmonsters].x + 160, menulist[menu_lockmonsters].y,
+        MENUFONTWHITE, lockmonsters ? ":On" : ":Off");
 
     ST_DrawBigFont(menu[m_itemOn].x - 12, menu[m_itemOn].y - 2, 0xFFFFF, "/l");
 }
 
 //
-// M_DebugHandler
+// M_MenuChoice
 //
 
-static void M_DebugHandler(void)
+static void M_MenuChoice(void)
 {
     int i;
     player_t* p;
 
     p = &players[consoleplayer];
 
-    switch(m_currentmenu + m_itemOn)
-    {
-    case menu_nolights:
-        nolights ^= 1;
-        break;
-    case menu_godmode:
-        if(p->cheats & CF_GODMODE)
-            p->cheats &= ~CF_GODMODE;
-        else
-            p->cheats |= CF_GODMODE;
-        break;
-    case menu_noclip:
-        if(p->cheats & CF_NOCLIP)
-            p->cheats &= ~CF_NOCLIP;
-        else
-            p->cheats |= CF_NOCLIP;
-        break;
-    case menu_allkeys:
-        for(i = 0; i < NUMCARDS; i++)
-            p->cards[i] = true;
-
-        showfullitemvalue[0] = true;
-        break;
-    case menu_allweapons:
-        for(i = 0; i < NUMWEAPONS; i++)
-            p->weaponowned[i] = true;
-
-        if(!p->backpack)
-        {
-            p->backpack = true;
-
-            for (i = 0; i < NUMAMMO; i++)
-                p->maxammo[i] *= 2;
-        }
-
-        for (i = 0; i < NUMAMMO; i++)
-            p->ammo[i] = p->maxammo[i];
-
-        showfullitemvalue[1] = true;
-        break;
-    case menu_lockmonsters:
-        lockmonsters ^= 1;
-        break;
-    default:
-        break;
-    }
-
-    S_StartSound(NULL, sfx_switch2);
-}
-
-//
-// M_GenericHandler
-//
-
-static void M_GenericHandler(void)
-{
     switch(m_currentmenu + m_itemOn)
     {
     case menu_options2:
@@ -285,8 +244,12 @@ static void M_GenericHandler(void)
         break;
     case menu_debug:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_DEBUGMENU, 7, M_DebugDrawer);
+        M_SetMenu(MENU_DEBUGMENU, 8, M_DebugDrawer);
         showfullitemvalue[0] = showfullitemvalue[1] = false;
+        break;
+    case menu_display:
+        S_StartSound(NULL, sfx_pistol);
+        M_SetMenu(MENU_DISPLAY, 6, M_DisplayDrawer);
         break;
     case menu_returnpaused:
     case menu_returnpaused2:
@@ -294,6 +257,60 @@ static void M_GenericHandler(void)
     case menu_restart_no:
         S_StartSound(NULL, sfx_pistol);
         M_SetMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
+        break;
+    case menu_returndisplay:
+        S_StartSound(NULL, sfx_pistol);
+        M_SetMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
+        break;
+    case menu_nolights:
+        S_StartSound(NULL, sfx_switch2);
+        nolights ^= 1;
+        break;
+    case menu_godmode:
+        S_StartSound(NULL, sfx_switch2);
+        if(p->cheats & CF_GODMODE)
+            p->cheats &= ~CF_GODMODE;
+        else
+            p->cheats |= CF_GODMODE;
+        break;
+    case menu_noclip:
+        S_StartSound(NULL, sfx_switch2);
+        if(p->cheats & CF_NOCLIP)
+            p->cheats &= ~CF_NOCLIP;
+        else
+            p->cheats |= CF_NOCLIP;
+        break;
+    case menu_allkeys:
+        for(i = 0; i < NUMCARDS; i++)
+            p->cards[i] = true;
+
+        showfullitemvalue[0] = true;
+        break;
+    case menu_allweapons:
+        S_StartSound(NULL, sfx_switch2);
+        for(i = 0; i < NUMWEAPONS; i++)
+            p->weaponowned[i] = true;
+
+        if(!p->backpack)
+        {
+            p->backpack = true;
+
+            for (i = 0; i < NUMAMMO; i++)
+                p->maxammo[i] *= 2;
+        }
+
+        for (i = 0; i < NUMAMMO; i++)
+            p->ammo[i] = p->maxammo[i];
+
+        showfullitemvalue[1] = true;
+        break;
+    case menu_mapall:
+        S_StartSound(NULL, sfx_switch2);
+        amCheating ^= 2;
+        break;
+    case menu_lockmonsters:
+        S_StartSound(NULL, sfx_switch2);
+        lockmonsters ^= 1;
         break;
     default:
         break;
@@ -369,8 +386,7 @@ dboolean M_Responder(event_t* ev)
             {
                 rc = true;
 
-                if(menu[m_itemOn].exec)
-                    menu[m_itemOn].exec();
+                M_MenuChoice();
             }
         }
     }
