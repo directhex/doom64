@@ -176,4 +176,13 @@ void WI_Drawer(void);
 void WI_Stop(void);
 int WI_Ticker(void);
 
+//
+// MENU
+//
+extern dboolean menuactive;
+
+void M_Ticker(void);
+void M_Drawer(void);
+dboolean M_Responder(event_t* ev);
+
 #endif // __D_MAIN__

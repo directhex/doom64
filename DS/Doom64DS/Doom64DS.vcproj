@@ -130,6 +130,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\m_main.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\p_ceilng.c"
 					>
 				</File>
@@ -247,6 +251,10 @@
 				</File>
 				<File
 					RelativePath=".\arm9\source\w_wad.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm9\source\wi_stuff.c"
 					>
 				</File>
 				<File

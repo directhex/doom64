@@ -286,6 +286,8 @@ void WI_Drawer(void)
 {
     int currentmap = gamemap;
 
+    GFX_CLEAR_COLOR = 0x1F0000;
+
     if(currentmap < 0)
         currentmap = 0;
 

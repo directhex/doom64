@@ -10,6 +10,8 @@
 #include "w_wad.h"
 #include "st_main.h"
 
+extern int menuskullcounter;    // from m_main.c
+
 //
 // STATUS BAR DATA
 //
@@ -355,7 +357,7 @@ void ST_Drawer(void)
             "Time:      %2.2d:%2.2d", (leveltime / TICRATE) / 60, (leveltime / TICRATE) % 60);
     }
 
-    if(!automapactive)
+    if(!automapactive && !menuactive)
     {
         // health text
         ST_DrawStatusItem(0, ST_HEALTHTEXTX, ST_HEALTHTEXTY);
@@ -570,7 +572,7 @@ int ST_CenterString(const char* string)
         }
     }
     
-    return (128 - (width / 2));
+    return (124 - (width / 2));
 }
 
 //
@@ -627,6 +629,7 @@ int ST_DrawBigFont(int x, int y, rcolor color, const char* string)
             if(c == '.')                { index = ST_MISCFONT + 3;              }
             if(c == '?')                { index = ST_MISCFONT + 4;              }
             if(c == ':')                { index = ST_MISCFONT + 5;              }
+            if(c == '*')                { index = ST_SKULLS + menuskullcounter; }
 
             if(c == '/')
             {

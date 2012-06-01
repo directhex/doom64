@@ -369,10 +369,8 @@ void D_ProcessEvents(void)
     {
         ev = &events[eventtail];
 
-        // TODO
-        /*if(M_Responder(ev))
+        if(M_Responder(ev))
             continue;               // menu ate the event
-            */
 
         G_Responder(ev);
     }
@@ -500,8 +498,7 @@ void D_UpdateTiccmd(void)
 		I_StartTic();
 		D_ProcessEvents();
 
-        // TODO
-		//M_Ticker();
+        M_Ticker();
 	
 		// If playing single player, do not allow tics to buffer
         // up very far
@@ -636,11 +633,8 @@ drawframe:
             I_FinishFrame();
         }
         
-        // TODO
-        /*
         if(menuactive)
             M_Drawer();
-        */
 
         // send out any new accumulation
         D_UpdateTiccmd();
@@ -780,9 +774,7 @@ void D_DoomMain(void)
 
         I_Printf("Loading Level...\n");
 
-        //nomonsters = false;
-        nolights = true;
-        //gamemap = 1;
+        nolights = false;
         players[0].playerstate = PST_REBORN;
         players[0].health = 100;
         players[0].readyweapon = players[0].pendingweapon = wp_pistol;
