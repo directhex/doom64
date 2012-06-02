@@ -184,6 +184,7 @@ extern dboolean menuactive;
 
 void M_Ticker(void);
 void M_Drawer(void);
+void M_SetMainMenu(void);
 dboolean M_Responder(event_t* ev);
 
 #endif // __D_MAIN__

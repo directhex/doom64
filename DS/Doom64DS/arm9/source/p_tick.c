@@ -277,6 +277,8 @@ void P_Drawer(void)
 // P_Ticker
 //
 
+extern int ptic;
+
 int P_Ticker(void)
 {
     int i;
@@ -300,6 +302,9 @@ int P_Ticker(void)
             P_PlayerThink(&players[i]);
         }
     }
+
+    if(devparm)
+        cpuStartTiming(2);
     
     P_RunThinkers();
     P_ScanSights();
@@ -309,6 +314,9 @@ int P_Ticker(void)
     
     ST_Ticker();
     AM_Ticker();
+
+    if(devparm)
+        ptic = timerTicks2msec(cpuEndTiming());
     
     // for par times
     leveltime++;

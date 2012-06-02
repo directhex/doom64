@@ -327,6 +327,9 @@ void ST_Drawer(void)
 {
     player_t* plyr = &players[consoleplayer];
 
+    if(demoplayback)
+        return;
+
     if(plyr->cheats & CF_NOCLIP)
         return;
 

@@ -231,10 +231,6 @@ static void R_InitPalettes(void)
 
     for(i = 1; i < NUMSPRITES; i++)
         R_CacheExternalPalette(i);
-
-    if(gfx_texpal_stride >= 0x10000)
-        I_Error("R_InitPalettes: palette cache overflowed by %d",
-        gfx_texpal_stride - 0x10000);
 }
 
 //

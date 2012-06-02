@@ -629,8 +629,7 @@ void G_RunGame(void)
     {
         G_DoLoadLevel();
 
-        // TODO
-        /*next = D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
+        next = D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
 
         if(next == ga_loadlevel)
             continue;   // restart level from scratch
@@ -644,15 +643,15 @@ void G_RunGame(void)
         if(next == ga_completed)
             next = D_MiniLoop(WI_Start, WI_Stop, WI_Drawer, WI_Ticker);
 
-        if(next == ga_victory)
+        /*if(next == ga_victory)
         {
             next = D_MiniLoop(IN_Start, IN_Stop, IN_Drawer, IN_Ticker);
 
             if(next == ga_finale)
                 D_MiniLoop(F_Start, F_Stop, F_Drawer, F_Ticker);
-        }
+        }*/
 
-        gamemap = nextmap;*/
+        gamemap = nextmap;
     }
 }
 

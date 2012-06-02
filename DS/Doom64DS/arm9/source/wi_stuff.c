@@ -303,25 +303,28 @@ void WI_Drawer(void)
 
     R_SlamBackground("EVIL", 31, 1);
 
+    if(menuactive)
+        return;
+
     // draw 'mapname' Finished text
     ST_DrawBigFont(-1, 20, 0xFFFFF, P_GetMapInfo(currentmap)->mapname);
 	ST_DrawBigFont(-1, 36, 0xFFFFF, "Finished");
 
     // draw kills
     ST_DrawBigFont(45, 60, WIALPHARED, "Kills");
-    ST_DrawBigFont(198, 60, WIALPHARED, "%");
+    ST_DrawBigFont(204, 60, WIALPHARED, "%");
     if(wi_stage > 0 && killvalue[0] > -1)
         ST_DrawNumber(168, 60, killvalue[0], 1, WIALPHARED);
 
     // draw items
     ST_DrawBigFont(45, 78, WIALPHARED, "Items");
-    ST_DrawBigFont(198, 78, WIALPHARED, "%");
+    ST_DrawBigFont(204, 78, WIALPHARED, "%");
     if(wi_stage > 1 && itemvalue[0] > -1)
         ST_DrawNumber(168, 78, itemvalue[0], 1, WIALPHARED);
 
     // draw secrets
     ST_DrawBigFont(45, 99, WIALPHARED, "Secrets");
-    ST_DrawBigFont(198, 99, WIALPHARED, "%");
+    ST_DrawBigFont(204, 99, WIALPHARED, "%");
     if(wi_stage > 2 && secretvalue[0] > -1)
         ST_DrawNumber(168, 99, secretvalue[0], 1, WIALPHARED);
 

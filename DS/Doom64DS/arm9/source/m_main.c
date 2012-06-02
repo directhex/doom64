@@ -5,6 +5,7 @@
 #include "s_sound.h"
 #include "st_main.h"
 #include "r_local.h"
+#include "g_game.h"
 
 typedef struct
 {
@@ -71,6 +72,10 @@ enum
     menu_soundvolume,
     menu_sounddefault,
     menu_returnsound,
+    menu_skbaby,
+    menu_skeasy,
+    menu_skmedium,
+    menu_skhard,
     NUM_MENU_ITEMS
 };
 
@@ -82,6 +87,7 @@ enum
 #define MENU_DEBUGMENU      menu_nolights
 #define MENU_DISPLAY        menu_brightness
 #define MENU_VOLUME         menu_musicvolume
+#define MENU_SKILL          menu_skbaby
 
 static menuitem_t menulist[NUM_MENU_ITEMS] =
 {
@@ -116,7 +122,11 @@ static menuitem_t menulist[NUM_MENU_ITEMS] =
     { "Music Volume", 64, 52 },
     { "Sound Volume", 64, 88 },
     { "Default", 64, 124 },
-    { "/r Return", 64, 142 }
+    { "/r Return", 64, 142 },
+    { "Be Gentle!", 70, 64 },
+    { "Bring It On!", 70, 82 },
+    { "I Own Doom!", 70, 100 },
+    { "Watch Me Die!", 70, 118 }
 };
 
 //
@@ -129,6 +139,18 @@ void M_SetMenu(int item, int numitems, void(*drawer)(void))
     menu = menulist + item;
     m_currentmenu = item;
     menudrawfunc = drawer;
+    m_itemOn = 0;
+}
+
+//
+// M_ClearMenu
+//
+
+static void M_ClearMenu(void)
+{
+    m_menualpha = 0x1F;
+    m_menuitems = 0;
+    menudrawfunc = NULL;
     m_itemOn = 0;
 }
 
@@ -204,6 +226,9 @@ static void M_FadeMenuDrawer(void)
         WI_Drawer();
         break;
     default:
+        GFX_ORTHO();
+        GFX_CLEAR_COLOR = 0x1F0000;
+        R_SlamBackground("TITLE", 23, 40);
         break;
     }
 }
@@ -221,6 +246,9 @@ static void M_GenericDrawer(void)
     case MENU_GAMEMENU:
         ST_DrawBigFont(-1, 16, MENUFONTRED, "Paused");
         ST_DrawBigFont(-1, 160, MENUFONTWHITE, "Press Start To Exit");
+        break;
+    case MENU_SKILL:
+        ST_DrawBigFont(-1, 16, MENUFONTRED, "Choose Your Skill...");
         break;
     case MENU_GAMEOPTIONS:
         ST_DrawBigFont(-1, 16, MENUFONTRED, "Options");
@@ -327,6 +355,17 @@ static void M_AdvanceMenu(int menu, int items, void(*drawer)(void))
 }
 
 //
+// M_SetMainMenu
+//
+
+void M_SetMainMenu(void)
+{
+    m_menualpha = 1;
+    M_SetMenu(MENU_MAINMENU, 2, M_GenericDrawer);
+    D_MiniLoop(NULL, NULL, M_FadeMenuDrawer, M_FadeMenuIn);
+}
+
+//
 // M_Ticker
 //
 
@@ -349,6 +388,20 @@ void M_Ticker(void)
 
     switch(exec)
     {
+    case menu_newgame:
+        S_StartSound(NULL, sfx_pistol);
+        M_AdvanceMenu(MENU_SKILL, 4, M_GenericDrawer);
+        break;
+    case menu_skbaby:
+    case menu_skeasy:
+    case menu_skmedium:
+    case menu_skhard:
+        S_StartSound(NULL, sfx_pistol);
+        D_MiniLoop(NULL, NULL, M_FadeMenuDrawer, M_FadeMenuOut);
+        G_DeferedInitNew(exec - menu_skbaby, startmap);
+        M_ClearMenu();
+        break;
+    case menu_options1:
     case menu_options2:
         S_StartSound(NULL, sfx_pistol);
         M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
@@ -379,7 +432,10 @@ void M_Ticker(void)
     case menu_quitmain_no:
     case menu_restart_no:
         S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
+        if(gamestate == GS_NONE)
+            M_AdvanceMenu(MENU_MAINMENU, 2, M_GenericDrawer);
+        else
+            M_AdvanceMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
         break;
     case menu_returndisplay:
     case menu_returnsound:
@@ -447,12 +503,18 @@ void M_Ticker(void)
 
 void M_Drawer(void)
 {
+    int alpha;
+
     I_CheckGFX();
 
-    GFX_ORTHO();
+    if(m_currentmenu != MENU_MAINMENU)
+        alpha = gamestate == GS_LEVEL ? 16 : 24;
+    else
+        alpha = 20;
 
+    GFX_ORTHO();
     GFX_POLY_FORMAT =
-        POLY_ALPHA(16)      |
+        POLY_ALPHA(alpha)   |
         POLY_ID(63)         |
         POLY_CULL_NONE      |
         POLY_MODULATION;
@@ -479,17 +541,20 @@ dboolean M_Responder(event_t* ev)
 
     if(ev->type == ev_btndown)
     {
-        if(ev->data & KEY_START && gamestate != GS_SKIPPABLE)
+        if(gamestate != GS_NONE)
         {
-            menuactive ^= 1;
+            if(ev->data & KEY_START && gamestate != GS_SKIPPABLE)
+            {
+                menuactive ^= 1;
 
-            if(menuactive && gamestate == GS_LEVEL)
-                M_SetMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
+                if(menuactive && gamestate == GS_LEVEL)
+                    M_SetMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
 
-            rc = true;
+                rc = true;
+            }
         }
 
-        if(menuactive)
+        if(menuactive && m_menuitems > 0)
         {
             if(ev->data & KEY_DOWN)
             {

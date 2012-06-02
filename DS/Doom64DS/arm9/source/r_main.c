@@ -47,6 +47,9 @@ int             g_start;
 int             g_end;
 int             numgfximgs;
 
+extern int bsptic;
+extern int rendertic;
+
 //
 // R_PointToAngle2
 //
@@ -139,7 +142,7 @@ subsector_t* R_PointInSubsector(fixed_t x, fixed_t y)
 // R_RenderView
 //
 
-static void R_RenderView(void)
+static void R_RenderView(player_t* player)
 {
     nextssect = ssectlist;
     vissprite = visspritelist;
@@ -147,7 +150,17 @@ static void R_RenderView(void)
     memset(occludeBuffer, 0, SCREENWIDTH);
     skyvisible = false;
 
-    R_RenderBSPNode(numnodes - 1);
+    if(devparm)
+        cpuStartTiming(2);
+
+    if(player->cameratarget != player->mo &&
+        (player->cameratarget->pitch >> 24) <= 240)
+        R_RenderBSPNodeNoClip(numnodes - 1);
+    else
+        R_RenderBSPNode(numnodes - 1);
+
+    if(devparm)
+        bsptic = timerTicks2msec(cpuEndTiming());
 }
 
 //
@@ -257,8 +270,15 @@ void R_DrawFrame(void)
     D_IncValidCount();
     D_UpdateTiccmd();
 
-    R_RenderView();
+    R_RenderView(player);
+
+    if(devparm)
+        cpuStartTiming(2);
+
     R_DrawScene();
+
+    if(devparm)
+        rendertic = timerTicks2msec(cpuEndTiming());
 
     MATRIX_POP = GFX_MTX_STACK_LEVEL;
 

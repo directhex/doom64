@@ -109,6 +109,7 @@ extern mobj_t       **vissprite;
 extern sector_t     *frontsector;
 
 void            R_RenderBSPNode(int bspnum);
+void            R_RenderBSPNodeNoClip(int bspnum);
 
 //
 // R_DRAW

@@ -220,6 +220,14 @@ void I_Init(void)
 
 byte* I_GetBackground(void)
 {
+    REG_BG3CNT  = BG_BMP8_256x256;
+    REG_BG3PA   = 256;
+    REG_BG3PB   = 0;
+    REG_BG3PC   = 0;
+    REG_BG3PD   = 256;
+    REG_BG3X    = 0;
+    REG_BG3Y    = 0;
+
     return (byte*)bgGetGfxPtr(bg_id);
 }
 
@@ -365,6 +373,9 @@ dboolean I_AllocVBlock(gfx_t* gfx, byte* data, int size,
 
 uint32 I_SetPalette(uint16* data, int offset, int size)
 {
+    if(offset >= 0x10000)
+        I_Error("I_SetPalette: palette cache overflowed by %d", offset - 0x10000);
+
     vramSetBankE(VRAM_E_LCD);
     memcpy16(VRAM_E + (offset >> 1), data, size >> 1);
     vramSetBankE(VRAM_E_TEX_PALETTE);

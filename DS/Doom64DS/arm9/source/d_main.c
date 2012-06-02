@@ -385,7 +385,9 @@ void D_ProcessEvents(void)
 // D_PrintDevStats
 //
 
-static int rendertime = 0;
+int bsptic = 0;
+int rendertic = 0;
+int ptic = 0;
 
 static void D_PrintDevStats(void)
 {
@@ -398,7 +400,9 @@ static void D_PrintDevStats(void)
     I_Printf("Vram: %ikb\n", Z_FreeVMemory(vramzone) >> 10);
     I_Printf("Vertex: %i\n", dsvertices);
     I_Printf("Tris: %i\n", dspolygons);
-    I_Printf("Frame: %i\n", I_GetTimeTicks() - rendertime);
+    I_Printf("Bsp: %ims\n", bsptic);
+    I_Printf("Draw: %ims\n", rendertic);
+    I_Printf("Game: %ims\n", ptic);
 }
 
 //
@@ -630,9 +634,6 @@ drawframe:
 
         if(draw && !action)
         {
-            if(devparm)
-                rendertime = I_GetTimeTicks();
-
             I_ClearFrame();
             draw();
             I_FinishFrame();
@@ -706,19 +707,22 @@ static void Splash_Drawer(void)
         GFX_SCREENRECT();
     }
 
-    switch(splashstage)
+    if(screenalpha < 0x1F)
     {
-    case 0:
-        R_SlamBackground("IDLOGO", 70, 28);
-        break;
-    case 1:
-        R_SlamBackground("WMSCRED1", 13, 64);
-        break;
-    case 2:
-        R_SlamBackground("USLEGAL", 25, 58);
-        break;
-    default:
-        break;
+        switch(splashstage)
+        {
+        case 0:
+            R_SlamBackground("IDLOGO", 70, 28);
+            break;
+        case 1:
+            R_SlamBackground("WMSCRED1", 0, 58);
+            break;
+        case 2:
+            R_SlamBackground("USLEGAL", 0, 50);
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -777,16 +781,173 @@ static void D_SplashScreen(void)
 
     if(skip != ga_title)
     {
-        //G_RunTitleMap();
+        G_RunTitleMap();
         gameaction = ga_title;
     }
 }
 
 //
-// D_DoomMain
+// Title_Drawer
 //
 
-void G_DoLoadLevel(void);
+static void Title_Drawer(void)
+{
+    I_CheckGFX();
+
+    GFX_ORTHO();
+    GFX_CLEAR_COLOR = 0x1F0000;
+    R_SlamBackground("TITLE", 23, 40);
+}
+
+//
+// Title_Ticker
+//
+
+static int Title_Ticker(void)
+{
+    if((gametic - pagetic) >= (TICRATE * 30))
+        return 1;
+
+    return 0;
+}
+
+//
+// Title_Start
+//
+
+static void Title_Start(void)
+{
+    gameaction = ga_nothing;
+    pagetic = gametic;
+    menuactive = true;
+    paused = false;
+    gamestate = GS_NONE;
+
+    S_StartMusic(mus_title);
+    M_SetMainMenu();
+}
+
+//
+// Title_Stop
+//
+
+static void Title_Stop(void)
+{
+    menuactive = false;
+
+    //WIPE_FadeScreen(8);
+    S_StopMusic();
+}
+
+//
+// D_DoomLoop
+// Main game loop
+//
+
+static void D_DoomLoop(void)
+{
+    int exit;
+
+    if(netgame)
+        gameaction = ga_newgame;
+
+    exit = gameaction;
+    
+    while(1)
+    {
+        exit = D_MiniLoop(Title_Start, Title_Stop, Title_Drawer, Title_Ticker);
+
+        if(exit == ga_newgame || exit == ga_loadgame)
+            G_RunGame();
+        else
+        {
+            //D_MiniLoop(Credits_Start, NULL, Credits_Drawer, Credits_Ticker);
+
+            if(gameaction == ga_title)
+                continue;
+
+            G_RunTitleMap();
+            continue;
+        }
+    }
+}
+
+//
+// D_DebugParams
+//
+
+static void D_DebugParams(void)
+{
+    int keys = 0;
+
+    scanKeys();
+    keys = keysHeld();
+
+    if(!(keys & (KEY_Y | KEY_B)))
+        return;
+
+    I_Printf("Debug startup enabled\n\n");
+
+    while(!(keys & KEY_START))
+    {
+        scanKeys();
+        keys = keysDown();
+
+        if(keys & KEY_UP)
+        {
+            keys &= ~KEY_UP;
+            startmap++;
+            if(startmap > 33)
+                startmap = 33;
+
+            I_Printf("startmap: %i\n", startmap);
+        }
+        if(keys & KEY_DOWN)
+        {
+            keys &= ~KEY_DOWN;
+            startmap--;
+            if(startmap < 1)
+                startmap = 1;
+
+            I_Printf("startmap: %i\n", startmap);
+        }
+        if(keys & KEY_A)
+        {
+            nomonsters ^= 1;
+            I_Printf("nomonsters ");
+            if(nomonsters)
+                I_Printf("on\n");
+            else
+                I_Printf("off\n");
+        }
+        if(keys & KEY_B)
+        {
+            lockmonsters ^= 1;
+            I_Printf("lockmonsters ");
+            if(lockmonsters)
+                I_Printf("on\n");
+            else
+                I_Printf("off\n");
+        }
+        if(keys & KEY_X)
+        {
+            devparm ^= 1;
+            I_Printf("development mode ");
+            if(devparm)
+                I_Printf("on\n");
+            else
+                I_Printf("off\n");
+        }
+
+        swiWaitForVBlank();
+    }
+
+    I_Printf("Exiting...\n");
+}
+
+//
+// D_DoomMain
+//
 
 void D_DoomMain(void)
 {
@@ -815,108 +976,8 @@ void D_DoomMain(void)
     offsetms = 0;
     playeringame[0] = true;
 
+    D_DebugParams();
     D_SplashScreen();
-
-    // temp
-    {
-        int keys = 0;
-
-        while(!(keys & KEY_START))
-        {
-            scanKeys();
-            keys = keysDown();
-
-            if(keys & KEY_UP)
-            {
-                keys &= ~KEY_UP;
-                gamemap++;
-                if(gamemap > 33)
-                    gamemap = 33;
-
-                I_Printf("map: %i\n", gamemap);
-            }
-            if(keys & KEY_DOWN)
-            {
-                keys &= ~KEY_DOWN;
-                gamemap--;
-                if(gamemap < 1)
-                    gamemap = 1;
-
-                I_Printf("map: %i\n", gamemap);
-            }
-            if(keys & KEY_A)
-            {
-                nomonsters ^= 1;
-                I_Printf("nomonsters ");
-                if(nomonsters)
-                    I_Printf("on\n");
-                else
-                    I_Printf("off\n");
-            }
-            if(keys & KEY_B)
-            {
-                lockmonsters ^= 1;
-                I_Printf("lockmonsters ");
-                if(lockmonsters)
-                    I_Printf("on\n");
-                else
-                    I_Printf("off\n");
-            }
-            if(keys & KEY_X)
-            {
-                devparm ^= 1;
-                I_Printf("development mode ");
-                if(devparm)
-                    I_Printf("on\n");
-                else
-                    I_Printf("off\n");
-            }
-            if(keys & KEY_Y)
-            {
-                gameskill++;
-                if(gameskill > sk_nightmare)
-                    gameskill = sk_baby;
-
-                I_Printf("skill ");
-                switch(gameskill)
-                {
-                case sk_baby:
-                    I_Printf("sk_baby\n");
-                    break;
-                case sk_easy:
-                    I_Printf("sk_easy\n");
-                    break;
-                case sk_medium:
-                    I_Printf("sk_medium\n");
-                    break;
-                case sk_hard:
-                    I_Printf("sk_hard\n");
-                    break;
-                case sk_nightmare:
-                    I_Printf("sk_nightmare\n");
-                    break;
-                default:
-                    break;
-                }
-            }
-
-            swiWaitForVBlank();
-        }
-
-        I_Printf("Loading Level...\n");
-
-        nolights = false;
-        players[0].playerstate = PST_REBORN;
-        players[0].health = 100;
-        players[0].readyweapon = players[0].pendingweapon = wp_pistol;
-        players[0].weaponowned[wp_fist] = true;
-        players[0].weaponowned[wp_pistol] = true;
-        players[0].ammo[am_clip] = 200;
-        players[0].maxammo[am_clip] = 200;
-        G_DoLoadLevel();
-        players[0].cheats |= CF_GODMODE;
-        D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
-        D_MiniLoop(WI_Start, WI_Stop, WI_Drawer, WI_Ticker);
-    }
+    D_DoomLoop();
 }
 

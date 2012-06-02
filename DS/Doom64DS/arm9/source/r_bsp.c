@@ -428,3 +428,64 @@ void R_RenderBSPNode(int bspnum)
     R_Subsector(bspnum & ~NF_SUBSECTOR);
 }
 
+//
+// R_RenderBSPNodeNoClip
+//
+// Same as R_RenderBSPNode, except don't
+// do bounding box/seg clipping. Just render
+// everything as nodes are being traversed
+//
+
+void R_RenderBSPNodeNoClip(int bspnum)
+{
+    node_t* bsp;
+    int side;
+    int i;
+    subsector_t* sub;
+    mobj_t* thing;
+    
+    while(!(bspnum & NF_SUBSECTOR))
+    {
+        bsp = &nodes[bspnum];
+        
+        // Decide which side the view point is on.
+        side = R_PointOnSide(viewx, viewy, bsp);
+        
+        R_RenderBSPNodeNoClip(bsp->children[side]);
+        
+        bspnum = bsp->children[side^1];
+    }
+
+    // subsector with contents
+    // add all the drawable elements in the subsector
+    if(bspnum == -1)
+        bspnum = 0;
+    
+    if(nextssect - ssectlist >= MAXSUBSECTORS)
+        return;
+
+    sub = &subsectors[bspnum & ~NF_SUBSECTOR];
+    *nextssect = sub;
+    nextssect++;
+
+    for(i = 0; i < sub->numlines; i++)
+    {
+        seg_t* seg = &segs[sub->firstline + i];
+        seg->sidedef->draw = true;
+    }
+
+    for(thing = sub->sector->thinglist; thing; thing = thing->snext)
+    {
+        // don't add vissprite if it doesn't meet these requirements
+        if(thing->subsector != sub || thing->flags & MF_NOSECTOR ||
+            (thing->type == MT_PLAYER && thing == players[consoleplayer].cameratarget))
+            continue;
+        
+        if(vissprite - visspritelist >= MAXSPRITES)
+            return;
+
+        *vissprite = thing;
+        vissprite++;
+    }
+}
+
