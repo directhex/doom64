@@ -276,13 +276,6 @@ void G_Ticker(void)
     int         i;
     int         buf;
     ticcmd_t*   cmd;
-
-    if(gameaction == ga_screenshot)
-    {
-        // TODO
-        //M_ScreenShot();
-        gameaction = ga_nothing;
-    }
         
     // get commands, check consistancy,
     // and build new consistancy check

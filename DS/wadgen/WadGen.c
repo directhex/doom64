@@ -218,7 +218,8 @@ void WGen_Process(void)
 
         Wad_AddOutputHudSprite(&exSpriteLump[i]);
     }
-    
+
+    WGen_AddLumpFile("IDLOGO.LMP");
     Wad_AddOutputLump("G_END", 0, NULL);
     
     // Midi tracks

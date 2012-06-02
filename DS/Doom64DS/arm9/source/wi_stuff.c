@@ -70,6 +70,7 @@ void WI_Start(void)
 
     // start music
     S_StartMusic(mus_complete);
+    gamestate = GS_WISTATS;
 
     //allowmenu = true; // TODO
 }
@@ -87,6 +88,7 @@ void WI_Stop(void)
     //allowmenu = false;    // TODO
 
     S_StopMusic();
+    gamestate = GS_NONE;
     //WIPE_FadeScreen(6);   // TODO
 }
 

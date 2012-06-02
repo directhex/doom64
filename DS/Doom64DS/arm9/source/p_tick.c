@@ -249,6 +249,7 @@ void P_Stop(void)
 
     S_ResetSound();
 
+    gamestate = GS_NONE;
     gameaction = action;
 }
 

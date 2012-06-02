@@ -14,7 +14,7 @@ gamestate_t     gamestate;
 skill_t         gameskill;
 int             gamemap;
 int             nextmap;
-int             gametic;
+int             gametic         = 0;
 int             validcount      = 1;
 int             totalkills      = 0;
 int             totalsecret     = 0;
@@ -47,6 +47,11 @@ int maketic = 0;
 int ticdup = 0;
 int skiptics = 0;
 fixed_t offsetms = 0;
+
+static int      pagetic;
+static int      splashstage;
+static int      screenalpha;
+static dboolean splashwait;
 
 //
 // D_Printf
@@ -646,11 +651,135 @@ drawframe:
             D_PrintDevStats();
     }
 
-    gamestate = GS_NONE;
-
     if(stop) stop();
 
     return action;
+}
+
+//
+// Splash_Start
+//
+
+static void Splash_Start(void)
+{
+    screenalpha = 0x1F;
+    splashstage = 0;
+    splashwait = false;
+    menuactive = false;
+    gamestate = GS_SKIPPABLE;
+    pagetic = gametic;
+    gameaction = ga_nothing;
+}
+
+//
+// Splash_Stop
+//
+
+static void Splash_Stop(void)
+{
+    gamestate = GS_NONE;
+    gameaction = ga_nothing;
+    menuactive = false;
+}
+
+//
+// Splash_Drawer
+//
+
+static void Splash_Drawer(void)
+{
+    I_CheckGFX();
+
+    GFX_ORTHO();
+
+    if(screenalpha > 1)
+    {
+        GFX_POLY_FORMAT =
+            POLY_ALPHA(screenalpha) |
+            POLY_ID(63)             |
+            POLY_CULL_NONE          |
+            POLY_MODULATION;
+
+        GFX_TEX_FORMAT  = 0;
+        GFX_PAL_FORMAT  = 0;
+        GFX_COLOR       = 0;
+        GFX_SCREENRECT();
+    }
+
+    switch(splashstage)
+    {
+    case 0:
+        R_SlamBackground("IDLOGO", 70, 28);
+        break;
+    case 1:
+        R_SlamBackground("WMSCRED1", 13, 64);
+        break;
+    case 2:
+        R_SlamBackground("USLEGAL", 25, 58);
+        break;
+    default:
+        break;
+    }
+}
+
+//
+// Splash_Ticker
+//
+
+static int Splash_Ticker(void)
+{
+    if(splashstage >= 3)
+        return 1;
+
+    if(!splashwait)
+    {
+        screenalpha -= 4;
+
+        if(screenalpha <= 1)
+        {
+            screenalpha = 1;
+            pagetic = gametic;
+            splashwait = true;
+        }
+    }
+    else
+    {
+        if(screenalpha > 1)
+        {
+            screenalpha += 4;
+
+            if(screenalpha >= 0x1F)
+            {
+                splashstage++;
+                screenalpha = 0x1F;
+                splashwait = false;
+            }
+        }
+        else if((gametic - pagetic) >= (TICRATE * 4))
+            screenalpha = 2;
+    }
+
+    return 0;
+}
+
+//
+// D_SplashScreen
+//
+
+static void D_SplashScreen(void)
+{
+    int skip = 0;
+
+    if(gameaction || netgame)
+        return;
+
+    skip = D_MiniLoop(Splash_Start, Splash_Stop, Splash_Drawer, Splash_Ticker);
+
+    if(skip != ga_title)
+    {
+        //G_RunTitleMap();
+        gameaction = ga_title;
+    }
 }
 
 //
@@ -685,6 +814,8 @@ void D_DoomMain(void)
     ticdup = 1;
     offsetms = 0;
     playeringame[0] = true;
+
+    D_SplashScreen();
 
     // temp
     {

@@ -14,7 +14,7 @@ static int              gfx_texpal_stride = 0;
 static uint32**         gfx_texpal_params;
 static uint32*          gfx_sprpal_params;
 static uint32           gfx_extpal_params[NUMSPRITES][8];
-static byte             gfx_padbuffer[256 * 256];
+static byte             gfx_padbuffer[512 * 256];
 static gfx_t*           gfx_textures;
 static gfx_t*           gfx_sprites;
 static short*           texturetranslation;
@@ -477,6 +477,8 @@ int R_GetTextureSize(int size)
         return TEXTURE_SIZE_128;
     if(size == 256)
         return TEXTURE_SIZE_256;
+    if(size == 512)
+        return TEXTURE_SIZE_512;
 
 	return 0;
 }
@@ -485,7 +487,7 @@ int R_GetTextureSize(int size)
 // R_PadTextureDims
 //
 
-#define MAXTEXSIZE	256
+#define MAXTEXSIZE	512
 #define MINTEXSIZE	8
 
 int R_PadTextureDims(int n)

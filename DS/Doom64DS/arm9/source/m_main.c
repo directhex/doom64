@@ -6,9 +6,6 @@
 #include "st_main.h"
 #include "r_local.h"
 
-#define MENUFONTRED ARGB16(31, 31, 0, 0)
-#define MENUFONTWHITE ARGB16(31, 31, 31, 31)
-
 typedef struct
 {
     char* name;
@@ -23,6 +20,19 @@ static int m_itemOn = 0;
 static menuitem_t* menu;
 static int menuskulldelay = 0;
 static dboolean showfullitemvalue[2] = { false, false };
+static int m_menualpha = 0x1F;
+static int m_menuexec = -1;
+
+#define MENUFONTRED ARGB16(m_menualpha, 31, 0, 0)
+#define MENUFONTWHITE ARGB16(m_menualpha, 31, 31, 31)
+#define M_DRAWSKULL() ST_DrawBigFont(menu[m_itemOn].x - 34, menu[m_itemOn].y - 8, MENUFONTWHITE, "*")
+#define M_DRAWARROW() ST_DrawBigFont(menu[m_itemOn].x - 12, menu[m_itemOn].y - 2, MENUFONTWHITE, "/l")
+#define M_DRAWDYNAMICITEM1(item, offset, color, str)            \
+    ST_DrawBigFont(menulist[item].x + offset, menulist[item].y, \
+    color, str)
+#define M_DRAWDYNAMICITEM2(item, offset, color, str)            \
+    ST_DrawMessage(menulist[item].x + offset, menulist[item].y, \
+    color, str)
 
 dboolean menuactive = false;
 int menuskullcounter = 0;
@@ -57,6 +67,10 @@ enum
     menu_statusbar,
     menu_displaydefault,
     menu_returndisplay,
+    menu_musicvolume,
+    menu_soundvolume,
+    menu_sounddefault,
+    menu_returnsound,
     NUM_MENU_ITEMS
 };
 
@@ -67,6 +81,7 @@ enum
 #define MENU_RESTARTLEVEL   menu_restart_yes
 #define MENU_DEBUGMENU      menu_nolights
 #define MENU_DISPLAY        menu_brightness
+#define MENU_VOLUME         menu_musicvolume
 
 static menuitem_t menulist[NUM_MENU_ITEMS] =
 {
@@ -97,7 +112,11 @@ static menuitem_t menulist[NUM_MENU_ITEMS] =
     { "Messages:", 40, 102 },
     { "Status Bar:", 40, 120 },
     { "Default", 40, 138 },
-    { "/r Return", 40, 156 }
+    { "/r Return", 40, 156 },
+    { "Music Volume", 64, 52 },
+    { "Sound Volume", 64, 88 },
+    { "Default", 64, 124 },
+    { "/r Return", 64, 142 }
 };
 
 //
@@ -114,13 +133,79 @@ void M_SetMenu(int item, int numitems, void(*drawer)(void))
 }
 
 //
-// M_Ticker
+// M_FadeMenuOut
 //
 
-void M_Ticker(void)
+static int M_FadeMenuOut(void)
 {
-    if(!(menuskulldelay++ & 3))
-        menuskullcounter = ((menuskullcounter + 1) & 7);
+    switch(gamestate)
+    {
+    case GS_LEVEL:
+        P_Ticker();
+        break;
+    case GS_WISTATS:
+        WI_Ticker();
+        break;
+    default:
+        break;
+    }
+
+    m_menualpha -= 4;
+
+    if(m_menualpha <= 1)
+    {
+        m_menualpha = 1;
+        return 1;
+    }
+
+    return 0;
+}
+
+//
+// M_FadeMenuIn
+//
+
+static int M_FadeMenuIn(void)
+{
+    switch(gamestate)
+    {
+    case GS_LEVEL:
+        P_Ticker();
+        break;
+    case GS_WISTATS:
+        WI_Ticker();
+    default:
+        break;
+    }
+
+    m_menualpha += 4;
+
+    if(m_menualpha >= 0x1F)
+    {
+        m_menualpha = 0x1F;
+        return 1;
+    }
+
+    return 0;
+}
+
+//
+// M_FadeMenuDrawer
+//
+
+static void M_FadeMenuDrawer(void)
+{
+    switch(gamestate)
+    {
+    case GS_LEVEL:
+        P_Drawer();
+        break;
+    case GS_WISTATS:
+        WI_Drawer();
+        break;
+    default:
+        break;
+    }
 }
 
 //
@@ -151,7 +236,30 @@ static void M_GenericDrawer(void)
     for(i = 0; i < m_menuitems; i++)
         ST_DrawBigFont(menu[i].x, menu[i].y, MENUFONTRED, menu[i].name);
 
-    ST_DrawBigFont(menu[m_itemOn].x - 34, menu[m_itemOn].y - 8, 0xFFFFF, "*");
+    M_DRAWSKULL();
+}
+
+//
+// M_VolumeDrawer
+//
+
+static void M_VolumeDrawer(void)
+{
+    int i;
+
+    ST_DrawBigFont(-1, 16, MENUFONTRED, "Volume");
+    ST_DrawBigFont(menu[0].x, menu[0].y, MENUFONTRED, menu[0].name);
+    ST_DrawBigFont(menu[0].x, menu[0].y + 18, MENUFONTWHITE, "/t");
+    ST_DrawBigFont(menu[0].x, menu[0].y + 18, MENUFONTWHITE, "/s");
+
+    ST_DrawBigFont(menu[1].x, menu[1].y, MENUFONTRED, menu[1].name);
+    ST_DrawBigFont(menu[1].x, menu[1].y + 18, MENUFONTWHITE, "/t");
+    ST_DrawBigFont(menu[1].x, menu[1].y + 18, MENUFONTWHITE, "/s");
+
+    for(i = 2; i < m_menuitems; i++)
+        ST_DrawBigFont(menu[i].x, menu[i].y, MENUFONTRED, menu[i].name);
+
+    M_DRAWSKULL();
 }
 
 //
@@ -170,14 +278,10 @@ static void M_DisplayDrawer(void)
     for(i = 1; i < m_menuitems; i++)
         ST_DrawBigFont(menu[i].x, menu[i].y, MENUFONTRED, menu[i].name);
 
-    ST_DrawBigFont(menulist[menu_swapscreens].x + 160, menulist[menu_swapscreens].y,
-        MENUFONTRED, "Off");
-    ST_DrawBigFont(menulist[menu_messages].x + 160, menulist[menu_messages].y,
-        MENUFONTRED, "On");
-    ST_DrawBigFont(menulist[menu_statusbar].x + 160, menulist[menu_statusbar].y,
-        MENUFONTRED, "On");
-
-    ST_DrawBigFont(menu[m_itemOn].x - 34, menu[m_itemOn].y - 8, 0xFFFFF, "*");
+    M_DRAWDYNAMICITEM1(menu_swapscreens, 160, MENUFONTRED, "Off");
+    M_DRAWDYNAMICITEM1(menu_messages, 160, MENUFONTRED, "On");
+    M_DRAWDYNAMICITEM1(menu_statusbar, 160, MENUFONTRED, "On");
+    M_DRAWSKULL();
 }
 
 //
@@ -193,74 +297,94 @@ static void M_DebugDrawer(void)
     for(i = 0; i < m_menuitems; i++)
         ST_DrawMessage(menu[i].x, menu[i].y, MENUFONTWHITE, menu[i].name);
 
-    ST_DrawMessage(menulist[menu_nolights].x + 160, menulist[menu_nolights].y,
-        MENUFONTWHITE, nolights ? ":On" : ":Off");
+    M_DRAWDYNAMICITEM2(menu_nolights, 160, MENUFONTWHITE,
+        nolights ? ":On" : ":Off");
+    M_DRAWDYNAMICITEM2(menu_godmode, 160, MENUFONTWHITE,
+        players[consoleplayer].cheats & CF_GODMODE ? ":On" : ":Off");
+    M_DRAWDYNAMICITEM2(menu_noclip, 160, MENUFONTWHITE,
+        players[consoleplayer].cheats & CF_NOCLIP ? ":On" : ":Off");
+    M_DRAWDYNAMICITEM2(menu_allkeys, 160, MENUFONTWHITE,
+        showfullitemvalue[0] ? ":100%%" : ":-");
+    M_DRAWDYNAMICITEM2(menu_allweapons, 160, MENUFONTWHITE,
+        showfullitemvalue[1] ? ":100%%" : ":-");
+    M_DRAWDYNAMICITEM2(menu_mapall, 160, MENUFONTWHITE,
+        amCheating ? ":On" : ":Off");
+    M_DRAWDYNAMICITEM2(menu_lockmonsters, 160, MENUFONTWHITE,
+        lockmonsters ? ":On" : ":Off");
 
-    ST_DrawMessage(menulist[menu_godmode].x + 160, menulist[menu_godmode].y,
-        MENUFONTWHITE, players[consoleplayer].cheats & CF_GODMODE ? ":On" : ":Off");
-
-    ST_DrawMessage(menulist[menu_noclip].x + 160, menulist[menu_noclip].y,
-        MENUFONTWHITE, players[consoleplayer].cheats & CF_NOCLIP ? ":On" : ":Off");
-
-    ST_DrawMessage(menulist[menu_allkeys].x + 160, menulist[menu_allkeys].y,
-        MENUFONTWHITE, showfullitemvalue[0] ? ":100%%" : ":-");
-
-    ST_DrawMessage(menulist[menu_allweapons].x + 160, menulist[menu_allweapons].y,
-        MENUFONTWHITE, showfullitemvalue[1] ? ":100%%" : ":-");
-
-    ST_DrawMessage(menulist[menu_mapall].x + 160, menulist[menu_mapall].y,
-        MENUFONTWHITE, amCheating ? ":On" : ":Off");
-
-    ST_DrawMessage(menulist[menu_lockmonsters].x + 160, menulist[menu_lockmonsters].y,
-        MENUFONTWHITE, lockmonsters ? ":On" : ":Off");
-
-    ST_DrawBigFont(menu[m_itemOn].x - 12, menu[m_itemOn].y - 2, 0xFFFFF, "/l");
+    M_DRAWARROW();
 }
 
 //
-// M_MenuChoice
+// M_AdvanceMenu
 //
 
-static void M_MenuChoice(void)
+static void M_AdvanceMenu(int menu, int items, void(*drawer)(void))
+{
+    D_MiniLoop(NULL, NULL, M_FadeMenuDrawer, M_FadeMenuOut);
+    M_SetMenu(menu, items, drawer);
+    D_MiniLoop(NULL, NULL, M_FadeMenuDrawer, M_FadeMenuIn);
+}
+
+//
+// M_Ticker
+//
+
+void M_Ticker(void)
 {
     int i;
+    int exec;
     player_t* p;
 
     p = &players[consoleplayer];
 
-    switch(m_currentmenu + m_itemOn)
+    if(!(menuskulldelay++ & 3))
+        menuskullcounter = ((menuskullcounter + 1) & 7);
+
+    if(m_menuexec <= -1)
+        return;
+
+    exec = m_menuexec;
+    m_menuexec = -1;
+
+    switch(exec)
     {
     case menu_options2:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
+        M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
         break;
     case menu_mainmenu:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_QUITTOMAIN, 2, M_GenericDrawer);
+        M_AdvanceMenu(MENU_QUITTOMAIN, 2, M_GenericDrawer);
         break;
     case menu_restartlevel:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_RESTARTLEVEL, 2, M_GenericDrawer);
+        M_AdvanceMenu(MENU_RESTARTLEVEL, 2, M_GenericDrawer);
         break;
     case menu_debug:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_DEBUGMENU, 8, M_DebugDrawer);
+        M_AdvanceMenu(MENU_DEBUGMENU, 8, M_DebugDrawer);
         showfullitemvalue[0] = showfullitemvalue[1] = false;
+        break;
+    case menu_volume:
+        S_StartSound(NULL, sfx_pistol);
+        M_AdvanceMenu(MENU_VOLUME, 4, M_VolumeDrawer);
         break;
     case menu_display:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_DISPLAY, 6, M_DisplayDrawer);
+        M_AdvanceMenu(MENU_DISPLAY, 6, M_DisplayDrawer);
         break;
     case menu_returnpaused:
     case menu_returnpaused2:
     case menu_quitmain_no:
     case menu_restart_no:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
+        M_AdvanceMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
         break;
     case menu_returndisplay:
+    case menu_returnsound:
         S_StartSound(NULL, sfx_pistol);
-        M_SetMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
+        M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
         break;
     case menu_nolights:
         S_StartSound(NULL, sfx_switch2);
@@ -328,9 +452,9 @@ void M_Drawer(void)
     GFX_ORTHO();
 
     GFX_POLY_FORMAT =
-        POLY_ALPHA(16)              |
-        POLY_ID(63)                 |
-        POLY_CULL_NONE              |
+        POLY_ALPHA(16)      |
+        POLY_ID(63)         |
+        POLY_CULL_NONE      |
         POLY_MODULATION;
 
         GFX_TEX_FORMAT  = 0;
@@ -350,9 +474,12 @@ dboolean M_Responder(event_t* ev)
 {
     int rc = false;
 
+    if(m_menualpha < 0x1F)
+        return false;
+
     if(ev->type == ev_btndown)
     {
-        if(ev->data & KEY_START)
+        if(ev->data & KEY_START && gamestate != GS_SKIPPABLE)
         {
             menuactive ^= 1;
 
@@ -385,8 +512,7 @@ dboolean M_Responder(event_t* ev)
             if(ev->data & KEY_A)
             {
                 rc = true;
-
-                M_MenuChoice();
+                m_menuexec = m_currentmenu + m_itemOn;
             }
         }
     }
@@ -396,3 +522,4 @@ dboolean M_Responder(event_t* ev)
 
     return rc;
 }
+

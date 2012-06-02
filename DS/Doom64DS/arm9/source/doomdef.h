@@ -48,6 +48,8 @@ typedef enum
 {
     GS_NONE,
     GS_LEVEL,
+    GS_WISTATS,
+    GS_FINALE,
     GS_SKIPPABLE
 } gamestate_t;
 

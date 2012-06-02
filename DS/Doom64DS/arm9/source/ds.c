@@ -404,12 +404,21 @@ void I_FinishFrame(void)
         if(block->tag == PU_NEWBLOCK)
         {
             uint32 offset;
+            uint32 addr;
 
             offset = (((*(uint32*)block->gfx & 0xffff) << 3) >> 2);
-            DC_FlushRange(block->block, block->size);
-            dmaCopyWords(0, (uint32*)block->block, (uint32*)gfx_base + offset, block->size);
+            addr = (uint32)block->block;
+            
+            // force scanline back at 192 before dma'ing
+            REG_VCOUNT = 192;
 
-            // force scanline back at 192
+            // flush cache if address is within 0x2000000
+            if((addr >> 24) == 0x02)
+                DC_FlushRange(block->block, block->size);
+
+            dmaCopyWords(0, (uint32*)block->block, (uint32*)gfx_base + offset, block->size);
+            
+            // force scanline back at 192 after the transfer
             REG_VCOUNT = 192;
 
             // mark this block as cache
