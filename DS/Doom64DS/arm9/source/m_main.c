@@ -23,6 +23,8 @@ static int menuskulldelay = 0;
 static dboolean showfullitemvalue[2] = { false, false };
 static int m_menualpha = 0x1F;
 static int m_menuexec = -1;
+static int m_menuchoice = -1;
+static int m_levelwarp = 0;
 
 #define MENUFONTRED ARGB16(m_menualpha, 31, 0, 0)
 #define MENUFONTWHITE ARGB16(m_menualpha, 31, 31, 31)
@@ -54,6 +56,7 @@ enum
     menu_quitmain_no,
     menu_restart_yes,
     menu_restart_no,
+    menu_levelwarp,
     menu_nolights,
     menu_godmode,
     menu_noclip,
@@ -84,7 +87,7 @@ enum
 #define MENU_GAMEOPTIONS    menu_controls
 #define MENU_QUITTOMAIN     menu_quitmain_yes
 #define MENU_RESTARTLEVEL   menu_restart_yes
-#define MENU_DEBUGMENU      menu_nolights
+#define MENU_DEBUGMENU      menu_levelwarp
 #define MENU_DISPLAY        menu_brightness
 #define MENU_VOLUME         menu_musicvolume
 #define MENU_SKILL          menu_skbaby
@@ -105,14 +108,15 @@ static menuitem_t menulist[NUM_MENU_ITEMS] =
     { "No", 108, 98 },
     { "Yes", 108, 80 },
     { "No", 108, 98 },
-    { "No Lights", 32, 40 },
-    { "God Mode", 32, 52 },
-    { "No Clip", 32, 64 },
-    { "All Keys", 32, 76 },
-    { "All Weapons", 32, 88 },
-    { "Map Everything", 32, 100 },
-    { "Lock Monsters", 32, 112 },
-    { "Return", 32, 124 },
+    { "Warp To Level:", 32, 40 },
+    { "No Lights", 32, 52 },
+    { "God Mode", 32, 64 },
+    { "No Clip", 32, 76 },
+    { "All Keys", 32, 88 },
+    { "All Weapons", 32, 100 },
+    { "Map Everything", 32, 112 },
+    { "Lock Monsters", 32, 124 },
+    { "Return", 32, 136 },
     { "Brightness", 40, 48 },
     { "Swap Screen:", 40, 84 },
     { "Messages:", 40, 102 },
@@ -325,6 +329,9 @@ static void M_DebugDrawer(void)
     for(i = 0; i < m_menuitems; i++)
         ST_DrawMessage(menu[i].x, menu[i].y, MENUFONTWHITE, menu[i].name);
 
+    ST_DrawMessage(menulist[menu_levelwarp].x + 160, menulist[menu_levelwarp].y,
+        MENUFONTWHITE, ":%02d", m_levelwarp + 1);
+
     M_DRAWDYNAMICITEM2(menu_nolights, 160, MENUFONTWHITE,
         nolights ? ":On" : ":Off");
     M_DRAWDYNAMICITEM2(menu_godmode, 160, MENUFONTWHITE,
@@ -386,115 +393,170 @@ void M_Ticker(void)
     exec = m_menuexec;
     m_menuexec = -1;
 
-    switch(exec)
+    if(m_menuchoice == 0)
     {
-    case menu_newgame:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_SKILL, 4, M_GenericDrawer);
-        break;
-    case menu_skbaby:
-    case menu_skeasy:
-    case menu_skmedium:
-    case menu_skhard:
-        S_StartSound(NULL, sfx_pistol);
-        D_MiniLoop(NULL, NULL, M_FadeMenuDrawer, M_FadeMenuOut);
-        G_DeferedInitNew(exec - menu_skbaby, startmap);
-        M_ClearMenu();
-        break;
-    case menu_options1:
-    case menu_options2:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
-        break;
-    case menu_mainmenu:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_QUITTOMAIN, 2, M_GenericDrawer);
-        break;
-    case menu_restartlevel:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_RESTARTLEVEL, 2, M_GenericDrawer);
-        break;
-    case menu_debug:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_DEBUGMENU, 8, M_DebugDrawer);
-        showfullitemvalue[0] = showfullitemvalue[1] = false;
-        break;
-    case menu_volume:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_VOLUME, 4, M_VolumeDrawer);
-        break;
-    case menu_display:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_DISPLAY, 6, M_DisplayDrawer);
-        break;
-    case menu_returnpaused:
-    case menu_returnpaused2:
-    case menu_quitmain_no:
-    case menu_restart_no:
-        S_StartSound(NULL, sfx_pistol);
-        if(gamestate == GS_NONE)
-            M_AdvanceMenu(MENU_MAINMENU, 2, M_GenericDrawer);
-        else
-            M_AdvanceMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
-        break;
-    case menu_returndisplay:
-    case menu_returnsound:
-        S_StartSound(NULL, sfx_pistol);
-        M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
-        break;
-    case menu_nolights:
-        S_StartSound(NULL, sfx_switch2);
-        nolights ^= 1;
-        break;
-    case menu_godmode:
-        S_StartSound(NULL, sfx_switch2);
-        if(p->cheats & CF_GODMODE)
-            p->cheats &= ~CF_GODMODE;
-        else
-            p->cheats |= CF_GODMODE;
-        break;
-    case menu_noclip:
-        S_StartSound(NULL, sfx_switch2);
-        if(p->cheats & CF_NOCLIP)
-            p->cheats &= ~CF_NOCLIP;
-        else
-            p->cheats |= CF_NOCLIP;
-        break;
-    case menu_allkeys:
-        for(i = 0; i < NUMCARDS; i++)
-            p->cards[i] = true;
-
-        showfullitemvalue[0] = true;
-        break;
-    case menu_allweapons:
-        S_StartSound(NULL, sfx_switch2);
-        for(i = 0; i < NUMWEAPONS; i++)
-            p->weaponowned[i] = true;
-
-        if(!p->backpack)
+        switch(exec)
         {
-            p->backpack = true;
+        case menu_levelwarp:
+            m_levelwarp--;
+            if(m_levelwarp <= 0)
+                m_levelwarp = 0;
+            else
+                S_StartSound(NULL, sfx_switch2);
+            break;
+        default:
+            break;
+        }
+    }
+    else if(m_menuchoice == 1)
+    {
+        switch(exec)
+        {
+        case menu_levelwarp:
+            m_levelwarp++;
+            if(m_levelwarp >= 31)
+                m_levelwarp = 31;
+            else
+                S_StartSound(NULL, sfx_switch2);
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch(exec)
+        {
+        case menu_newgame:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_SKILL, 4, M_GenericDrawer);
+            break;
+        case menu_skbaby:
+        case menu_skeasy:
+        case menu_skmedium:
+        case menu_skhard:
+            S_StartSound(NULL, sfx_pistol);
+            D_MiniLoop(NULL, NULL, M_FadeMenuDrawer, M_FadeMenuOut);
+            G_DeferedInitNew(exec - menu_skbaby, startmap);
+            M_ClearMenu();
+            break;
+        case menu_options1:
+        case menu_options2:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
+            break;
+        case menu_mainmenu:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_QUITTOMAIN, 2, M_GenericDrawer);
+            break;
+        case menu_restartlevel:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_RESTARTLEVEL, 2, M_GenericDrawer);
+            break;
+        case menu_debug:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_DEBUGMENU, 9, M_DebugDrawer);
+            showfullitemvalue[0] = showfullitemvalue[1] = false;
+            break;
+        case menu_volume:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_VOLUME, 4, M_VolumeDrawer);
+            break;
+        case menu_display:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_DISPLAY, 6, M_DisplayDrawer);
+            break;
+        case menu_returnpaused:
+        case menu_returnpaused2:
+        case menu_quitmain_no:
+        case menu_restart_no:
+            S_StartSound(NULL, sfx_pistol);
+            if(gamestate == GS_NONE)
+                M_AdvanceMenu(MENU_MAINMENU, 2, M_GenericDrawer);
+            else
+                M_AdvanceMenu(MENU_GAMEMENU, 4, M_GenericDrawer);
+            break;
+        case menu_quitmain_yes:
+            S_StartSound(NULL, sfx_pistol);
+            M_ClearMenu();
+            menuactive = false;
+            gameaction = ga_title;
+            break;
+        case menu_restart_yes:
+            S_StartSound(NULL, sfx_pistol);
+            M_ClearMenu();
+            menuactive = false;
+            gameaction = ga_loadlevel;
+            nextmap = gamemap;
+            players[consoleplayer].playerstate = PST_REBORN;
+        break;
+        case menu_returndisplay:
+        case menu_returnsound:
+            S_StartSound(NULL, sfx_pistol);
+            M_AdvanceMenu(MENU_GAMEOPTIONS, 4, M_GenericDrawer);
+            break;
+        case menu_levelwarp:
+            gameaction = ga_warplevel;
+            gamemap = nextmap = m_levelwarp + 1;
+            M_ClearMenu();
+            menuactive = false;
+            break;
+        case menu_nolights:
+            S_StartSound(NULL, sfx_switch2);
+            nolights ^= 1;
+            break;
+        case menu_godmode:
+            S_StartSound(NULL, sfx_switch2);
+            if(p->cheats & CF_GODMODE)
+                p->cheats &= ~CF_GODMODE;
+            else
+                p->cheats |= CF_GODMODE;
+            break;
+        case menu_noclip:
+            S_StartSound(NULL, sfx_switch2);
+            if(p->cheats & CF_NOCLIP)
+                p->cheats &= ~CF_NOCLIP;
+            else
+                p->cheats |= CF_NOCLIP;
+            break;
+        case menu_allkeys:
+            for(i = 0; i < NUMCARDS; i++)
+                p->cards[i] = true;
+
+            showfullitemvalue[0] = true;
+            break;
+        case menu_allweapons:
+            S_StartSound(NULL, sfx_switch2);
+            for(i = 0; i < NUMWEAPONS; i++)
+                p->weaponowned[i] = true;
+
+            if(!p->backpack)
+            {
+                p->backpack = true;
+
+                for (i = 0; i < NUMAMMO; i++)
+                    p->maxammo[i] *= 2;
+            }
 
             for (i = 0; i < NUMAMMO; i++)
-                p->maxammo[i] *= 2;
+                p->ammo[i] = p->maxammo[i];
+
+            showfullitemvalue[1] = true;
+            break;
+        case menu_mapall:
+            S_StartSound(NULL, sfx_switch2);
+            amCheating ^= 2;
+            break;
+        case menu_lockmonsters:
+            S_StartSound(NULL, sfx_switch2);
+            lockmonsters ^= 1;
+            break;
+        default:
+            break;
         }
-
-        for (i = 0; i < NUMAMMO; i++)
-            p->ammo[i] = p->maxammo[i];
-
-        showfullitemvalue[1] = true;
-        break;
-    case menu_mapall:
-        S_StartSound(NULL, sfx_switch2);
-        amCheating ^= 2;
-        break;
-    case menu_lockmonsters:
-        S_StartSound(NULL, sfx_switch2);
-        lockmonsters ^= 1;
-        break;
-    default:
-        break;
     }
+
+    m_menuchoice = -1;
 }
 
 //
@@ -577,6 +639,18 @@ dboolean M_Responder(event_t* ev)
             if(ev->data & KEY_A)
             {
                 rc = true;
+                m_menuexec = m_currentmenu + m_itemOn;
+            }
+            else if(ev->data & KEY_LEFT)
+            {
+                rc = true;
+                m_menuchoice = 0;
+                m_menuexec = m_currentmenu + m_itemOn;
+            }
+            else if(ev->data & KEY_RIGHT)
+            {
+                rc = true;
+                m_menuchoice = 1;
                 m_menuexec = m_currentmenu + m_itemOn;
             }
         }
