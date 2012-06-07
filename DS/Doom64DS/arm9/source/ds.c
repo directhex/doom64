@@ -184,9 +184,6 @@ void I_Init(void)
     vramSetBankH(VRAM_H_SUB_BG);
     vramSetBankI(VRAM_I_SUB_BG_0x06208000);
 
-    bg_id = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
-    bgSetPriority(0, 1);
-
     while(GFX_BUSY);
 
     //
@@ -209,7 +206,9 @@ void I_Init(void)
     //
     MATRIX_CONTROL  = GL_MODELVIEW;
     MATRIX_POP      = GFX_MTX_STACK_LEVEL;
-    
+
+    bg_id = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
+    bgSetPriority(0, 1);
     consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
     consoleClear();
 }
@@ -305,18 +304,6 @@ void I_ClearFrame(void)
     GFX_TEX_FORMAT      = 0;
     GFX_PAL_FORMAT      = 0;
     GFX_POLY_FORMAT     = 0;
-
-    //
-    // load identity to all the matrices
-    //
-    MATRIX_CONTROL      = GL_PROJECTION;
-    MATRIX_IDENTITY     = 0;
-    MATRIX_CONTROL      = GL_MODELVIEW;
-    MATRIX_IDENTITY     = 0;
-    MATRIX_CONTROL      = GL_TEXTURE;
-    MATRIX_IDENTITY     = 0;
-    MATRIX_CONTROL      = GL_POSITION;
-    MATRIX_IDENTITY     = 0;
 
     for(i = 0; i < 32; i++)
         GFX_FOG_TABLE[i] = (i * 4);
@@ -414,23 +401,32 @@ void I_FinishFrame(void)
         // new block
         if(block->tag == PU_NEWBLOCK)
         {
-            uint32 offset;
-            uint32 addr;
+            uint32 src;
+            uint32 dst;
+            uint32* vram;
+            uint32 copyflag;
 
-            offset = (((*(uint32*)block->gfx & 0xffff) << 3) >> 2);
-            addr = (uint32)block->block;
+            vram = (uint32*)gfx_base + (((*(uint32*)block->gfx & 0xffff) << 3) >> 2);
+            src = (uint32)block->block;
+            dst = (uint32)vram;
             
             // force scanline back at 192 before dma'ing
             REG_VCOUNT = 192;
 
-            // flush cache if address is within 0x2000000
-            if((addr >> 24) == 0x02)
-                DC_FlushRange(block->block, block->size);
+            DC_FlushRange(block->block, block->size);
+            DC_FlushRange(vram, block->size);
 
-            dmaCopyWords(0, (uint32*)block->block, (uint32*)gfx_base + offset, block->size);
-            
-            // force scanline back at 192 after the transfer
-            REG_VCOUNT = 192;
+            if((src | dst | block->size) & 3)
+                copyflag = DMA_COPY_HALFWORDS | (block->size >> 1);
+            else
+                copyflag = DMA_COPY_WORDS | (block->size >> 2);
+
+            DMA0_SRC = src;
+	        DMA0_DEST = dst;
+	        DMA0_CR = copyflag;
+	        while(DMA0_CR & DMA_BUSY);
+
+            DC_InvalidateRange(vram, block->size);
 
             // mark this block as cache
             block->tag = PU_CACHE;

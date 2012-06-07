@@ -1137,11 +1137,12 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
     R_PrecacheLevel();
 
     Z_CheckHeap();
-    
     free = Z_FreeMemory();
 
     if(free < 4096)
         I_Error("P_SetupLevel: not enough free memory %d", free);
+
+    Z_SetVAllocList(vramzone);
 }
 
 

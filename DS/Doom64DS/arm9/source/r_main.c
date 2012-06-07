@@ -153,8 +153,7 @@ static void R_RenderView(player_t* player)
     if(devparm)
         cpuStartTiming(2);
 
-    if(player->cameratarget != player->mo &&
-        (player->cameratarget->pitch >> 24) <= 240)
+    if(player->cameratarget != player->mo && gamemap == 33)
         R_RenderBSPNodeNoClip(numnodes - 1);
     else
         R_RenderBSPNode(numnodes - 1);
