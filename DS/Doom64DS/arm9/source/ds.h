@@ -12,7 +12,6 @@ void I_Init(void);
 void I_Error(const char *s, ...);
 void I_Printf(const char *s, ...);
 void I_PrintWait(const char *s, ...);
-void I_ClearFrame(void);
 void I_StartTic(void);
 int I_GetTime(void);
 int I_GetTimeMS(void);

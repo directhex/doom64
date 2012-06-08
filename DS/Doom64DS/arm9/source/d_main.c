@@ -634,7 +634,6 @@ drawframe:
 
         if(draw && !action)
         {
-            I_ClearFrame();
             draw();
             I_FinishFrame();
         }
@@ -759,7 +758,7 @@ static int Splash_Ticker(void)
                 splashwait = false;
             }
         }
-        else if((gametic - pagetic) >= (TICRATE * 4))
+        else if((gametic - pagetic) >= (TICRATE * 2))
             screenalpha = 2;
     }
 

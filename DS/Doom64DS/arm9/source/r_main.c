@@ -197,6 +197,13 @@ void R_DrawFrame(void)
     mobj_t* viewcamera;
     player_t* player;
     pspdef_t* psp;
+    int i;
+
+    for(i = 0; i < 32; i++)
+        GFX_FOG_TABLE[i] = (i * 4);
+
+    GFX_FOG_TABLE[31] = 0x7F;
+    GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x700;
 
     if(automapactive)
     {
@@ -211,9 +218,16 @@ void R_DrawFrame(void)
             GFX_CLEAR_COLOR = sky->skycolor[2];
         else
             GFX_CLEAR_COLOR = 0x1F0000;
+
+        GFX_FOG_COLOR = sky->fogcolor;
+        GFX_FOG_OFFSET = GL_MAX_DEPTH - ((1000 - sky->fognear) * 10);
     }
     else
+    {
         GFX_CLEAR_COLOR = 0x1F0000;
+        GFX_FOG_COLOR = 0;
+        GFX_FOG_OFFSET = GL_MAX_DEPTH - 192;
+    }
 
     //
     // setup view rotation/position
