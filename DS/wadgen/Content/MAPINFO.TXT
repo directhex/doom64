@@ -307,8 +307,8 @@ map MAP33 "TITLE"
 cluster 1
 {
 	pic = "EVIL"
-	pic_x = 64
-	pic_y = 30
+	pic_x = 31
+	pic_y = 1
 	entertext =	"you cackle as the",
 			"familiarity of the",
 			"situation occurs to you.",
@@ -329,26 +329,26 @@ cluster 1
 cluster 2
 {
 	pic = "EVIL"
-	pic_x = 64
-	pic_y = 30
-	entertext =	"The vast silence reminds",
-			"you of the military morgue.",
-			"",
-			"You knew the installation",
-			"had a classified level.",
-			"",
-			"The U.A.C. had some good",
-			"reason to hide this place.",
-			"",
-			"You wonder what it",
-			"could be..."
+	pic_x = 31
+	pic_y = 1
+	entertext =	"The vast silence",
+			"reminds you of the",
+			"military morgue.",
+			"You knew the",
+			"installation had a",
+			"classified level.",
+			"The U.A.C. had some",
+			"good reason to hide",
+			"this place.",
+			"You wonder what",
+			"it could be..."
 }
 
 cluster 3
 {
 	pic = "EVIL"
-	pic_x = 64
-	pic_y = 30
+	pic_x = 31
+	pic_y = 1
 	entertext =	"You smile.",
 			"",
 			"What strange place have",
@@ -365,8 +365,8 @@ cluster 3
 cluster 4
 {
 	pic = "EVIL"
-	pic_x = 64
-	pic_y = 30
+	pic_x = 31
+	pic_y = 1
 	entertext =	"You wretch as a strange",
 			"acrid odor assaults you.",
 			"",
@@ -383,8 +383,8 @@ cluster 4
 cluster 5
 {
 	pic = "EVIL"
-	pic_x = 64
-	pic_y = 30
+	pic_x = 31
+	pic_y = 1
 	nointermission
 	entertext =	"Congratulations!",
 			"You found...",

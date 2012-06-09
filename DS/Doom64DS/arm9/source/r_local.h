@@ -129,7 +129,7 @@ extern int          thunderCounter;
 void            R_DrawScene(void);
 void            R_DrawSky(void);
 void            R_DrawPSprite(pspdef_t *psp, sector_t* sector, player_t *player);
-void            R_SlamBackground(const char* name, int x, int y);
+void            R_SlamBackground(const char* name, int x, int y, rcolor color);
 
 //
 // R_COLORS

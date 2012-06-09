@@ -232,7 +232,7 @@ static void M_FadeMenuDrawer(void)
     default:
         GFX_ORTHO();
         GFX_CLEAR_COLOR = 0x1F0000;
-        R_SlamBackground("TITLE", 23, 40);
+        R_SlamBackground("TITLE", 23, 40, 0xFFFFF);
         break;
     }
 }

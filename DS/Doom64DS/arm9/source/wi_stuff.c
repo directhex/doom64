@@ -301,7 +301,7 @@ void WI_Drawer(void)
 
     GFX_ORTHO();
 
-    R_SlamBackground("EVIL", 31, 1);
+    R_SlamBackground("EVIL", 31, 1, 0xFFFFF);
 
     if(menuactive)
         return;

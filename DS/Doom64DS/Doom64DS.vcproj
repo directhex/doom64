@@ -118,6 +118,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\arm9\source\f_finale.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm9\source\g_game.c"
 					>
 				</File>

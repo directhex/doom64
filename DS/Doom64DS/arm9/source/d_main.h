@@ -178,6 +178,22 @@ void WI_Stop(void);
 int WI_Ticker(void);
 
 //
+// FINALE
+//
+void    F_Start(void);
+void    F_Stop(void);
+int     F_Ticker(void);
+void    F_Drawer (void);
+
+//
+// FINALE2
+//
+void    IN_Start(void);
+void    IN_Stop(void);
+void    IN_Drawer(void);
+int     IN_Ticker(void);
+
+//
 // MENU
 //
 extern dboolean menuactive;

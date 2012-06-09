@@ -230,9 +230,6 @@ dboolean G_Responder(event_t* ev)
                 players[0].cheats &= ~CF_NOCLIP;
         }
 
-        if(buttons & KEY_START)
-            nolights ^= 1;
-
         if(demoplayback && gameaction == ga_nothing)
         {
             if(ev->type == ev_btndown)
@@ -643,13 +640,13 @@ void G_RunGame(void)
         if(next == ga_completed)
             next = D_MiniLoop(WI_Start, WI_Stop, WI_Drawer, WI_Ticker);
 
-        /*if(next == ga_victory)
+        if(next == ga_victory)
         {
             next = D_MiniLoop(IN_Start, IN_Stop, IN_Drawer, IN_Ticker);
 
             if(next == ga_finale)
                 D_MiniLoop(F_Start, F_Stop, F_Drawer, F_Ticker);
-        }*/
+        }
 
         gamemap = nextmap;
     }

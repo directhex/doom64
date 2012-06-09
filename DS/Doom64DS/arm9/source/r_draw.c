@@ -1338,7 +1338,7 @@ void R_DrawSky(void)
 // R_SlamBackground
 //
 
-void R_SlamBackground(const char* name, int x, int y)
+void R_SlamBackground(const char* name, int x, int y, rcolor color)
 {
     int width;
     int height;
@@ -1384,10 +1384,10 @@ void R_SlamBackground(const char* name, int x, int y)
         tv = divf32(height, frac);
     }
 
-    GFX_POLY_FORMAT = POLY_ALPHA(31) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
+    GFX_POLY_FORMAT = POLY_ALPHA(color >> 15) | POLY_ID(0) | POLY_CULL_NONE | POLY_MODULATION;
     GFX_TEX_FORMAT  = gfx_images[index].params;
     GFX_PAL_FORMAT  = gfx_imgpal_params[index];
-    GFX_COLOR       = RGB15(31, 31, 31);
+    GFX_COLOR       = (color & 0x7FFF);
     GFX_BEGIN       = GL_QUADS;
     GFX_TEX_COORD   = COORD_PACK(0, 0);
     GFX_VERTEX16    = VERTEX_PACK(x, y);

@@ -711,13 +711,13 @@ static void Splash_Drawer(void)
         switch(splashstage)
         {
         case 0:
-            R_SlamBackground("IDLOGO", 70, 28);
+            R_SlamBackground("IDLOGO", 70, 28, 0xFFFFF);
             break;
         case 1:
-            R_SlamBackground("WMSCRED1", 0, 58);
+            R_SlamBackground("WMSCRED1", 0, 58, 0xFFFFF);
             break;
         case 2:
-            R_SlamBackground("USLEGAL", 0, 50);
+            R_SlamBackground("USLEGAL", 0, 50, 0xFFFFF);
             break;
         default:
             break;
@@ -795,7 +795,7 @@ static void Title_Drawer(void)
 
     GFX_ORTHO();
     GFX_CLEAR_COLOR = 0x1F0000;
-    R_SlamBackground("TITLE", 23, 40);
+    R_SlamBackground("TITLE", 23, 40, 0xFFFFF);
 }
 
 //
