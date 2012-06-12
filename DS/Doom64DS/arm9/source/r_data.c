@@ -480,6 +480,30 @@ int R_GetTextureSize(int size)
 }
 
 //
+// R_GetDSTextureSize
+//
+
+int R_GetDSTextureSize(int size)
+{
+    if(size == TEXTURE_SIZE_8)
+        return 8;
+    if(size == TEXTURE_SIZE_16)
+        return 16;
+    if(size == TEXTURE_SIZE_32)
+        return 32;
+    if(size == TEXTURE_SIZE_64)
+        return 64;
+    if(size == TEXTURE_SIZE_128)
+        return 128;
+    if(size == TEXTURE_SIZE_256)
+        return 256;
+    if(size == TEXTURE_SIZE_512)
+        return 512;
+
+	return 0;
+}
+
+//
 // R_PadTextureDims
 //
 

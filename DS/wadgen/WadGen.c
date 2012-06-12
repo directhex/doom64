@@ -232,10 +232,10 @@ void WGen_Process(void)
     
 #ifndef USE_SOUNDFONTS
     // Sounds
-    for(i = 0; i < sn64->nsfx; i++)
+    for(i = 33; i < sn64->nsfx; i++)
     {
         sprintf(name, "SFX_%03d", i);
-        //Wad_AddOutputLump(name, sfx[i].wavsize, wavtabledata[i]);
+        Wad_AddOutputLump(name, sfx[i].wavsize, wavtabledata[i]);
     }
 #endif
 

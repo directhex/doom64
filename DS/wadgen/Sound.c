@@ -687,7 +687,7 @@ static uint Sound_DecodeVADPCM(byte* in, short* out, uint len, predictor_t* book
         Sound_Decode8(++in, out, index, pred1, lastsmp);
         in+=4; _len-=4;
 
-#ifndef USE_SOUNDFONTS
+/*#ifndef USE_SOUNDFONTS
         //
         // cut speed of sound by half
         //
@@ -707,13 +707,13 @@ static uint Sound_DecodeVADPCM(byte* in, short* out, uint len, predictor_t* book
             out += 16;
         }
         else
-#endif
+#endif*/
             out += 8;
 
         Sound_Decode8(in, out, index, pred1, lastsmp);
         in+=4; _len-=4;
 
-#ifndef USE_SOUNDFONTS
+/*#ifndef USE_SOUNDFONTS
         //
         // cut speed of sound by half
         //
@@ -733,7 +733,7 @@ static uint Sound_DecodeVADPCM(byte* in, short* out, uint len, predictor_t* book
             out += 16;
         }
         else
-#endif
+#endif*/
             out += 8;
         
         samples += 16;
@@ -779,8 +779,8 @@ static void Sound_ProcessData(subpatch_t* in, wavtable_t* wavtable, int samplera
     // cut tempo in half for non-instruments.
     // this is a temp workaround until a synth system is implemented
     //
-    if(!in->instrument)
-        nsamp = nsamp * 2;
+    //if(!in->instrument)
+        //nsamp = nsamp * 2;
 #endif
 
     outsize = (nsamp * sizeof(short)) + WAV_HEADER_SIZE;

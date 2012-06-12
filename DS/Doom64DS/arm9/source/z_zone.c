@@ -142,6 +142,11 @@ static void Z_InitVram(byte* base_start, uint32 size)
 
 void Z_Init(void)
 {
+    uint32 memory = (u32)getHeapLimit() - (u32)getHeapEnd();
+
+    if(memory <= 0x150000)
+        I_Error("Z_Init: not enough memory to allocate: %ikb", memory >> 10);
+
     memset(allocated_blocks, 0, sizeof(allocated_blocks));
 
     Z_InitVram(gfx_tex_buffer, GFX_BUFFER_SIZE);

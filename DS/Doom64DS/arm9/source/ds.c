@@ -354,7 +354,8 @@ void I_FinishFrame(void)
     I_CheckGFX();
     
     // wait for vblank before flushing cache
-    swiWaitForVBlank();
+    while(REG_VCOUNT > 200);
+    while(REG_VCOUNT < 150);
 
     // lock banks
     vramSetBankA(VRAM_A_LCD);
@@ -382,9 +383,8 @@ void I_FinishFrame(void)
             vram = (uint32*)gfx_base + (((*(uint32*)block->gfx & 0xffff) << 3) >> 2);
             src = (uint32)block->block;
             dst = (uint32)vram;
-            
-            // force scanline back at 192 before dma'ing
-            REG_VCOUNT = 192;
+
+            while(DMA0_CR & DMA_BUSY);
 
             DC_FlushRange(block->block, block->size);
             DC_FlushRange(vram, block->size);
@@ -397,7 +397,6 @@ void I_FinishFrame(void)
             DMA0_SRC = src;
             DMA0_DEST = dst;
             DMA0_CR = copyflag;
-            while(DMA0_CR & DMA_BUSY);
 
             DC_InvalidateRange(vram, block->size);
 

@@ -89,6 +89,7 @@ void            R_PrecacheLevel(void);
 uint32          R_CachePalette(const char* name);
 int             R_PadTextureDims(int n);
 int             R_GetTextureSize(int size);
+int             R_GetDSTextureSize(int size);
 void            R_LoadTexture(dtexture texture, dboolean flip_s, dboolean flip_t, dboolean masked);
 void            R_SetTextureFrame(int texture, int frame, dboolean palette);
 dboolean        R_LoadSprite(int sprite, int frame, int rotation, int palindex, int *x, int *y, int *w, int *h);
