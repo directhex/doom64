@@ -50,6 +50,8 @@ void S_Init(void)
 	if(nosound && nomusic)
 		return;
 
+    soundEnable();
+
     S_SetMusicVolume(80);
     S_SetSoundVolume(80);
 }

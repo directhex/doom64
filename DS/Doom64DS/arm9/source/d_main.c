@@ -963,7 +963,7 @@ void D_DoomMain(void)
     I_Printf("ST_Init\n");
     ST_Init();
     I_Printf("S_Init\n");
-    //S_Init(); // TODO
+    S_Init();
 
     gameaction = ga_nothing;
     gamestate = GS_NONE;
