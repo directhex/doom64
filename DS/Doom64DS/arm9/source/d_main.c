@@ -396,6 +396,7 @@ static void D_PrintDevStats(void)
     I_Printf("Memory: %ikb\n", Z_FreeMemory() >> 10);
     I_Printf("Static: %ikb\n", Z_TagUsage(PU_STATIC) >> 10);
     I_Printf("Cache: %ikb\n", Z_TagUsage(PU_CACHE) >> 10);
+    I_Printf("Audio: %ikb\n", Z_TagUsage(PU_AUDIO) >> 10);
     I_Printf("DMA: %ikb\n", gfxdmasize >> 10);
     I_Printf("Vram: %ikb\n", Z_FreeVMemory(vramzone) >> 10);
     I_Printf("Vertex: %i\n", dsvertices);
@@ -936,6 +937,15 @@ static void D_DebugParams(void)
                 I_Printf("on\n");
             else
                 I_Printf("off\n");
+        }
+        if(keys & KEY_Y)
+        {
+            nosound ^= 1;
+            I_Printf("sound ");
+            if(nosound)
+                I_Printf("disabled\n");
+            else
+                I_Printf("enabled\n");
         }
 
         swiWaitForVBlank();

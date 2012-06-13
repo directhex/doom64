@@ -1368,7 +1368,7 @@ dboolean PTR_UseTraverse(intercept_t* in)
         
         if(openrange <= 0)
         {
-            S_StartSound(usething, sfx_noway);
+            S_StartSound(usething, sfx_oof);
             return false;	// can't use through a wall
         }
         

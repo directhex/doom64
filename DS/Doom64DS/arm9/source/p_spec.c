@@ -1782,7 +1782,7 @@ dboolean P_UseSpecialLine(mobj_t* thing, line_t* line, int side)
             {
                 p->message = PD_BLUE;
                 p->messagepic = 0;
-                S_StartSound(thing,sfx_noway);
+                S_StartSound(thing,sfx_oof);
                 p->tryopen[tryopentype[0]] = true;
                 return false;
             }
@@ -1793,7 +1793,7 @@ dboolean P_UseSpecialLine(mobj_t* thing, line_t* line, int side)
             {
                 p->message = PD_YELLOW;
                 p->messagepic = 1;
-                S_StartSound(thing,sfx_noway);
+                S_StartSound(thing,sfx_oof);
                 p->tryopen[tryopentype[1]] = true;
                 return false;
             }
@@ -1804,7 +1804,7 @@ dboolean P_UseSpecialLine(mobj_t* thing, line_t* line, int side)
             {
                 p->message = PD_RED;
                 p->messagepic = 2;
-                S_StartSound(thing,sfx_noway);
+                S_StartSound(thing,sfx_oof);
                 p->tryopen[tryopentype[2]] = true;
                 return false;
             }

@@ -29,9 +29,20 @@
 // percent attenuation from front to back
 #define S_IFRACVOL              30
 
-static dboolean nosound = false;
-static dboolean nomusic = false;
+dboolean nosound = false;
+dboolean nomusic = false;
+
 static int lastmusic = 0;
+
+typedef struct
+{
+    int handle;
+    int lifetics;
+    lumpinfo_t* lump;
+} sfxchannel_t;
+
+static sfxchannel_t sfxchannels[NUMSFX];
+static sfxchannel_t* sfxchan_ptr[16];
 
 //
 // Internals.
@@ -47,8 +58,8 @@ int S_AdjustSoundParams(fixed_t x, fixed_t y, int* vol, int* sep);
 
 void S_Init(void)
 {
-	if(nosound && nomusic)
-		return;
+    if(nosound && nomusic)
+        return;
 
     soundEnable();
 
@@ -113,7 +124,7 @@ void S_ResetSound(void)
 void S_PauseSound(void)
 {
     if(nosound && nomusic)
-		return;
+        return;
 }
 
 //
@@ -123,7 +134,7 @@ void S_PauseSound(void)
 void S_ResumeSound(void)
 {
     if(nosound && nomusic)
-		return;
+        return;
 }
 
 //
@@ -132,6 +143,11 @@ void S_ResumeSound(void)
 
 void S_StopSound(mobj_t* origin, int sfx_id)
 {
+    // TODO
+    // TEMP
+    sfxchan_ptr[sfxchannels[sfx_id].handle] = NULL;
+    sfxchannels[sfx_id].lump = NULL;
+    soundKill(sfxchannels[sfx_id].handle);
 }
 
 //
@@ -157,6 +173,23 @@ void S_RemoveOrigin(mobj_t* origin)
 
 void S_UpdateSounds(void)
 {
+    int i;
+
+    for(i = 0; i < NUMSFX; i++)
+    {
+        if(sfxchannels[i].lump == NULL)
+            continue;
+
+        if(I_GetTimeTicks() - sfxchannels[i].lifetics >= 4000)
+        {
+            if(sfxchannels[i].lump->cache != NULL)
+                Z_Free(sfxchannels[i].lump->cache);
+
+            sfxchan_ptr[sfxchannels[i].handle] = NULL;
+            sfxchannels[i].lump->cache = NULL;
+            sfxchannels[i].lump = NULL;
+        }
+    }
 }
 
 //
@@ -170,6 +203,9 @@ void S_StartSound(mobj_t* origin, int sfx_id)
     int reverb;
 
     if(nosound)
+        return;
+
+    if(sfx_id == sfx_None)
         return;
 
     if(origin && origin != players[consoleplayer].cameratarget)
@@ -199,6 +235,30 @@ void S_StartSound(mobj_t* origin, int sfx_id)
 
     // Assigns the handle to one of the channels in the mix/output buffer.
     // TODO
+    // TEMP
+    {
+        char name[9];
+        int lump;
+
+        sprintf(name, "SFX_%03d", sfx_id - 1);
+        lump = W_GetNumForName(name);
+        W_CacheLumpNum(lump, PU_AUDIO);
+
+        sfxchannels[sfx_id].lump = &lumpinfo[lump];
+        sfxchannels[sfx_id].lifetics = I_GetTimeTicks();
+        sfxchannels[sfx_id].handle = soundPlaySample(
+            sfxchannels[sfx_id].lump->cache,
+            SoundFormat_16Bit,
+            W_LumpLength(lump),
+            11025,
+            volume,
+            sep / 2,
+            0,
+            0
+            );
+
+        sfxchan_ptr[sfxchannels[sfx_id].handle] = &sfxchannels[sfx_id];
+    }
 }
 
 //

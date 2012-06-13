@@ -19,6 +19,18 @@ void I_Sleep(uint32 ms);
 int I_GetTimeTicks(void);
 void I_FinishFrame(void);
 
+typedef union
+{
+    void* arg_p;
+    int arg_i;
+} fifoargs_t;
+
+typedef struct
+{
+    int type;
+    fifoargs_t arg[2];
+} fifomsg_t;
+
 typedef struct
 {
     uint32 params;

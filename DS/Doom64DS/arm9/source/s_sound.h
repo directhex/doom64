@@ -4,6 +4,9 @@
 #include "p_mobj.h"
 #include "sounds.h"
 
+extern dboolean nosound;
+extern dboolean nomusic;
+
 //
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,

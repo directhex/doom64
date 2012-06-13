@@ -25,6 +25,7 @@ static int m_menualpha = 0x1F;
 static int m_menuexec = -1;
 static int m_menuchoice = -1;
 static int m_levelwarp = 0;
+static int m_soundtest_id = 0;
 
 #define MENUFONTRED ARGB16(m_menualpha, 31, 0, 0)
 #define MENUFONTWHITE ARGB16(m_menualpha, 31, 31, 31)
@@ -57,6 +58,7 @@ enum
     menu_restart_yes,
     menu_restart_no,
     menu_levelwarp,
+    menu_soundtest,
     menu_nolights,
     menu_godmode,
     menu_noclip,
@@ -64,6 +66,7 @@ enum
     menu_allweapons,
     menu_mapall,
     menu_lockmonsters,
+    menu_devmode,
     menu_returnpaused2,
     menu_brightness,
     menu_swapscreens,
@@ -109,14 +112,16 @@ static menuitem_t menulist[NUM_MENU_ITEMS] =
     { "Yes", 108, 80 },
     { "No", 108, 98 },
     { "Warp To Level:", 32, 40 },
-    { "No Lights", 32, 52 },
-    { "God Mode", 32, 64 },
-    { "No Clip", 32, 76 },
-    { "All Keys", 32, 88 },
-    { "All Weapons", 32, 100 },
-    { "Map Everything", 32, 112 },
-    { "Lock Monsters", 32, 124 },
-    { "Return", 32, 136 },
+    { "Sound Test:", 32, 52 },
+    { "No Lights", 32, 64 },
+    { "God Mode", 32, 76 },
+    { "No Clip", 32, 88 },
+    { "All Keys", 32, 100 },
+    { "All Weapons", 32, 112 },
+    { "Map Everything", 32, 124 },
+    { "Lock Monsters", 32, 136 },
+    { "Developer Mode", 32, 148 },
+    { "Return", 32, 160 },
     { "Brightness", 40, 48 },
     { "Swap Screen:", 40, 84 },
     { "Messages:", 40, 102 },
@@ -332,6 +337,9 @@ static void M_DebugDrawer(void)
     ST_DrawMessage(menulist[menu_levelwarp].x + 160, menulist[menu_levelwarp].y,
         MENUFONTWHITE, ":%02d", m_levelwarp + 1);
 
+    ST_DrawMessage(menulist[menu_soundtest].x + 160, menulist[menu_soundtest].y,
+        MENUFONTWHITE, ":%03d", m_soundtest_id);
+
     M_DRAWDYNAMICITEM2(menu_nolights, 160, MENUFONTWHITE,
         nolights ? ":On" : ":Off");
     M_DRAWDYNAMICITEM2(menu_godmode, 160, MENUFONTWHITE,
@@ -346,6 +354,8 @@ static void M_DebugDrawer(void)
         amCheating ? ":On" : ":Off");
     M_DRAWDYNAMICITEM2(menu_lockmonsters, 160, MENUFONTWHITE,
         lockmonsters ? ":On" : ":Off");
+    M_DRAWDYNAMICITEM2(menu_devmode, 160, MENUFONTWHITE,
+        devparm ? ":On" : ":Off");
 
     M_DRAWARROW();
 }
@@ -399,8 +409,15 @@ void M_Ticker(void)
         {
         case menu_levelwarp:
             m_levelwarp--;
-            if(m_levelwarp <= 0)
+            if(m_levelwarp < 0)
                 m_levelwarp = 0;
+            else
+                S_StartSound(NULL, sfx_switch2);
+            break;
+        case menu_soundtest:
+            m_soundtest_id--;
+            if(m_soundtest_id < 0)
+                m_soundtest_id = 0;
             else
                 S_StartSound(NULL, sfx_switch2);
             break;
@@ -414,8 +431,15 @@ void M_Ticker(void)
         {
         case menu_levelwarp:
             m_levelwarp++;
-            if(m_levelwarp >= 31)
+            if(m_levelwarp > 31)
                 m_levelwarp = 31;
+            else
+                S_StartSound(NULL, sfx_switch2);
+            break;
+        case menu_soundtest:
+            m_soundtest_id++;
+            if(m_soundtest_id > 123)
+                m_soundtest_id = 123;
             else
                 S_StartSound(NULL, sfx_switch2);
             break;
@@ -455,7 +479,7 @@ void M_Ticker(void)
             break;
         case menu_debug:
             S_StartSound(NULL, sfx_pistol);
-            M_AdvanceMenu(MENU_DEBUGMENU, 9, M_DebugDrawer);
+            M_AdvanceMenu(MENU_DEBUGMENU, 11, M_DebugDrawer);
             showfullitemvalue[0] = showfullitemvalue[1] = false;
             break;
         case menu_volume:
@@ -500,6 +524,9 @@ void M_Ticker(void)
             gamemap = nextmap = m_levelwarp + 1;
             M_ClearMenu();
             menuactive = false;
+            break;
+        case menu_soundtest:
+            S_StartSound(NULL, m_soundtest_id + 1);
             break;
         case menu_nolights:
             S_StartSound(NULL, sfx_switch2);
@@ -550,6 +577,10 @@ void M_Ticker(void)
         case menu_lockmonsters:
             S_StartSound(NULL, sfx_switch2);
             lockmonsters ^= 1;
+            break;
+        case menu_devmode:
+            S_StartSound(NULL, sfx_switch2);
+            devparm ^= 1;
             break;
         default:
             break;

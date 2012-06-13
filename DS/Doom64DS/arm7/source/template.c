@@ -31,59 +31,55 @@
 #include <dswifi7.h>
 #include <maxmod7.h>
 
-//---------------------------------------------------------------------------------
-void VblankHandler(void) {
-//---------------------------------------------------------------------------------
-	Wifi_Update();
+void VblankHandler(void)
+{
+    Wifi_Update();
 }
 
-
-//---------------------------------------------------------------------------------
-void VcountHandler() {
-//---------------------------------------------------------------------------------
-	inputGetAndSend();
+void VcountHandler()
+{
+    inputGetAndSend();
 }
 
 volatile bool exitflag = false;
 
-//---------------------------------------------------------------------------------
-void powerButtonCB() {
-//---------------------------------------------------------------------------------
-	exitflag = true;
+void powerButtonCB()
+{
+    exitflag = true;
 }
 
-//---------------------------------------------------------------------------------
-int main() {
-//---------------------------------------------------------------------------------
-	readUserSettings();
+int main()
+{
+    readUserSettings();
 
-	irqInit();
-	// Start the RTC tracking IRQ
-	initClockIRQ();
-	fifoInit();
+    irqInit();
+    // Start the RTC tracking IRQ
+    initClockIRQ();
+    fifoInit();
 
-	mmInstall(FIFO_MAXMOD);
+    mmInstall(FIFO_MAXMOD);
 
-	SetYtrigger(80);
+    SetYtrigger(80);
 
-	installWifiFIFO();
-	installSoundFIFO();
+    installWifiFIFO();
+    installSoundFIFO();
+    installSystemFIFO();
 
-	installSystemFIFO();
+    irqSet(IRQ_VCOUNT, VcountHandler);
+    irqSet(IRQ_VBLANK, VblankHandler);
 
-	irqSet(IRQ_VCOUNT, VcountHandler);
-	irqSet(IRQ_VBLANK, VblankHandler);
+    irqEnable(IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);
 
-	irqEnable( IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);
-	
-	setPowerButtonCB(powerButtonCB);   
+    setPowerButtonCB(powerButtonCB);   
 
-	// Keep the ARM7 mostly idle
-	while (!exitflag) {
-		if ( 0 == (REG_KEYINPUT & (KEY_SELECT | KEY_START | KEY_L | KEY_R))) {
-			exitflag = true;
-		}
-		swiWaitForVBlank();
-	}
+    // Keep the ARM7 mostly idle
+    while(!exitflag)
+    {
+        if(0 == (REG_KEYINPUT & (KEY_SELECT | KEY_START | KEY_L | KEY_R)))
+            exitflag = true;
+
+	    swiIntrWait(1, IRQ_FIFO_NOT_EMPTY | IRQ_VBLANK);
+    }
+
 	return 0;
 }

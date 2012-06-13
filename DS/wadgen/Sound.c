@@ -1981,9 +1981,9 @@ static void Sound_ProcessData(subpatch_t* in, wavtable_t* wavtable, int samplera
     short* outdata;
     short* wavdata;
     uint nsamp;
-    int len;
+    //int len;
     uint outsize;
-    struct adpcm_state state;
+    //struct adpcm_state state;
 
     indatalen = wavtable->size;
     indata = (sfxdata + wavtable->start);
@@ -2003,10 +2003,12 @@ static void Sound_ProcessData(subpatch_t* in, wavtable_t* wavtable, int samplera
 
     Sound_CreateWavHeader((byte*)outdata, samplerate, nsamp);
     Sound_DecodeVADPCM(indata, wavdata, indatalen, pred, in);
-    len = Sound_EncodeADPCM(wavdata, (byte*)outdata, nsamp, &state);
+    //len = Sound_EncodeADPCM(wavdata, (byte*)outdata, nsamp, &state);
 
-    wavtable->wavsize = sizeof(struct adpcm_state) + len;
-    wavtabledata[wavtable->ptrindex] = (byte*)outdata;
+    //wavtable->wavsize = sizeof(struct adpcm_state) + len;
+    //wavtabledata[wavtable->ptrindex] = (byte*)outdata;
+    wavtable->wavsize = outsize - WAV_HEADER_SIZE;
+    wavtabledata[wavtable->ptrindex] = ((byte*)outdata) + WAV_HEADER_SIZE;
 }
 
 //**************************************************************
