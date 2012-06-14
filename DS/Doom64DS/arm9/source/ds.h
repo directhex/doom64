@@ -66,12 +66,13 @@ static inline void I_PlotSubBGPixel(int x, int y, int c)
     bg_buffer[(y * BGMAIN_WIDTH) + x] = c;
 }
 
-static inline void I_SendDataToArm7(int type, void* data)
+static inline void I_SendDataToArm7(int type, void* data, int arg)
 {
     fifomsg_t send;
 
     send.type = type;
     send.arg[0].arg_p = data;
+    send.arg[1].arg_i = arg;
     fifoSendDatamsg(FIFO_USER_01, sizeof(send), (u8*)&send);
 }
 
