@@ -8,6 +8,8 @@
 #include "doomdef.h"
 #include "z_zone.h"
 
+#define ARM9_MAIN   main
+
 void I_Init(void);
 void I_Error(const char *s, ...);
 void I_Printf(const char *s, ...);
@@ -19,6 +21,10 @@ void I_Sleep(uint32 ms);
 int I_GetTimeTicks(void);
 void I_FinishFrame(void);
 
+#define FIFO_MSG_PLAYERDATA     0
+#define FIFO_MSG_LINEDEFDATA    1
+#define FIFO_MSG_SSECTDATA      2
+
 typedef union
 {
     void* arg_p;
@@ -28,7 +34,7 @@ typedef union
 typedef struct
 {
     int type;
-    fifoargs_t arg[2];
+    fifoargs_t arg[5];
 } fifomsg_t;
 
 typedef struct
@@ -58,6 +64,15 @@ extern byte bg_buffer[BGMAIN_WIDTH * BGMAIN_HEIGHT];
 static inline void I_PlotSubBGPixel(int x, int y, int c)
 {
     bg_buffer[(y * BGMAIN_WIDTH) + x] = c;
+}
+
+static inline void I_SendDataToArm7(int type, void* data)
+{
+    fifomsg_t send;
+
+    send.type = type;
+    send.arg[0].arg_p = data;
+    fifoSendDatamsg(FIFO_USER_01, sizeof(send), (u8*)&send);
 }
 
 byte* I_GetBackground(void);

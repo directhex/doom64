@@ -7,7 +7,7 @@
 #include "z_zone.h"
 #include "r_local.h"
 
-static char msg[256];
+static char strbuffer[256];
 static int bg_id = 0;
 byte bg_buffer[BGMAIN_WIDTH * BGMAIN_HEIGHT];
 
@@ -20,11 +20,11 @@ void I_Error(const char *s, ...)
     va_list v;
 
     va_start(v, s);
-    vsprintf(msg, s, v);
+    vsprintf(strbuffer, s, v);
     va_end(v);
 
     consoleDemoInit();
-    iprintf(msg);
+    iprintf(strbuffer);
 
     while (1) { swiWaitForVBlank(); }
 }
@@ -38,10 +38,10 @@ void I_Printf(const char *s, ...)
     va_list v;
 
     va_start(v, s);
-    vsprintf(msg, s, v);
+    vsprintf(strbuffer, s, v);
     va_end(v);
 
-    iprintf(msg);
+    iprintf(strbuffer);
 }
 
 //
@@ -54,10 +54,10 @@ void I_PrintWait(const char *s, ...)
     int keys = 0;
 
     va_start(v, s);
-    vsprintf(msg, s, v);
+    vsprintf(strbuffer, s, v);
     va_end(v);
 
-    iprintf(msg);
+    iprintf(strbuffer);
 
     while(!(keys & KEY_START))
     {
@@ -161,19 +161,52 @@ int I_FileExists(char *filename)
 }
 
 //
+// I_PollArm7Messages
+//
+
+static void I_PollArm7Messages(int bytes, void *userdata)
+{
+    fifomsg_t msg;
+
+    fifoGetDatamsg(FIFO_USER_01, bytes, (u8*)&msg);
+
+    switch(msg.type)
+    {
+    case FIFO_MSG_PLAYERDATA:
+        {
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+//
 // I_Init
 //
 
 void I_Init(void)
 {
+    // init file system
     fatInitDefault();
 
+    // init fifo callback for arm7 communication
+    fifoSetDatamsgHandler(FIFO_USER_01, I_PollArm7Messages, NULL);
+
+    // init register stuff
     REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_A | POWER_2D_B | POWER_SWAP_LCDS;
     REG_DISPCNT     = MODE_5_3D;
     REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG3_ACTIVE;
+
+    // init timers
     TIMER0_CR       = TIMER_ENABLE | TIMER_DIV_1024;
     TIMER1_CR       = TIMER_ENABLE | TIMER_CASCADE;
 
+    // init vram banks
+    // a - d: textures
+    // e: palettes
+    // f - g: screen1 background
+    // h - i: screen2 background
     vramSetBankA(VRAM_A_LCD);
     vramSetBankB(VRAM_B_LCD);
     vramSetBankC(VRAM_C_LCD);
@@ -186,32 +219,32 @@ void I_Init(void)
 
     while(GFX_BUSY);
 
-    //
     // make sure there are no push/pops that haven't executed yet
-    //
+    // clear push/pop errors or push/pop busy bit never clears
     while(GFX_STATUS & GFX_MTX_BUSY)
-        GFX_STATUS |= GFX_MTX_STACK_RESET;  // clear push/pop errors or push/pop busy bit never clears
+        GFX_STATUS |= GFX_MTX_STACK_RESET;
 
-    //
-    // pop the projection stack to the top; poping 0 off an empty stack causes an error... weird?
-    //
+    // pop the projection stack to the top; poping 0 off an
+    // empty stack causes an error... weird?
     if((GFX_STATUS & GFX_MTX_PROJ_STACK) != 0)
     {
         MATRIX_CONTROL  = GL_PROJECTION;
         MATRIX_POP      = 1;
     }
 
-    //
     // 31 deep modelview matrix; 32nd entry works but sets error flag
-    //
     MATRIX_CONTROL  = GL_MODELVIEW;
     MATRIX_POP      = GFX_MTX_STACK_LEVEL;
 
+    // init background
     bg_id = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
     bgSetPriority(0, 1);
+
+    // console/debug stuff
     consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
     consoleClear();
 
+    // init gfx registers
     GFX_CONTROL         = GL_FOG | GL_BLEND | GL_TEXTURE_2D | GL_ALPHA_TEST;
     GFX_ALPHA_TEST      = 0;
     GFX_CUTOFF_DEPTH    = GL_MAX_DEPTH;
@@ -384,8 +417,11 @@ void I_FinishFrame(void)
             src = (uint32)block->block;
             dst = (uint32)vram;
 
+            // data is dma'ed asynchronously so don't copy
+            // new data until it's done
             while(DMA0_CR & DMA_BUSY);
 
+            // flush source and destination just to be sure
             DC_FlushRange(block->block, block->size);
             DC_FlushRange(vram, block->size);
 
@@ -510,10 +546,10 @@ void I_Sleep(uint32 ms)
 }
 
 //
-// main
+// ARM9 MAIN
 //
 
-int main(void)
+int ARM9_MAIN(void)
 {
     defaultExceptionHandler();
     D_DoomMain();

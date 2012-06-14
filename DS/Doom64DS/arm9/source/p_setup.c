@@ -1123,6 +1123,10 @@ void P_SetupLevel(int map, int playermask, skill_t skill)
         if(playeringame[i])
             P_SpawnPlayer(&playerstarts[i]);
     }
+
+    I_SendDataToArm7(FIFO_MSG_PLAYERDATA, (void*)&players[consoleplayer]);
+    I_SendDataToArm7(FIFO_MSG_LINEDEFDATA, (void*)lines);
+    I_SendDataToArm7(FIFO_MSG_SSECTDATA, (void*)subsectors);
     
     memset(taglist, 0, sizeof(int) * MAXQUEUELIST);
     taglistidx = 0;

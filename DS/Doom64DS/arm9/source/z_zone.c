@@ -274,8 +274,12 @@ void *(Z_Malloc)(int size, int tag, void *user, const char *file, int line)
     
     if(!(newblock = (memblock_t*)malloc(sizeof(memblock_t) + size)))
     {
-        Z_FreeTags(PU_CACHE, PU_CACHE);
-        newblock = (memblock_t*)malloc(sizeof(memblock_t) + size);
+        Z_FreeTags(PU_AUDIO, PU_AUDIO);
+        if(!(newblock = (memblock_t*)malloc(sizeof(memblock_t) + size)))
+        {
+            Z_FreeTags(PU_CACHE, PU_CACHE);
+            newblock = (memblock_t*)malloc(sizeof(memblock_t) + size);
+        }
     }
 
     if(!newblock)
@@ -347,8 +351,12 @@ void *(Z_Realloc)(void *ptr, int size, int tag, void *user, const char *file, in
 
     if(!(newblock = (memblock_t*)realloc(block, sizeof(memblock_t) + size)))
     {
-        Z_FreeTags(PU_CACHE, PU_CACHE);
-        newblock = (memblock_t*)realloc(block, sizeof(memblock_t) + size);
+        Z_FreeTags(PU_AUDIO, PU_AUDIO);
+        if(!(newblock = (memblock_t*)malloc(sizeof(memblock_t) + size)))
+        {
+            Z_FreeTags(PU_CACHE, PU_CACHE);
+            newblock = (memblock_t*)malloc(sizeof(memblock_t) + size);
+        }
     }
 
     if(!newblock)

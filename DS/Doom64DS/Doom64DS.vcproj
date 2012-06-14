@@ -390,13 +390,65 @@
 				Name="source"
 				>
 				<File
-					RelativePath=".\arm7\source\template.c"
+					RelativePath=".\arm7\source\arm7.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\common.c"
 					>
 				</File>
 			</Filter>
 			<Filter
 				Name="include"
 				>
+				<File
+					RelativePath=".\arm7\source\arm7.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\d_player.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\d_think.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\doomdata.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\doomdef.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\doomtype.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\info.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\m_fixed.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\p_mobj.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\p_pspr.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\t_bsp.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\tables.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

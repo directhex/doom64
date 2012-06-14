@@ -13,7 +13,7 @@
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-#define S_CLIPPING_DIST (1700<<FRACBITS)
+#define S_CLIPPING_DIST (1200<<FRACBITS)
 
 // Distance to origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
@@ -37,8 +37,9 @@ static int lastmusic = 0;
 typedef struct
 {
     int handle;
-    int lifetics;
-    lumpinfo_t* lump;
+    int starttic;
+    fixed_t org_x;
+    fixed_t org_y;
 } sfxchannel_t;
 
 static sfxchannel_t sfxchannels[NUMSFX];
@@ -143,11 +144,11 @@ void S_ResumeSound(void)
 
 void S_StopSound(mobj_t* origin, int sfx_id)
 {
+    sfxchannel_t* sfxchan = &sfxchannels[sfx_id];
     // TODO
     // TEMP
-    sfxchan_ptr[sfxchannels[sfx_id].handle] = NULL;
-    sfxchannels[sfx_id].lump = NULL;
-    soundKill(sfxchannels[sfx_id].handle);
+    sfxchan_ptr[sfxchan->handle] = NULL;
+    soundKill(sfxchan->handle);
 }
 
 //
@@ -173,23 +174,34 @@ void S_RemoveOrigin(mobj_t* origin)
 
 void S_UpdateSounds(void)
 {
-    int i;
+    /*int i;
 
-    for(i = 0; i < NUMSFX; i++)
+    for(i = 0; i < 16; i++)
     {
-        if(sfxchannels[i].lump == NULL)
+        sfxchannel_t* sfxchan = sfxchan_ptr[i];
+
+        if(!sfxchan)
             continue;
 
-        if(I_GetTimeTicks() - sfxchannels[i].lifetics >= 4000)
-        {
-            if(sfxchannels[i].lump->cache != NULL)
-                Z_Free(sfxchannels[i].lump->cache);
+        if(sfxchan->data == NULL)
+            continue;
 
-            sfxchan_ptr[sfxchannels[i].handle] = NULL;
-            sfxchannels[i].lump->cache = NULL;
-            sfxchannels[i].lump = NULL;
+        if(sfxchan->org_x | sfxchan->org_y)
+        {
+            int volume = NORM_VOLUME;
+            int sep = NORM_SEP;
+
+            if(!S_AdjustSoundParams(sfxchan->org_x, sfxchan->org_y, &volume, &sep))
+            {
+                sfxchan_ptr[sfxchan->handle] = NULL;
+                soundKill(sfxchan->handle);
+                return;
+            }
+
+            soundSetVolume(sfxchan->handle, volume);
+            soundSetPan(sfxchan->handle, sep / 2);
         }
-    }
+    }*/
 }
 
 //
@@ -239,15 +251,30 @@ void S_StartSound(mobj_t* origin, int sfx_id)
     {
         char name[9];
         int lump;
+        sfxchannel_t* sfxchan;
 
         sprintf(name, "SFX_%03d", sfx_id - 1);
         lump = W_GetNumForName(name);
-        W_CacheLumpNum(lump, PU_AUDIO);
 
-        sfxchannels[sfx_id].lump = &lumpinfo[lump];
-        sfxchannels[sfx_id].lifetics = I_GetTimeTicks();
-        sfxchannels[sfx_id].handle = soundPlaySample(
-            sfxchannels[sfx_id].lump->cache,
+        sfxchan = &sfxchannels[sfx_id];
+
+        if(sfxchan->starttic == gametic)
+            return;
+
+        sfxchan->starttic = gametic;
+        if(origin)
+        {
+            sfxchan->org_x = origin->x;
+            sfxchan->org_y = origin->y;
+        }
+        else
+        {
+            sfxchan->org_x = 0;
+            sfxchan->org_y = 0;
+        }
+
+        sfxchan->handle = soundPlaySample(
+            W_CacheLumpNum(lump, PU_AUDIO),
             SoundFormat_16Bit,
             W_LumpLength(lump),
             11025,
@@ -257,7 +284,7 @@ void S_StartSound(mobj_t* origin, int sfx_id)
             0
             );
 
-        sfxchan_ptr[sfxchannels[sfx_id].handle] = &sfxchannels[sfx_id];
+        sfxchan_ptr[sfxchan->handle] = &sfxchannels[sfx_id];
     }
 }
 
