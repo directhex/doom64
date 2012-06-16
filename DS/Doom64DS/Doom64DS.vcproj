@@ -390,11 +390,19 @@
 				Name="source"
 				>
 				<File
+					RelativePath=".\arm7\source\am_main.c"
+					>
+				</File>
+				<File
 					RelativePath=".\arm7\source\arm7.c"
 					>
 				</File>
 				<File
 					RelativePath=".\arm7\source\common.c"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\m_fixed.c"
 					>
 				</File>
 			</Filter>
@@ -431,6 +439,10 @@
 				</File>
 				<File
 					RelativePath=".\arm7\source\m_fixed.h"
+					>
+				</File>
+				<File
+					RelativePath=".\arm7\source\p_local.h"
 					>
 				</File>
 				<File

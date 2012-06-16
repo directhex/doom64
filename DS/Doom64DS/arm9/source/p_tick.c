@@ -36,6 +36,8 @@ void P_InitThinkers(void)
 {
     thinkercap.prev = thinkercap.next  = &thinkercap;
     mobjhead.next = mobjhead.prev = &mobjhead;
+
+    I_SendDataToArm7(FIFO_MSG_MOBJLIST, (void*)&mobjhead, 0);
 }
 
 //
@@ -263,14 +265,11 @@ void P_Drawer(void)
     if(!leveltime)
         return;
 
-    if(!I_DmaBGBusy() && automapactive)
-        AM_Drawer();
-
     R_DrawFrame();
     ST_Drawer();
 
     if(automapactive)
-        I_RefreshBG();
+        AM_Drawer();
 }
 
 //

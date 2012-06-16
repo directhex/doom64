@@ -24,6 +24,15 @@ void I_FinishFrame(void);
 #define FIFO_MSG_PLAYERDATA     0
 #define FIFO_MSG_LINEDEFDATA    1
 #define FIFO_MSG_SSECTDATA      2
+#define FIFO_MSG_VERTEXDATA     3
+#define FIFO_MSG_FINESINEDATA   4
+#define FIFO_MSG_FINECOSINEDATA 5
+#define FIFO_MSG_AUTOMAP        6
+#define FIFO_MSG_MOBJLIST       7
+
+#define FIFO_AUTOMAP_BUFFER     0
+#define FIFO_AUTOMAP_DRAW       1
+#define FIFO_AUTOMAP_CHEAT      2
 
 typedef union
 {
@@ -34,7 +43,7 @@ typedef union
 typedef struct
 {
     int type;
-    fifoargs_t arg[5];
+    fifoargs_t arg[3];
 } fifomsg_t;
 
 typedef struct
@@ -44,7 +53,7 @@ typedef struct
 } gfx_t;
 
 #define BGMAIN_WIDTH     256
-#define BGMAIN_HEIGHT    128
+#define BGMAIN_HEIGHT    192
 
 //
 // disable for debug/testing only
@@ -65,6 +74,8 @@ static inline void I_PlotSubBGPixel(int x, int y, int c)
 {
     bg_buffer[(y * BGMAIN_WIDTH) + x] = c;
 }
+
+#define FIFO_SEND_MSG(msg) fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg)
 
 static inline void I_SendDataToArm7(int type, void* data, int arg)
 {

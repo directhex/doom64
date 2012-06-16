@@ -7,6 +7,7 @@
 #include "m_fixed.h"
 #include "d_think.h"
 #include "tables.h"
+#include "doomdef.h"
 #include "doomdata.h"
 
 //

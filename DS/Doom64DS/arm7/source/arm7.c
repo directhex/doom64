@@ -5,6 +5,9 @@
 #include "d_player.h"
 #include "t_bsp.h"
 
+void AM_Start(void);
+void AM_Drawer(void);
+
 //
 // IRQ_VBlank
 //
@@ -57,33 +60,39 @@ static void I_PollArm9Messages(int bytes, void *userdata)
         subsectors = (subsector_t*)msg.arg[0].arg_p;
         numsubsectors = msg.arg[1].arg_i;
         break;
+    case FIFO_MSG_VERTEXDATA:
+        vertexes = (vertex_t*)msg.arg[0].arg_p;
+        numvertexes = msg.arg[1].arg_i;
+        break;
+    case FIFO_MSG_FINESINEDATA:
+        finesine = (fixed_t*)msg.arg[0].arg_p;
+        break;
+    case FIFO_MSG_FINECOSINEDATA:
+        finecosine = (fixed_t*)msg.arg[0].arg_p;
+        break;
+    case FIFO_MSG_AUTOMAP:
+        switch(msg.arg[0].arg_i)
+        {
+        case FIFO_AUTOMAP_BUFFER:
+            automapbuffer = (byte*)msg.arg[1].arg_p;
+            AM_Start();
+            break;
+        case FIFO_AUTOMAP_DRAW:
+            AM_Drawer();
+            break;
+        case FIFO_AUTOMAP_CHEAT:
+            amCheating = msg.arg[1].arg_i;
+            break;
+        default:
+            break;
+        }
+        break;
+    case FIFO_MSG_MOBJLIST:
+        mobjhead = (mobj_t*)msg.arg[0].arg_p;
+        break;
     default:
         break;
     }
-}
-
-//
-// I_SendMsgToArm9
-//
-
-int I_SendMsgToArm9(fifomsg_t* sendmsg)
-{
-    fifomsg_t msg;
-
-    // send message to arm9 and wait for a response
-    fifoSendDatamsg(FIFO_USER_01, sizeof(fifomsg_t), (u8*)sendmsg);
-    while(fifoCheckDatamsg(FIFO_USER_01) == false);
-
-    // retrieve message from arm9
-    fifoGetDatamsg(FIFO_USER_01, sizeof(fifomsg_t), (u8*)&msg);
-
-    switch(msg.type)
-    {
-    default:
-        break;
-    }
-
-    return 0;
 }
 
 //

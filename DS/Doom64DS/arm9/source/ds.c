@@ -161,27 +161,6 @@ int I_FileExists(char *filename)
 }
 
 //
-// I_PollArm7Messages
-//
-
-static void I_PollArm7Messages(int bytes, void *userdata)
-{
-    fifomsg_t msg;
-
-    fifoGetDatamsg(FIFO_USER_01, bytes, (u8*)&msg);
-
-    switch(msg.type)
-    {
-    case FIFO_MSG_PLAYERDATA:
-        {
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-//
 // I_Init
 //
 
@@ -189,9 +168,6 @@ void I_Init(void)
 {
     // init file system
     fatInitDefault();
-
-    // init fifo callback for arm7 communication
-    fifoSetDatamsgHandler(FIFO_USER_01, I_PollArm7Messages, NULL);
 
     // init register stuff
     REG_POWERCNT    = POWER_3D_CORE | POWER_MATRIX | POWER_LCD | POWER_2D_A | POWER_2D_B | POWER_SWAP_LCDS;
@@ -241,8 +217,8 @@ void I_Init(void)
     bgSetPriority(0, 1);
 
     // console/debug stuff
-    consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
-    consoleClear();
+    //consoleInit(NULL, 1, BgType_Text4bpp, BgSize_T_256x256, 11, 8, false, true);
+    //consoleClear();
 
     // init gfx registers
     GFX_CONTROL         = GL_FOG | GL_BLEND | GL_TEXTURE_2D | GL_ALPHA_TEST;
@@ -261,6 +237,8 @@ void I_Init(void)
 
 byte* I_GetBackground(void)
 {
+    swiWaitForVBlank();
+
     REG_BG3CNT  = BG_BMP8_256x256;
     REG_BG3PA   = 256;
     REG_BG3PB   = 0;
@@ -279,13 +257,12 @@ byte* I_GetBackground(void)
 
 void I_RefreshBG(void)
 {
-    int size = 0x8000;
-
-    if(I_DmaBGBusy())
-        return;
+    const int size = 0xC000;
 
     DC_FlushRange(bg_buffer, size);
-    dmaCopyWordsAsynch(3, bg_buffer, BG_GFX, size);
+    DC_FlushRange(BG_GFX_SUB, size);
+    dmaCopyWordsAsynch(3, bg_buffer, BG_GFX_SUB, size);
+    DC_InvalidateRange(BG_GFX_SUB, size);
     memset(bg_buffer, 0, size);
 }
 

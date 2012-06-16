@@ -30,17 +30,8 @@
 
 typedef unsigned angle_t;
 
-// Effective size is 10240.
-extern  fixed_t		finesine[5*FINEANGLES/4];
-
-// Re-use data, is just PI/2 pahse shift.
-extern  fixed_t*	finecosine;
-
-// Effective size is 2049;
-// The +1 size is to handle the case when x==y
-//  without additional checking.
-extern angle_t		tantoangle[SLOPERANGE+1];
-
+extern fixed_t* finecosine;
+extern fixed_t* finesine;
 
 #endif
 

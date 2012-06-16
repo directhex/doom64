@@ -8,6 +8,9 @@
 #define dcos(angle) finecosine[(angle) >> ANGLETOFINESHIFT]
 #define dsin(angle) finesine[(angle) >> ANGLETOFINESHIFT]
 
+extern byte* automapbuffer;
+extern int amCheating;
+
 //
 // The packed attribute forces structures to be packed into the minimum 
 // space necessary.  If this is not done, the compiler may align structure
@@ -20,6 +23,9 @@
 #define PACKEDATTR  __attribute__((packed))
 #define PUREFUNC    __attribute__((pure))
 #define NOINLINE    __attribute__((noinline))
+
+#include "p_mobj.h"
+extern mobj_t* mobjhead;
 
 //
 // Global parameters/defines.

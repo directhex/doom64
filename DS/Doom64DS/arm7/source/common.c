@@ -1,5 +1,6 @@
 #include "d_player.h"
 #include "t_bsp.h"
+#include "p_mobj.h"
 
 int                 numvertexes;
 vertex_t*           vertexes;
@@ -20,5 +21,8 @@ side_t*             sides;
 light_t*            lights;
 int                 numlights;
 macroinfo_t         macros;
-
 player_t*           player;
+fixed_t*            finecosine;
+fixed_t*            finesine;
+byte*               automapbuffer;
+mobj_t*             mobjhead;
