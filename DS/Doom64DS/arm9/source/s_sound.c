@@ -175,6 +175,7 @@ void S_RemoveOrigin(mobj_t* origin)
 
 void S_UpdateSounds(void)
 {
+    // TODO - do this on ARM7
     /*int i;
 
     for(i = 0; i < 16; i++)
@@ -213,7 +214,7 @@ void S_StartSound(mobj_t* origin, int sfx_id)
 {
     int volume;
     int sep;
-    int reverb;
+    //int reverb;
 
     if(nosound)
         return;
@@ -232,7 +233,8 @@ void S_StartSound(mobj_t* origin, int sfx_id)
         volume = NORM_VOLUME;
     }
 
-    reverb = 0;
+    // TODO
+    /*reverb = 0;
     
     if(origin)
     {
@@ -244,11 +246,10 @@ void S_StartSound(mobj_t* origin, int sfx_id)
             reverb = 16;
         else if(subsector->sector->flags & MS_REVERBHEAVY)
             reverb = 32;
-    }
+    }*/
 
     // Assigns the handle to one of the channels in the mix/output buffer.
-    // TODO
-    // TEMP
+    
     {
         char name[9];
         int lump;

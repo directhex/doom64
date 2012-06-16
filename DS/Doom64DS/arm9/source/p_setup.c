@@ -956,6 +956,10 @@ void P_LoadingPlaque(void)
     int lump;
     uint16* pal;
     byte* data;
+    byte* bg = I_GetBackground();
+
+    if(bg == NULL)
+        return;
 
     lump = W_GetNumForName("LOADING");
     data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
@@ -966,10 +970,6 @@ void P_LoadingPlaque(void)
     {
         byte* src;
         byte* dst;
-        byte* bg = I_GetBackground();
-
-        if(bg == NULL)
-            return;
 
         src = &data[i * LOADING_W];
         dst = &bg[((i + LOADING_Y) * 256) + LOADING_X];

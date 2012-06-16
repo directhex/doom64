@@ -391,14 +391,17 @@ int ptic = 0;
 
 static void D_PrintDevStats(void)
 {
+    int verts = dsvertices;
+    int tris = dspolygons;
+
     ST_DrawMessage(0, 0, ARGB16(31, 0, 31, 0), "Memory: %ikb\n", Z_FreeMemory() >> 10);
     ST_DrawMessage(0, 8, ARGB16(31, 0, 31, 0), "Static: %ikb\n", Z_TagUsage(PU_STATIC) >> 10);
     ST_DrawMessage(0, 16, ARGB16(31, 0, 31, 0), "Cache: %ikb\n", Z_TagUsage(PU_CACHE) >> 10);
     ST_DrawMessage(0, 24, ARGB16(31, 0, 31, 0), "Audio: %ikb\n", Z_TagUsage(PU_AUDIO) >> 10);
     ST_DrawMessage(0, 32, ARGB16(31, 0, 31, 0), "DMA: %ikb\n", gfxdmasize >> 10);
     ST_DrawMessage(0, 40, ARGB16(31, 0, 31, 0), "Vram: %ikb\n", Z_FreeVMemory(vramzone) >> 10);
-    ST_DrawMessage(0, 48, ARGB16(31, 0, 31, 0), "Vertex: %i\n", dsvertices);
-    ST_DrawMessage(0, 56, ARGB16(31, 0, 31, 0), "Tris: %i\n", dspolygons);
+    ST_DrawMessage(0, 48, ARGB16(31, 0, 31, 0), "Vertex: %i\n", verts);
+    ST_DrawMessage(0, 56, ARGB16(31, 0, 31, 0), "Tris: %i\n", tris);
     ST_DrawMessage(0, 64, ARGB16(31, 0, 31, 0), "Bsp: %ims\n", bsptic);
     ST_DrawMessage(0, 72, ARGB16(31, 0, 31, 0), "Draw: %ims\n", rendertic);
     ST_DrawMessage(0, 80, ARGB16(31, 0, 31, 0), "Game: %ims\n", ptic);
