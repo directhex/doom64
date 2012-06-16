@@ -147,6 +147,7 @@ void S_StopSound(mobj_t* origin, int sfx_id)
     sfxchannel_t* sfxchan = &sfxchannels[sfx_id];
     // TODO
     // TEMP
+    if(sfx_id == 0) return;
     sfxchan_ptr[sfxchan->handle] = NULL;
     soundKill(sfxchan->handle);
 }
@@ -277,10 +278,10 @@ void S_StartSound(mobj_t* origin, int sfx_id)
             W_CacheLumpNum(lump, PU_AUDIO),
             SoundFormat_16Bit,
             W_LumpLength(lump),
-            11025,
-            volume,
+            sfx_id == sfx_itemup ? 22050 : 11025,
+            sfx_id == sfx_electric ? 20 : volume,
             sep / 2,
-            0,
+            sfx_id == sfx_electric ? 1 : 0,
             0
             );
 
