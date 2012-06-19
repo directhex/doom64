@@ -5,11 +5,11 @@
 #include "doomtype.h"
 #include "tables.h"
 
+void *dmemcpy(void *s1, const void *s2, unsigned int n);
+void *dmemset(void *s, unsigned int c, unsigned int n);
+
 #define dcos(angle) finecosine[(angle) >> ANGLETOFINESHIFT]
 #define dsin(angle) finesine[(angle) >> ANGLETOFINESHIFT]
-
-extern byte* automapbuffer;
-extern int amCheating;
 
 //
 // The packed attribute forces structures to be packed into the minimum 
@@ -23,9 +23,6 @@ extern int amCheating;
 #define PACKEDATTR  __attribute__((packed))
 #define PUREFUNC    __attribute__((pure))
 #define NOINLINE    __attribute__((noinline))
-
-#include "p_mobj.h"
-extern mobj_t* mobjhead;
 
 //
 // Global parameters/defines.

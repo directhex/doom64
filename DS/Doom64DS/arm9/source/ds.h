@@ -27,12 +27,6 @@ void I_FinishFrame(void);
 #define FIFO_MSG_VERTEXDATA     3
 #define FIFO_MSG_FINESINEDATA   4
 #define FIFO_MSG_FINECOSINEDATA 5
-#define FIFO_MSG_AUTOMAP        6
-#define FIFO_MSG_MOBJLIST       7
-
-#define FIFO_AUTOMAP_BUFFER     0
-#define FIFO_AUTOMAP_DRAW       1
-#define FIFO_AUTOMAP_CHEAT      2
 
 typedef union
 {

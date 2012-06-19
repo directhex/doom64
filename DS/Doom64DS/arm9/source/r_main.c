@@ -184,7 +184,6 @@ void R_Init(void)
 
     I_SendDataToArm7(FIFO_MSG_FINESINEDATA, (void*)finesine, 0);
     I_SendDataToArm7(FIFO_MSG_FINECOSINEDATA, (void*)finecosine, 0);
-
     R_InitData();
 }
 
@@ -208,12 +207,12 @@ void R_DrawFrame(void)
     GFX_FOG_TABLE[31] = 0x7F;
     GFX_CONTROL = (GFX_CONTROL & 0xF0FF) | 0x700;
 
-    /*if(automapactive)
+    if(automapactive)
     {
         GFX_CLEAR_COLOR = 0x1F0000;
         return;
     }
-    else */if(sky != NULL)
+    else if(sky != NULL)
     {
         if(sky->flags & SKF_CLOUD)
             GFX_CLEAR_COLOR = sky->skycolor[1];

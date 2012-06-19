@@ -36,8 +36,6 @@ void P_InitThinkers(void)
 {
     thinkercap.prev = thinkercap.next  = &thinkercap;
     mobjhead.next = mobjhead.prev = &mobjhead;
-
-    I_SendDataToArm7(FIFO_MSG_MOBJLIST, (void*)&mobjhead, 0);
 }
 
 //
@@ -222,7 +220,7 @@ void P_Stop(void)
         ST_ClearDamageMarkers();*/
 
     // free level tags
-    Z_FreeTags(PU_LEVEL, PU_PURGELEVEL-1);
+    Z_FreeTags(PU_AUDIO, PU_PURGELEVEL);
 
     // TODO
     if(automapactive)
@@ -265,11 +263,14 @@ void P_Drawer(void)
     if(!leveltime)
         return;
 
+    if(!I_DmaBGBusy() && automapactive)
+        AM_Drawer();
+
     R_DrawFrame();
     ST_Drawer();
 
     if(automapactive)
-        AM_Drawer();
+        I_RefreshBG();
 }
 
 //

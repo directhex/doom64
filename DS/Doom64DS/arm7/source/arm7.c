@@ -5,9 +5,6 @@
 #include "d_player.h"
 #include "t_bsp.h"
 
-void AM_Start(void);
-void AM_Drawer(void);
-
 //
 // IRQ_VBlank
 //
@@ -69,26 +66,6 @@ static void I_PollArm9Messages(int bytes, void *userdata)
         break;
     case FIFO_MSG_FINECOSINEDATA:
         finecosine = (fixed_t*)msg.arg[0].arg_p;
-        break;
-    case FIFO_MSG_AUTOMAP:
-        switch(msg.arg[0].arg_i)
-        {
-        case FIFO_AUTOMAP_BUFFER:
-            automapbuffer = (byte*)msg.arg[1].arg_p;
-            AM_Start();
-            break;
-        case FIFO_AUTOMAP_DRAW:
-            AM_Drawer();
-            break;
-        case FIFO_AUTOMAP_CHEAT:
-            amCheating = msg.arg[1].arg_i;
-            break;
-        default:
-            break;
-        }
-        break;
-    case FIFO_MSG_MOBJLIST:
-        mobjhead = (mobj_t*)msg.arg[0].arg_p;
         break;
     default:
         break;

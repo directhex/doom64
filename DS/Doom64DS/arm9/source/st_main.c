@@ -346,7 +346,7 @@ void ST_Drawer(void)
                 ARGB16(alpha, 31, 31, 31), st_msg);
         }
     }
-    /*else if(automapactive)
+    else if(automapactive)
     {
         ST_DrawMessage(10, 10, ARGB16(31, 31, 31, 31),
             "Level %i: %s", gamemap, P_GetMapInfo(gamemap)->mapname);
@@ -358,9 +358,9 @@ void ST_Drawer(void)
             "Secrets:   %i / %i", plyr->secretcount, totalsecret);
         ST_DrawMessage(10, 50, ARGB16(31, 31, 31, 31),
             "Time:      %2.2d:%2.2d", (leveltime / TICRATE) / 60, (leveltime / TICRATE) % 60);
-    }*/
+    }
 
-    if(!menuactive)
+    if(!automapactive && !menuactive)
     {
         // health text
         ST_DrawStatusItem(0, ST_HEALTHTEXTX, ST_HEALTHTEXTY);

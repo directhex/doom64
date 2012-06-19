@@ -29,11 +29,4 @@ static inline fixed_t FixedDot(fixed_t a1, fixed_t b1,
         FixedMul(c1, c2);
 }
 
-static inline int D_abs(x)
-{
-    fixed_t _t = (x),_s;
-    _s = _t >> (8*sizeof _t-1);
-    return (_t^_s)-_s;
-}
-
 #endif

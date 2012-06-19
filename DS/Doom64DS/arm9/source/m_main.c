@@ -571,17 +571,8 @@ void M_Ticker(void)
             showfullitemvalue[1] = true;
             break;
         case menu_mapall:
-            {
-                fifomsg_t msg;
-
-                S_StartSound(NULL, sfx_switch2);
-                amCheating ^= 2;
-
-                msg.type = FIFO_MSG_AUTOMAP;
-                msg.arg[0].arg_i = FIFO_AUTOMAP_CHEAT;
-                msg.arg[1].arg_i = amCheating;
-                FIFO_SEND_MSG(msg);
-            }
+            S_StartSound(NULL, sfx_switch2);
+            amCheating ^= 2;
             break;
         case menu_lockmonsters:
             S_StartSound(NULL, sfx_switch2);

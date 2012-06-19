@@ -259,6 +259,9 @@ void I_RefreshBG(void)
 {
     const int size = 0xC000;
 
+    if(I_DmaBGBusy())
+        return;
+
     DC_FlushRange(bg_buffer, size);
     DC_FlushRange(BG_GFX_SUB, size);
     dmaCopyWordsAsynch(3, bg_buffer, BG_GFX_SUB, size);
