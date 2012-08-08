@@ -1,33 +1,31 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Handling interactions (i.e., collisions).
 //
 //-----------------------------------------------------------------------------
-
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 
 // Data.
@@ -54,7 +52,7 @@ rcsid[] = "$Id$";
 #include "tables.h"
 #include "info.h"
 
-
+CVAR_EXTERNAL(p_damageindicator);
 
 
 // a weapon is found with two clip loads,
@@ -330,8 +328,13 @@ dboolean P_GivePower(player_t* player, int power)
 	if (power == pw_infrared)
 	{
 		player->powers[power] = INFRATICS;
-		infraredFactor = 300;
-		R_RefreshBrightness();
+
+        if(&players[displayplayer] == player)
+        {
+		    infraredFactor = 300;
+		    R_RefreshBrightness();
+        }
+
 		return true;
 	}
 
@@ -752,6 +755,89 @@ void P_TouchSpecialThing(mobj_t* special, mobj_t* toucher)
 	}
 }
 
+//
+// P_Obituary
+//
+
+static void P_Obituary(mobj_t* source, mobj_t* target)
+{
+    static char omsg[128];
+    char *name;
+    int i;
+
+    if(!target->player)
+        return;
+
+    name = player_names[target->player - players];
+
+    if(source != NULL)
+    {
+        switch(source->type)
+        {
+        case MT_POSSESSED1:
+            sprintf(omsg, "%s\nwas tickled to death\nby a Zombieman.", name);
+            break;
+        case MT_POSSESSED2:
+            sprintf(omsg, "%s\ntook a shotgun to the face.", name);
+            break;
+        case MT_IMP1:
+            sprintf(omsg, "%s\nwas burned by an Imp.", name);
+            break;
+        case MT_IMP2:
+            sprintf(omsg, "%s\nwas killed by a\nNightmare Imp.", name);
+            break;
+        case MT_DEMON1:
+            sprintf(omsg, "%s\nwas bit by a Demon.", name);
+            break;
+        case MT_DEMON2:
+            sprintf(omsg, "%s\nwas eaten by a Spectre.", name);
+            break;
+        case MT_MANCUBUS:
+            sprintf(omsg, "%s\nwas squashed by a Mancubus.", name);
+            break;
+        case MT_CACODEMON:
+            sprintf(omsg, "%s\nwas smitten by a Cacodemon.", name);
+            break;
+        case MT_BRUISER1:
+            sprintf(omsg, "%s\nwas bruised by a\nBaron of Hell.", name);
+            break;
+        case MT_BRUISER2:
+            sprintf(omsg, "%s\nwas splayed by a\nHell Knight.", name);
+            break;
+        case MT_BABY:
+            sprintf(omsg, "%s\nwas vaporized by\nan Arachnotron.", name);
+            break;
+        case MT_SKULL:
+            sprintf(omsg, "A Lost Soul slammed into\n%s.", name);
+            break;
+        case MT_CYBORG:
+            sprintf(omsg, "%s\nwas splattered by a\nCyberdemon.", name);
+            break;
+        case MT_RESURRECTOR:
+            sprintf(omsg, "%s\nwas destroyed by \nthe Resurrector.", name);
+            break;
+        case MT_PLAYERBOT1:
+        case MT_PLAYERBOT2:
+        case MT_PLAYERBOT3:
+            sprintf(omsg, "%s\nwas killed by a marine.", name);
+            break;
+        default:
+            sprintf(omsg, "%s died.", name);
+            break;
+        }
+    }
+    else
+        sprintf(omsg, "%s died.", name);
+
+    for(i = 0; i < MAXPLAYERS; i++)
+    {
+        if(playeringame[i])
+            players[i].message = omsg;
+    }
+
+
+}
+
 
 //
 // KillMobj
@@ -806,6 +892,10 @@ void P_KillMobj(mobj_t* source, mobj_t* target)
 			// switch view prior to dying
 			AM_Stop ();
 		}
+
+        // 20120123 villsa - obituaries!
+        if(netgame)
+            P_Obituary(source, target);
 
 	}
 
@@ -875,7 +965,7 @@ void P_DamageMobj(mobj_t* target, mobj_t* inflictor, mobj_t* source, int damage)
     {
         if(source->player &&
             (target->player && target->player != source->player) &&
-            !sv_friendlyfire.value)
+            !(gameflags & GF_FRIENDLYFIRE))
         {
             // don't take damage from teammates
             return;
@@ -943,8 +1033,11 @@ void P_DamageMobj(mobj_t* target, mobj_t* inflictor, mobj_t* source, int damage)
 	}
 
     // apply damage multiplier
-    if(sv_damagescale.value != 1 && !source->player)
-        damage = (int)((float)damage * sv_damagescale.value);
+    if(source)
+    {
+        if(damagescale > 1 && !source->player)
+            damage = damage * damagescale;
+    }
 
 	// player specific
 	if(player)

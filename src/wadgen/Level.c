@@ -184,9 +184,11 @@ void Level_GetMapWad(int num)
     lump_t          *l = NULL;
     int             lump = 0;
     int             i = 0;
-    FILE            *f;
     byte            *buffer;
+#ifdef DUMPMAPWAD
+    FILE            *f;
     path            wadfile;
+#endif
     
     sprintf(name, "MAP%02d", num+1);
     name[8] = 0;
@@ -211,6 +213,7 @@ void Level_GetMapWad(int num)
 
 #endif
     
+#ifdef DUMPMAPWAD
     sprintf(wadfile, "MAP%02d.wad", num+1);
     f = fopen(wadfile, "wb");
     if(f == NULL)
@@ -222,13 +225,10 @@ void Level_GetMapWad(int num)
     Mem_Free((void**)&buffer);
     
     levelSize[num] = File_Read(wadfile, &levelData[num]);
-    
+
     Sleep(100);	// Let everything get caught up
-    
-#ifndef DUMPMAPWAD
-
-    remove(wadfile);
-
+#else
+    levelData[num] = buffer;
 #endif
 }
 
@@ -240,11 +240,11 @@ void Level_GetMapWad(int num)
 
 void Level_Setup(void)
 {
-    int i = 0;
+    int i;
     
     for(i = 0; i < MAXLEVELWADS; i++)
     {
         Level_GetMapWad(i);
-        WGen_UpdateProgress();
+        WGen_UpdateProgress("Decompressing MAP%02d...", i);
     }
 }

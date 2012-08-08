@@ -1,21 +1,23 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:
-//	System specific interface stuff.
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -60,17 +62,6 @@ void        I_EndDisplay(void);
 fixed_t     I_GetTimeFrac(void);
 void        I_GetTime_SaveMS(void);
 
-
-void I_FinishUpdate(void);
-
-
-//
-// Called by D_DoomLoop,
-// called before processing each tic in a frame.
-// Quick syncronous operations are performed here.
-// Can call D_PostEvent.
-void I_StartTic (void);
-
 // Asynchronous interrupt functions should maintain private queues
 // that are read by the synchronous functions
 // to be converted into events.
@@ -90,6 +81,8 @@ void I_BeginRead(void);
 void I_Error (char *error, ...);
 void I_Printf(char *msg, ...);
 char *I_DoomExeDir(void);
+
+void I_RegisterCvars(void);
 
 extern FILE	*DebugFile;
 extern dboolean	DigiJoy;

@@ -1,33 +1,31 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	Handles WAD file header, directory, lump I/O.
 //
 //-----------------------------------------------------------------------------
-
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #ifdef _MSC_VER
 #include "i_opndir.h"
@@ -97,6 +95,8 @@ typedef struct
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
+
+void W_IwadChecksum(void);
 
 #define MAX_MEMLUMPS	16
 
@@ -183,16 +183,16 @@ static void W_HashLumps(void)
 
 void W_Init(void)
 {
-    char*       iwad;
-    wadinfo_t   header;
-    lumpinfo_t* lump_p;
-    int         i;
-    wad_file_t* wadfile;
-    int         length;
-    int         startlump;
-    filelump_t* fileinfo;
-    filelump_t* filerover;
-    int         p;
+    char*           iwad;
+    wadinfo_t       header;
+    lumpinfo_t*     lump_p;
+    int             i;
+    wad_file_t*     wadfile;
+    int             length;
+    int             startlump;
+    filelump_t*     fileinfo;
+    filelump_t*     filerover;
+    int             p;
     
     // open the file and add to directory
     iwad = W_FindIWAD();
@@ -258,8 +258,25 @@ void W_Init(void)
             W_MergeFile(filename);
         }
     }
+    // 20120724 villsa - find drag & drop wad files
+    else
+    {
+        for(i = 1; i < myargc; i++)
+        {
+            if(dstrstr(myargv[i], ".wad") ||
+                dstrstr(myargv[i], ".WAD"))
+            {
+                char *filename;
+                filename = W_TryFindWADByName(myargv[i]);
+                W_MergeFile(filename);
+            }
+        }
+    }
 
     W_HashLumps();
+
+    // 20120302 villsa - check for out of date lumps
+    W_IwadChecksum();
 }
 
 //
@@ -320,8 +337,9 @@ wad_file_t *W_AddFile(char *filename)
         // WAD file
         W_Read(wadfile, 0, &header, sizeof(header));
 
-        if(dstrncmp(header.identification,"PWAD",4))
-            I_Error("W_AddFile: Wad file %s doesn't have PWAD id\n", filename);
+        if(dstrncmp(header.identification,"PWAD",4) &&
+            dstrncmp(header.identification,"IWAD",4))
+            I_Error("W_AddFile: Wad file %s doesn't have valid IWAD or PWAD id\n", filename);
 
         header.numlumps = LONG(header.numlumps);
         header.infotableofs = LONG(header.infotableofs);
@@ -576,6 +594,9 @@ void* W_CacheLumpName(const char* name, int tag)
     return W_CacheLumpNum(W_GetNumForName(name), tag);
 }
 
+//
+// W_Checksum
+//
 
 static wad_file_t **open_wadfiles = NULL;
 static int num_open_wadfiles = 0;
@@ -617,10 +638,6 @@ static void ChecksumAddLump(md5_context_t *md5_context, lumpinfo_t *lump)
     MD5_UpdateInt32(md5_context, lump->size);
 }
 
-//
-// W_Checksum
-//
-
 void W_Checksum(md5_digest_t digest)
 {
     md5_context_t md5_context;
@@ -637,6 +654,40 @@ void W_Checksum(md5_digest_t digest)
         ChecksumAddLump(&md5_context, &lumpinfo[i]);
     
     MD5_Final(digest, &md5_context);
+}
+
+//
+// W_IwadChecksum
+//
+
+#define MAXDIGESTS  3
+
+static const md5_digest_t iwad_digests[MAXDIGESTS] =
+{
+    { 0xa6,0x4e,0xa8,0xf0,0x18,0xef,0x09,0x12,0xc6,0x2c,0xb3,0xd7,0xf3,0xee,0x93,0xe6 },    // USA1
+    { 0xeb,0xa5,0x29,0x66,0x16,0xab,0xc1,0x1e,0xf2,0x5a,0xbf,0x8d,0xe7,0xb6,0xf3,0x9c },    // European
+    { 0x06,0xa0,0x47,0x0f,0x62,0x4d,0x06,0x59,0x49,0x7d,0xfd,0x79,0x4d,0xb7,0x5a,0x81 }     // Japan
+};
+
+void W_IwadChecksum(void)
+{
+    int i;
+    md5_digest_t checksum;
+    int lump;
+
+    if((lump = W_CheckNumForName("CHECKSUM")) != -1)
+    {
+        W_ReadLump(lump, checksum);
+
+        for(i = 0; i < MAXDIGESTS; i++)
+        {
+            if(!memcmp(iwad_digests[i], checksum, sizeof(md5_digest_t)))
+                return;
+            
+        }
+    }
+
+    oldiwad = true;
 }
 
 

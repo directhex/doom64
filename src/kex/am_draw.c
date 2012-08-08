@@ -1,43 +1,43 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION: Automap rendering code
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char rcsid[] = "$Id$";
-#endif
 
 #include "r_lights.h"
 #include "m_fixed.h"
 #include "tables.h"
 #include "doomstat.h"
 #include "z_zone.h"
-#include "r_gl.h"
-#include "r_texture.h"
+#include "gl_main.h"
+#include "gl_texture.h"
+#include "am_map.h"
 #include "am_draw.h"
 #include "m_cheat.h"
 #include "r_sky.h"
 #include "p_local.h"
 #include "r_clipper.h"
-#include "r_vertices.h"
+#include "r_drawlist.h"
 
 extern fixed_t automappanx;
 extern fixed_t automappany;
@@ -45,30 +45,33 @@ extern byte amModeCycle;
 
 static angle_t am_viewangle;
 
+CVAR_EXTERNAL(am_fulldraw);
+CVAR_EXTERNAL(am_ssect);
+CVAR_EXTERNAL(r_texturecombiner);
+
 //
 // AM_BeginDraw
 //
 
 void AM_BeginDraw(angle_t view, fixed_t x, fixed_t y)
 {
-    curtexture = cursprite = curgfx = -1;
     am_viewangle = view;
 
-    if(am_overlay.value)
+    if(r_texturecombiner.value > 0 && am_overlay.value)
     {
-        R_GLToggleBlend(1);
+        GL_SetState(GLSTATE_BLEND, 1);
 
         //
         // increase the rgb scale so the automap can look good while transparent (overlay mode)
         //
-        dglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GL_SetTextureMode(GL_COMBINE);
         dglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 4);
     }
 
     dglDepthRange(0.0f, 0.0f);
     dglMatrixMode(GL_PROJECTION);
     dglLoadIdentity();
-    dglFrustum(video_width, video_height, 45.0f, 0.1f);
+    dglViewFrustum(video_width, video_height, 45.0f, 0.1f);
     dglMatrixMode(GL_MODELVIEW);
     dglLoadIdentity();
     dglPushMatrix();
@@ -79,6 +82,7 @@ void AM_BeginDraw(angle_t view, fixed_t x, fixed_t y)
     drawlist[DLT_AMAP].index = 0;
 
     R_FrustrumSetup();
+    GL_ResetTextures();
 }
 
 //
@@ -90,14 +94,14 @@ void AM_EndDraw(void)
     dglPopMatrix();
     dglDepthRange(0.0f, 1.0f);
 
-    if(am_overlay.value)
+    if(r_texturecombiner.value > 0 && am_overlay.value)
     {
-        R_GLToggleBlend(0);
-        dglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GL_SetState(GLSTATE_BLEND, 0);
+        GL_SetTextureMode(GL_COMBINE);
         dglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 1);
     }
 
-    R_GLResetCombiners();
+    GL_SetDefaultCombiner();
 }
 
 //
@@ -105,7 +109,7 @@ void AM_EndDraw(void)
 //
 
 static float am_drawscale = 0.0f;
-dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
+static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
 {
     leaf_t* leaf;
     rcolor color;
@@ -241,11 +245,9 @@ void AM_DrawLeafs(float scale)
                 if(!R_FrustrumTestVertex(v, sub->numleafs))
                     continue;
 
-                DL_PushVertex(am_drawlist);
-
-                list            = &am_drawlist->list[am_drawlist->index++];
+                list            = DL_AddVertexList(am_drawlist);
                 list->data      = (subsector_t*)sub;
-                list->drawfunc  = NULL;
+                list->callback  = NULL;
                 list->texid     = sub->sector->floorpic;
             }
         }
@@ -258,10 +260,20 @@ void AM_DrawLeafs(float scale)
     //
     DL_BeginDrawList(!am_ssect.value && r_fillmode.value, 0);
 
-    if(!nolights)
-        dglTexCombModulate(GL_TEXTURE0_ARB, GL_PRIMARY_COLOR);
+    if(r_texturecombiner.value > 0)
+    {
+        if(!nolights)
+            dglTexCombModulate(GL_TEXTURE0_ARB, GL_PRIMARY_COLOR);
+        else
+            dglTexCombReplace();
+    }
     else
-        dglTexCombReplace();
+    {
+        if(!nolights)
+            GL_SetTextureMode(GL_MODULATE);
+        else
+            GL_SetTextureMode(GL_REPLACE);
+    }
 
     DL_ProcessDrawList(DLT_AMAP, DL_ProcessAutomap);
 }
@@ -270,7 +282,7 @@ void AM_DrawLeafs(float scale)
 // AM_DrawLine
 //
 
-void AM_DrawLine(int x1, int x2, int y1, int y2, float scale, byte r, byte g, byte b)
+void AM_DrawLine(int x1, int x2, int y1, int y2, float scale, rcolor c)
 {
     vtx_t v[2];
     
@@ -279,17 +291,15 @@ void AM_DrawLine(int x1, int x2, int y1, int y2, float scale, byte r, byte g, by
     v[1].x = F2D3D(x2);
     v[1].z = F2D3D(y2);
 
-    v[0].r = v[1].r = r;
-    v[0].g = v[1].g = g;
-    v[0].b = v[1].b = b;
-    v[0].a = v[1].a = 0xff;
-
     v[0].y = v[1].y = (scale*2);
 
+    dglSetVertexColor(v, c, 2);
+
     dglDisable(GL_TEXTURE_2D);
-    dglColor4ub(r, g, b, 0xff);
     dglBegin(GL_LINES);
+    dglColor4ub(v[0].r, v[0].g, v[0].b, v[0].a);
     dglVertex3f(v[0].x, v[0].z, -v[0].y);
+    dglColor4ub(v[1].r, v[1].g, v[1].b, v[1].a);
     dglVertex3f(v[1].x, v[1].z, -v[1].y);
     dglEnd();
     dglEnable(GL_TEXTURE_2D);
@@ -310,16 +320,10 @@ void AM_DrawTriangle(mobj_t* mobj, float scale, dboolean solid, byte r, byte g, 
         return;
     else if(mobj->state == (state_t *)S_000)
         return;
-    
-    if(r_fillmode.value)
-        dglPolygonMode(GL_FRONT_AND_BACK, (solid == 1) ? GL_LINE : GL_FILL);
 
     x = mobj->x;
     y = mobj->y;
     angle = mobj->angle;
-
-    dglSetVertex(tri);
-    dglTriangle(0, 1, 2);
 
     tri[0].z = tri[1].z = tri[2].z = -(scale*2);
     tri[0].tu = tri[1].tu = tri[2].tu = 0.0f;
@@ -338,13 +342,24 @@ void AM_DrawTriangle(mobj_t* mobj, float scale, dboolean solid, byte r, byte g, 
     tri[0].g = tri[1].g = tri[2].g = g;
     tri[0].b = tri[1].b = tri[2].b = b;
     tri[0].a = tri[1].a = tri[2].a = 0xff;
+
+    if(!R_FrustrumTestVertex(tri, 3))
+        return;
     
+    if(r_fillmode.value)
+        dglPolygonMode(GL_FRONT_AND_BACK, (solid == 1) ? GL_LINE : GL_FILL);
+
+    dglSetVertex(tri);
+    dglTriangle(0, 1, 2);
     dglDisable(GL_TEXTURE_2D);
     dglDrawGeometry(3, tri);
     dglEnable(GL_TEXTURE_2D);
     
     if(r_fillmode.value)
         dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if(devparm)
+        vertCount += 3;
 }
 
 //
@@ -454,8 +469,8 @@ void AM_DrawSprite(mobj_t* thing, float scale)
     vtx[3].tu   = 1 - flip;
     vtx[3].tv   = 0.0f;
     
-    R_BindSpriteTexture(sprframe->lump[rot], thing->info->palette);
-    R_GLToggleBlend(1);
+    GL_BindSpriteTexture(sprframe->lump[rot], thing->info->palette);
+    GL_SetState(GLSTATE_BLEND, 1);
 
     alpha = (thing->alpha * (am_overlay.value ? 96 : 0xff)) / 0xff;
 
@@ -475,9 +490,9 @@ void AM_DrawSprite(mobj_t* thing, float scale)
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, DGL_CLAMP);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, DGL_CLAMP);
     dglTriangle(0, 1, 2);
-    dglTriangle(0, 2, 3);
+    dglTriangle(3, 2, 1);
     dglDrawGeometry(4, vtx);
 
-    R_GLToggleBlend(0);
+    GL_SetState(GLSTATE_BLEND, 0);
 }
 

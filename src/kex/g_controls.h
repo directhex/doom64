@@ -1,26 +1,30 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1999-2000 Paul Brook
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//---------------------------------------------------------------------
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 
 #ifndef G_CONTROLS_H
 #define G_CONTROLS_H
 
 #include "doomdef.h"
-#include "r_gl.h"
 
 #define NUMKEYS		SDLK_LAST
 
@@ -69,6 +73,6 @@ typedef struct
 #define PCF_GAMEPAD     0x40
 
 extern playercontrols_t	Controls;
-extern char *ConfigFileName;
+extern char *G_GetConfigFileName(void);
 
 #endif

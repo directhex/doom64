@@ -1,29 +1,30 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	Fixed point implementation.
 //
 //-----------------------------------------------------------------------------
-
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include "stdlib.h"
 
@@ -76,7 +77,7 @@ FixedDiv
   fixed_t	b )
 {
     if ( (D_abs(a)>>14) >= D_abs(b))
-	return (a^b)<0 ? MININT : MAXINT;
+	return (a^b)<0 ? D_MININT : D_MAXINT;
     return FixedDiv2 (a,b);
 
 }
@@ -91,4 +92,16 @@ FixedDiv2
     return (fixed_t)((((int64)a)<<FRACBITS)/b);
 }
 
+//
+// FixedDot
+//
 
+fixed_t FixedDot(fixed_t a1, fixed_t b1,
+                 fixed_t c1, fixed_t a2,
+                 fixed_t b2, fixed_t c2)
+{
+    return 
+        FixedMul(a1, a2) +
+        FixedMul(b1, b2) +
+        FixedMul(c1, c2);
+}

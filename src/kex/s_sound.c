@@ -1,30 +1,29 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION: In-game Sound behavior
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char rcsid[] = "$Id$";
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,6 +43,7 @@ static const char rcsid[] = "$Id$";
 #include "m_misc.h"
 #include "p_setup.h"
 #include "i_audio.h"
+#include "con_console.h"
 
 // Adjustable by menu.
 #define NORM_VOLUME     127
@@ -71,6 +71,10 @@ static dboolean nosound = false;
 static dboolean nomusic = false;
 static int lastmusic = 0;
 
+CVAR_CMD(s_sfxvol, 80)  { if(cvar->value < 0.0f) return; S_SetSoundVolume(cvar->value); }
+CVAR_CMD(s_musvol, 80)  { if(cvar->value < 0.0f) return; S_SetMusicVolume(cvar->value); }
+CVAR_CMD(s_gain, 1)     { if(cvar->value < 0.0f) return; S_SetGainOutput(cvar->value);  }
+
 //
 // Internals.
 //
@@ -86,10 +90,16 @@ int S_AdjustSoundParams(fixed_t x, fixed_t y, int* vol, int* sep);
 void S_Init(void)
 {
     if(M_CheckParm("-nosound"))
+    {
         nosound = true;
+        CON_DPrintf("Sounds disabled\n");
+    }
 
     if(M_CheckParm("-nomusic"))
+    {
         nomusic = true;
+        CON_DPrintf("Music disabled\n");
+    }
 
 	if(nosound && nomusic)
 		return;
@@ -98,6 +108,7 @@ void S_Init(void)
 
     S_SetMusicVolume(s_musvol.value);
     S_SetSoundVolume(s_sfxvol.value);
+    S_SetGainOutput(s_gain.value);
 }
 
 //
@@ -116,6 +127,15 @@ void S_SetSoundVolume(float volume)
 void S_SetMusicVolume(float volume)
 {
     I_SetMusicVolume(volume);
+}
+
+//
+// S_SetGainOutput
+//
+
+void S_SetGainOutput(float db)
+{
+    I_SetGain(db);
 }
 
 //
@@ -360,6 +380,21 @@ int S_AdjustSoundParams(fixed_t x, fixed_t y, int* vol, int* sep)
 }
 
 
+//
+// S_RegisterCvars
+//
+
+CVAR_EXTERNAL(s_soundfont);
+CVAR_EXTERNAL(s_driver);
+
+void S_RegisterCvars(void)
+{
+    CON_CvarRegister(&s_sfxvol);
+    CON_CvarRegister(&s_musvol);
+    CON_CvarRegister(&s_gain);
+    CON_CvarRegister(&s_soundfont);
+    CON_CvarRegister(&s_driver);
+}
 
 
 

@@ -79,8 +79,9 @@ uint WGen_Swap32(unsigned int x);
 
 void WGen_Printf(char* s, ...);
 void WGen_Complain(char *fmt, ...);
-void WGen_UpdateProgress(void);
+void WGen_UpdateProgress(char *fmt, ...);
 void WGen_ConvertN64Pal(dPalette_t* palette, word* data, int indexes);
+void WGen_AddDigest(char* name, int lump, int size);
 
 #ifdef USE_PNG
 cache Png_Create(int width, int height, int numpal, dPalette_t* pal,
@@ -101,5 +102,7 @@ static inline char* strupr(char* in)
     return in;
 }
 #endif
+
+#include "MD5.h"
 
 #endif

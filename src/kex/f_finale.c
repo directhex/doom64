@@ -1,22 +1,25 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Log: f_finale.c,v $
-// Revision 1.1  2008/05/18 22:28:33  svkaiser
-// Initial submission
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 //
 // DESCRIPTION:
@@ -24,14 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
-
 #include <ctype.h>
 #include "i_system.h"
-#include "m_misc.h"
 #include "z_zone.h"
 #include "w_wad.h"
 #include "s_sound.h"
@@ -44,6 +41,7 @@ rcsid[] = "$Id$";
 #include "r_local.h"
 #include "st_stuff.h"
 #include "r_wipe.h"
+#include "gl_draw.h"
 
 static int          castrotation = 0;
 static int          castnum;
@@ -274,10 +272,10 @@ stopattack:
 
 void F_Drawer(void)
 {
-    R_GLClearFrame(0xFF000000);
-    R_DrawGfx(64, 30, "EVIL", D_RGBA(255, 255, 255, 0xff), false);
-    M_DrawSmbText(-1, 240-32, D_RGBA(255, 0, 0, 0xff), castorder[castnum].name);
-    R_DrawHudSprite(
+    GL_ClearView(0xFF000000);
+    Draw_GfxImage(64, 30, "EVIL", D_RGBA(255, 255, 255, 0xff), false);
+    Draw_BigText(-1, 240-32, D_RGBA(255, 0, 0, 0xff), castorder[castnum].name);
+    Draw_Sprite2D(
         caststate->sprite,
         castrotation,
         (caststate->frame & FF_FRAMEMASK),

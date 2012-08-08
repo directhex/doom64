@@ -1,21 +1,23 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:
-//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -67,32 +69,8 @@ void M_NormalizeSlashes(char *str);
 int M_FileExists(char *filename);
 long M_FileLength(FILE *handle);
 dboolean M_WriteTextFile(char const* name, char* source, int length);
-
 void M_ScreenShot(void);
 int M_CacheThumbNail(byte** data);
-
-#define SM_FONT1		16
-#define SM_FONT2		42
-#define SM_MISCFONT		10
-#define SM_NUMBERS		0
-#define SM_SKULLS		70
-#define SM_THERMO		68
-#define SM_MICONS		78
-
-typedef struct
-{
-    int x;
-    int y;
-    int w;
-    int h;
-} symboldata_t;
-
-extern const symboldata_t symboldata[];
-
-int M_DrawText(int x, int y, rcolor color, float scale, dboolean wrap, const char* string, ...);
-int M_CenterSmbText(const char* string);
-int M_DrawSmbText(int x, int y, rcolor color, const char* string);
-void M_DrawNumber(int x, int y, int num, int type, rcolor c);
 void M_LoadDefaults(void);
 void M_SaveDefaults(void);
 

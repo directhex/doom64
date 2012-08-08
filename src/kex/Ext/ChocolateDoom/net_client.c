@@ -43,6 +43,11 @@
 #include "st_stuff.h"
 #include "w_wad.h"
 
+CVAR_EXTERNAL(sv_nomonsters);
+CVAR_EXTERNAL(sv_fastmonsters);
+CVAR_EXTERNAL(sv_respawnitems);
+CVAR_EXTERNAL(sv_respawn);
+
 typedef enum
 {
     // waiting for the game to start
@@ -371,16 +376,17 @@ void NET_CL_StartGame(void)
     // Fill in game settings structure with appropriate parameters
     // for the new game
 
-    settings.deathmatch = deathmatch;
-    settings.map = startmap;
-    settings.skill = startskill;
-//    settings.loadgame = startloadgame;
-//    settings.gameversion = gameversion;
-    settings.nomonsters = (int)sv_nomonsters.value;
-    settings.fast_monsters = (int)sv_fastmonsters.value;
-    settings.respawn_monsters = (int)sv_respawn.value;
-	settings.respawn_items = (int)sv_respawnitems.value;
-//    settings.timelimit = timelimit;
+    settings.deathmatch         = deathmatch;
+    settings.map                = startmap;
+    settings.skill              = startskill;
+    settings.nomonsters         = (int)sv_nomonsters.value;
+    settings.fast_monsters      = (int)sv_fastmonsters.value;
+    settings.respawn_monsters   = (int)sv_respawn.value;
+	settings.respawn_items      = (int)sv_respawnitems.value;
+    settings.damagescale        = damagescale;
+    settings.healthscale        = healthscale;
+    settings.compatflags        = compatflags;
+    settings.gameflags          = gameflags;
 
     //!
     // @category net
@@ -664,19 +670,20 @@ static void NET_CL_ParseGameStart(net_packet_t *packet)
 
     client_state = CLIENT_STATE_IN_GAME;
 
-    deathmatch = settings.deathmatch;
-    ticdup = settings.ticdup;
-    extratics = settings.extratics;
-    startmap = settings.map;
-    startskill = settings.skill;
-//    startloadgame = settings.loadgame;
-//    lowres_turn = settings.lowres_turn;
-    nomonsters = settings.nomonsters;
-    fastparm = settings.fast_monsters;
-    respawnparm = settings.respawn_monsters;
-	respawnitem = settings.respawn_items;
+    deathmatch      = settings.deathmatch;
+    ticdup          = settings.ticdup;
+    extratics       = settings.extratics;
+    startmap        = settings.map;
+    startskill      = settings.skill;
+    nomonsters      = settings.nomonsters;
+    fastparm        = settings.fast_monsters;
+    respawnparm     = settings.respawn_monsters;
+	respawnitem     = settings.respawn_items;
+    compatflags     = settings.compatflags;
+    gameflags       = settings.gameflags;
+    damagescale     = settings.damagescale;
+    healthscale     = settings.healthscale;
     net_cl_new_sync = settings.new_sync != 0;
-//    timelimit = settings.timelimit;
 
     if (net_cl_new_sync == false)
     {
@@ -992,14 +999,15 @@ static void NET_CL_ParseConsoleMessage(net_packet_t *packet)
 static void NET_CL_ParseCvarUpdate(net_packet_t* packet)
 {
     char *cvarname;
-    unsigned int cvarvalue;
+    char *cvarvalue;
     char str[256];
 
-    cvarname = NET_ReadString(packet);
-    NET_ReadInt8(packet, &cvarvalue);
-    CON_CvarSetValue(cvarname, (float)cvarvalue);
+    cvarname    = NET_ReadString(packet);
+    cvarvalue   = NET_ReadString(packet);
 
-    sprintf(str, "%s changed to %i", cvarname, cvarvalue);
+    CON_CvarSet(cvarname, cvarvalue);
+
+    sprintf(str, "%s changed to %s", cvarname, cvarvalue);
     ST_Notification(str);
 }
 
@@ -1289,6 +1297,8 @@ void NET_CL_Disconnect(void)
 
     NET_CL_Shutdown();
 }
+
+CVAR_EXTERNAL(m_playername);
 
 void NET_CL_Init(void)
 {

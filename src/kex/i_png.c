@@ -1,32 +1,29 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	PNG image system
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include <math.h>
 
@@ -37,13 +34,18 @@ rcsid[] = "$Id$";
 #include "m_fixed.h"
 #include "z_zone.h"
 #include "w_wad.h"
-#include "r_texture.h"
+#include "gl_texture.h"
 #include "con_console.h"
 #include "i_png.h"
 
 static byte*    pngWriteData;
 static byte*    pngReadData;
 static size_t   pngWritePos = 0;
+
+CVAR_CMD(i_gamma, 0)
+{
+    GL_DumpTextures();
+}
 
 //
 // I_PNGRowSize
@@ -119,19 +121,19 @@ static void I_TranslatePalette(png_colorp dest)
 byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
                     int* w, int* h, int* offset, int palindex)
 {
-    png_structp		png_ptr;
-    png_infop		info_ptr;
-    size_t			width;
-    size_t			height;
-    int				bit_depth;
-    int				color_type;
-    int				interlace_type;
-    int             pixel_depth;
-    byte*			png;
-    byte*volatile	out;
-    size_t			row;
-    size_t			rowSize;
-    byte**volatile	row_pointers;
+    png_structp png_ptr;
+    png_infop   info_ptr;
+    png_uint_32 width;
+    png_uint_32 height;
+    int         bit_depth;
+    int         color_type;
+    int         interlace_type;
+    int         pixel_depth;
+    byte*       png;
+    byte*       out;
+    size_t      row;
+    size_t      rowSize;
+    byte**      row_pointers;
     
     // get lump data
     png = W_CacheLumpNum(lump, PU_STATIC);
@@ -187,16 +189,16 @@ byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
         &interlace_type,
         NULL,
         NULL);
-
+    
     if (usingGL && !alpha)
-	{
-		int num_trans = 0;
-		png_get_tRNS (png_ptr, info_ptr, NULL, &num_trans, NULL);
-		if (num_trans)
-	//if(usingGL && !alpha && info_ptr->num_trans)
-        I_Error("I_PNGReadData: RGB8 PNG image (%s) has transparency", lumpinfo[lump].name);
+    {
+        int num_trans = 0;
+        png_get_tRNS (png_ptr, info_ptr, NULL, &num_trans, NULL);
+        if (num_trans)
+            //if(usingGL && !alpha && info_ptr->num_trans)
+            I_Error("I_PNGReadData: RGB8 PNG image (%s) has transparency", lumpinfo[lump].name);
     }
-	
+    
     // if the data will be outputted as palette index data (non RGB(A))
     if(palette)
     {
@@ -212,8 +214,8 @@ byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
         {
             int i = 0;
             png_colorp pal = NULL; //info_ptr->palette;
-			int num_pal = 0;
-			png_get_PLTE (png_ptr, info_ptr, &pal, &num_pal); // FIXME: num_pal not used??
+            int num_pal = 0;
+            png_get_PLTE (png_ptr, info_ptr, &pal, &num_pal); // FIXME: num_pal not used??
             
             if(palindex)
             {
@@ -245,7 +247,7 @@ byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
                     Z_Free(pallump);
                 }
             }
-
+            
             I_TranslatePalette(pal);
             png_set_palette_to_rgb(png_ptr);
         }
@@ -274,15 +276,15 @@ byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
         NULL);
     
     // get the size of each row
-	pixel_depth = bit_depth;
-
+    pixel_depth = bit_depth;
+    
     if(color_type == PNG_COLOR_TYPE_RGB)
         pixel_depth *= 3;
     else if(color_type == PNG_COLOR_TYPE_RGB_ALPHA)
         pixel_depth *= 4;
-
+    
     rowSize = I_PNGRowSize(width, pixel_depth /*info_ptr->pixel_depth*/);
-	
+    
     if(w)
         *w = width;
     if(h)
@@ -314,7 +316,7 @@ byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
             byte a = (byte)(c & 0xff);
             
             *check = ((a<<24)|(b<<16)|(g<<8)|r);
-
+            
             check++;
         }
     }
@@ -344,14 +346,14 @@ static void I_PNGWriteFunc(png_structp png_ptr, byte* data, size_t length)
 
 byte* I_PNGCreate(int width, int height, byte* data, int* size)
 {
-    png_structp		png_ptr;
-    png_infop		info_ptr;
-    int				i = 0;
-    byte*			out;
-    byte*			pic;
-    byte**			row_pointers;
-    size_t			j = 0;
-    size_t			row;
+    png_structp png_ptr;
+    png_infop   info_ptr;
+    int         i = 0;
+    byte*       out;
+    byte*       pic;
+    byte**      row_pointers;
+    size_t      j = 0;
+    size_t      row;
     
     // setup png pointer
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);

@@ -48,9 +48,11 @@ add_executable(doom64ex
 	dgl.c
 	f_finale.c
 	g_actions.c
-	g_cmds.c
 	g_game.c
 	g_settings.c
+	gl_draw.c
+	gl_main.c
+	gl_texture.c
 	i_audio.c
 #	i_cpu.c
 #	i_cpu_posix.c
@@ -59,6 +61,7 @@ add_executable(doom64ex
 #	i_opndir.c
 	i_png.c
 	i_system.c
+	i_video.c
 	i_xinput.c
 	in_stuff.c
 	info.c
@@ -93,20 +96,17 @@ add_executable(doom64ex
 	psnprntf.c
 	r_bsp.c
 	r_clipper.c
-	r_gl.c
-	r_glExt.c
+	r_drawlist.c
 	r_lights.c
 	r_main.c
+	r_scene.c
 	r_sky.c
-	r_texture.c
 	r_things.c
-	r_vertices.c
 	r_wipe.c
 	s_sound.c
 	sc_main.c
 	st_stuff.c
 	tables.c
-	v_sdl.c
 	w_file.c
 	w_merge.c
 	w_wad.c

@@ -385,7 +385,8 @@ void Sprite_Setup(void)
 	{
 		romWadFile.lumpcache[l] = Wad_GetLump(romWadFile.lump[l].name, false);
 		Sprite_Convert(l);
-		WGen_UpdateProgress();
+
+		WGen_UpdateProgress("Converting Sprites...");
 	}
 
 	spriteExCount = spriteIndexCount;
@@ -398,7 +399,8 @@ void Sprite_Setup(void)
 		l = Wad_GetLumpNum(HudSprNames[i].name);
 		romWadFile.lumpcache[l] = Wad_GetLump(romWadFile.lump[l].name, false);
 		Sprite_Convert(l);
-		WGen_UpdateProgress();
+
+		WGen_UpdateProgress("Converting Hud Sprites...");
 	}
 
 	hudSpriteExCount = spriteIndexCount - spriteExCount;

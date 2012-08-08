@@ -1,32 +1,33 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Archiving: SaveGame I/O.
 //      Thinker, Ticker.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include "doomstat.h"
-
 #include "z_zone.h"
 #include "p_local.h"
 #include "p_macros.h"
@@ -39,6 +40,9 @@ rcsid[] = "$Id$";
 #include "r_wipe.h"
 #include "p_setup.h"
 
+CVAR_EXTERNAL(i_interpolateframes);
+CVAR_EXTERNAL(p_damageindicator);
+CVAR_EXTERNAL(r_wipe);
 
 int     leveltime;
 
@@ -60,6 +64,7 @@ void G_DoReborn(int playernum);
 thinker_t   thinkercap;		// Both the head and tail of the thinker list.
 mobj_t      mobjhead;		// Both the head and tail of the mobj list.
 mobj_t      *currentmobj;
+thinker_t   *currentthinker;
 
 
 //
@@ -86,6 +91,18 @@ void P_AddThinker(thinker_t* thinker)
 }
 
 //
+// P_UnlinkThinker
+//
+
+static void P_UnlinkThinker(thinker_t* thinker)
+{
+    thinker_t* next = currentthinker->next;
+    (next->prev = currentthinker = thinker->prev)->next = next;
+
+    Z_Free(thinker);
+}
+
+//
 // P_RemoveThinker
 // Deallocation is lazy -- it will not actually be freed
 // until its thinking turn comes up.
@@ -93,7 +110,7 @@ void P_AddThinker(thinker_t* thinker)
 
 void P_RemoveThinker(thinker_t* thinker)
 {
-    thinker->function.acv = (actionf_v)(-1);
+    thinker->function.acp1 = P_UnlinkThinker;
     P_MacroDetachThinker(thinker);
 }
 
@@ -143,7 +160,7 @@ void P_RunMobjs(void)
         if(currentmobj->flags & MF_NOSECTOR)
             continue;
         
-        if(sv_lockmonsters.value && !currentmobj->player && currentmobj->flags & MF_COUNTKILL)
+        if(gameflags & GF_LOCKMONSTERS && !currentmobj->player && currentmobj->flags & MF_COUNTKILL)
             continue;
 
         if(!currentmobj->player)
@@ -170,25 +187,12 @@ void P_RunMobjs(void)
 
 void P_RunThinkers(void)
 {
-    thinker_t*  currentthinker;
-    
-    currentthinker = thinkercap.next;
-    while(currentthinker != &thinkercap)
+    for(currentthinker = thinkercap.next;
+        currentthinker != &thinkercap;
+        currentthinker = currentthinker->next)
     {
-        if(currentthinker->function.acv == (actionf_v)(-1))
-        {
-            // time to remove it
-            currentthinker->next->prev = currentthinker->prev;
-            currentthinker->prev->next = currentthinker->next;
-            Z_Free(currentthinker);
-        }
-        else
-        {
-            if(currentthinker->function.acp1)
-                currentthinker->function.acp1(currentthinker);
-        }
-
-        currentthinker = currentthinker->next;
+        if(currentthinker->function.acp1)
+            currentthinker->function.acp1(currentthinker);
     }
 }
 
@@ -215,10 +219,7 @@ static void P_UpdateFrameStates(void)
     pitch = viewcamera->pitch + ANG90;
 
     if(viewcamera == player->mo)
-    {
         pitch += player->recoilpitch;
-        pitch += player->extrapitch;
-    }
 
     //
     // update player position/view for interpolation
@@ -246,8 +247,8 @@ static void P_UpdateFrameStates(void)
     {
         sector_t* sector = &sectors[i];
 
-        sector->frame_z1[0] = sector->floorplane.d;
-        sector->frame_z2[0] = sector->ceilingplane.d;
+        sector->frame_z1[0] = sector->floorheight;
+        sector->frame_z2[0] = sector->ceilingheight;
         sector->frame_z1[1] = sector->frame_z1[0];
         sector->frame_z2[1] = sector->frame_z1[0];
     }
@@ -353,14 +354,22 @@ void P_Stop(void)
         demoplayback = false;
 
     // do wipe/melt effect
-    if(r_wipe.value && gameaction != ga_loadgame)
+    if(gameaction != ga_loadgame)
     {
-        if(gameaction != ga_warpquick)
-            WIPE_MeltScreen();
+        if(r_wipe.value)
+        {
+            if(gameaction != ga_warpquick)
+                WIPE_MeltScreen();
+            else
+            {
+                S_StopMusic();
+                WIPE_FadeScreen(8);
+            }
+        }
         else
         {
-            S_StopMusic();
-            WIPE_FadeScreen(8);
+            if(gameaction == ga_warpquick)
+                S_StopMusic();
         }
     }
 
@@ -379,7 +388,7 @@ void P_Drawer(void)
     if(!leveltime)
         return;
 
-    R_GLClearFrame(0xFF000000);
+    GL_ClearView(0xFF000000);
 
     if(!automapactive || am_overlay.value)
         R_RenderPlayerView(&players[displayplayer]);

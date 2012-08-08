@@ -1,24 +1,24 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:  none
-//	Implements special effects:
-//	Texture animation, height or lighting changes
-//	 according to adjacent sectors, respective
-//	 utility functions, etc.
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -193,11 +193,11 @@ typedef enum
 
 typedef struct
 {
-    line_t*		line;
-    bwhere_e	where;
-    int			btexture;
-    int			btimer;
-    mobj_t*		soundorg;
+    line_t*     line;
+    bwhere_e    where;
+    int         btexture;
+    int         btimer;
+    mobj_t*     soundorg;
 } button_t;
 
 
@@ -307,9 +307,8 @@ typedef struct
     sector_t*   sector;
     fixed_t     topheight;
     fixed_t     bottomheight;
-    fixed_t     speed;
     fixed_t     initceiling;
-    fixed_t     initfloor;
+    fixed_t     speed;
     
     // 1 = up, 0 = waiting at top, -1 = down
     int         direction;
@@ -320,8 +319,6 @@ typedef struct
     // (keep in case a door going down is reset)
     // when it reaches 0, start going down
     int         topcountdown;
-    
-    dboolean    split;
     
 } vldoor_t;
 

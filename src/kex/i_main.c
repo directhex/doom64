@@ -1,32 +1,30 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//	Main program and common functions (for portability sakes)
+//	Main program
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #ifdef _MSC_VER
 #include "i_opndir.h"
@@ -38,14 +36,10 @@ rcsid[] = "$Id$";
 #include "doomstat.h"
 #include "d_main.h"
 #include "SDL.h"
-#include "v_sdl.h"
+#include "i_video.h"
 #include "m_misc.h"
 #include "i_system.h"
 #include "con_console.h"
-
-#ifdef _WIN32
-#include "i_xinput.h"
-#endif
 
 const char version_date[] = __DATE__;
 
@@ -116,7 +110,7 @@ char *dstrcpy(char *dest, const char *src)
 
 void dstrncpy(char *dest, const char *src, int maxcount)
 {
-    char *p1 = dest;
+    register char *p1 = dest;
     const char *p2 = src;
     while ((maxcount--) >= 0)
         *p1++ = *p2++;
@@ -184,7 +178,7 @@ int dstrnicmp(const char *s1, const char *s2, int len)
 
 void dstrupr(char *s)
 {
-    char	c;
+    register char c;
     
     while ((c = *s) != 0)
     {
@@ -200,7 +194,7 @@ void dstrupr(char *s)
 
 void dstrlwr(char *s)
 {
-    char	c;
+    register char c;
     
     while ((c = *s) != 0)
     {
@@ -216,7 +210,7 @@ void dstrlwr(char *s)
 
 int dstrlen(const char *string)
 {
-    int rc = 0;
+    register int rc = 0;
     if(string)
         while (*(string++)) rc++;
         else rc = -1;
@@ -230,7 +224,7 @@ int dstrlen(const char *string)
 
 char *dstrrchr(char *s, char c)
 {
-    int len = dstrlen(s);
+    register int len = dstrlen(s);
     s += len;
     while(len--)
         if(*--s == c) return s;
@@ -245,6 +239,26 @@ void dstrcat(char *dest, const char *src)
 {
     dest += dstrlen(dest);
     dstrcpy(dest, src);
+}
+
+//
+// dstrstr
+//
+
+char *dstrstr(char *s1, char *s2)
+{
+    register char *p = s1;
+    register int len = dstrlen(s2);
+    
+    for(;(p = dstrrchr(p, *s2)) != 0; p++)
+    {
+        if(dstrncmp(p, s2, len) == 0)
+        {
+            return p;
+        }
+    }
+    
+    return 0;
 }
 
 //
@@ -541,11 +555,6 @@ int I_Main(int argc, char *argv[])
     I_SpawnSysConsole();
 #endif
 
-#ifdef _USE_XINPUT
-    I_Printf("I_XInputInit: Initializing XInput API\n");
-    I_XInputInit();
-#endif
-
     //process affinity mask stuff
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
     {
@@ -554,7 +563,6 @@ int I_Main(int argc, char *argv[])
     }
 #endif
 
-    V_Init();
     D_DoomMain();
     
     return 0;

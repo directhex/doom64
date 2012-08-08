@@ -109,6 +109,10 @@ SOURCE=.\..\Level.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\MD5.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\..\Mem.c
 # End Source File
 # Begin Source File
@@ -162,6 +166,10 @@ SOURCE=.\..\Gfx.h
 # Begin Source File
 
 SOURCE=.\..\Level.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\MD5.h
 # End Source File
 # Begin Source File
 

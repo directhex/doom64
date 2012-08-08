@@ -1,31 +1,31 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2005 Simon Howard
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	Archiving: SaveGame I/O.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include <time.h> // [kex] - for saving the date and time
 
@@ -55,6 +55,24 @@ static FILE*    save_stream;
 static byte*    savebuffer;
 
 static unsigned long save_offset = 0;
+
+//
+// P_GetSaveGameName
+//
+
+char *P_GetSaveGameName(int num)
+{
+    static char name[256];
+    
+#ifdef _WIN32
+    sprintf(name, SAVEGAMENAME"%d.dsg", num);
+#else
+    // 20120105 bkw: UNIX-friendly savegame location
+    sprintf(name, "%s/.doom64ex/"SAVEGAMENAME"%d.dsg", getenv("HOME"), num);
+#endif
+    
+    return name;
+}
 
 //------------------------------------------------------------------------
 //
@@ -641,11 +659,9 @@ static void saveg_write_vldoor_t(vldoor_t* door)
     saveg_write32(door->bottomheight);
     saveg_write32(door->speed);
     saveg_write32(door->initceiling);
-    saveg_write32(door->initfloor);
     saveg_write32(door->direction);
     saveg_write32(door->topwait);
     saveg_write32(door->topcountdown);
-    saveg_write32(door->split);
 }
 
 static void saveg_read_vldoor_t(vldoor_t* door)
@@ -656,11 +672,9 @@ static void saveg_read_vldoor_t(vldoor_t* door)
     door->bottomheight  = saveg_read32();
     door->speed         = saveg_read32();
     door->initceiling   = saveg_read32();
-    door->initfloor     = saveg_read32();
     door->direction     = saveg_read32();
     door->topwait       = saveg_read32();
     door->topcountdown  = saveg_read32();
-    door->split         = saveg_read32();
 
     door->sector->specialdata = door;
 }
@@ -1064,7 +1078,7 @@ static void saveg_write_laserthinker_t(laserthinker_t* laserthinker)
 
 static void saveg_read_laserthinker_t(laserthinker_t* laserthinker)
 {
-    laser_t* l;
+    laser_t* l = NULL;
     int next;
     dboolean head = true;
 
@@ -1136,7 +1150,7 @@ static void saveg_write_header(char *description)
     for(; i < SAVESTRINGSIZE; i++)
         saveg_write8(0);
 
-    dsprintf(date, "%s", saveg_gettime());
+    sprintf(date, "%s", saveg_gettime());
     size = dstrlen(date);
 
     for(i = 0; i < size; i++)
@@ -1261,11 +1275,11 @@ static void saveg_write_marker(int marker)
 
 dboolean P_WriteSaveGame(char* description, int slot)
 {
-    char name[256];
+    //char name[256];
 
     // setup game save file
-    sprintf(name, SAVEGAMENAME"%d.dsg", slot);
-    save_stream = fopen(name, "wb");
+    // sprintf(name, SAVEGAMENAME"%d.dsg", slot);
+    save_stream = fopen(P_GetSaveGameName(slot), "wb");
 
     // success?
     if(save_stream == NULL)
@@ -1418,16 +1432,6 @@ void P_ArchiveWorld(void)
         saveg_write16(sec->lightlevel);
         saveg_write32(sec->xoffset);
         saveg_write32(sec->yoffset);
-        saveg_write32(sec->floorplane.a);
-        saveg_write32(sec->floorplane.b);
-        saveg_write32(sec->floorplane.c);
-        saveg_write32(sec->floorplane.nc);
-        saveg_write32(sec->floorplane.d);
-        saveg_write32(sec->ceilingplane.a);
-        saveg_write32(sec->ceilingplane.b);
-        saveg_write32(sec->ceilingplane.c);
-        saveg_write32(sec->ceilingplane.nc);
-        saveg_write32(sec->ceilingplane.d);
         saveg_write_mobjindex(sec->soundtarget);
 
         for(j = 0; j < 5; j++)
@@ -1445,7 +1449,7 @@ void P_ArchiveWorld(void)
 
         for(j = 0; j < 2; j++)
         {
-            if(li->sidenum[j] == -1)
+            if(li->sidenum[j] == NO_SIDE_INDEX)
                 continue;
             
             si = &sides[li->sidenum[j]];
@@ -1490,26 +1494,16 @@ void P_UnArchiveWorld (void)
     // do sectors
     for(i = 0, sec = sectors; i < numsectors; i++, sec++)
     {
-        sec->floorheight        = INT2F(saveg_read16());
-        sec->ceilingheight      = INT2F(saveg_read16());
-        sec->floorpic           = saveg_read16();
-        sec->ceilingpic         = saveg_read16();
-        sec->special            = saveg_read16();
-        sec->tag                = saveg_read16();
-        sec->flags              = saveg_read16();
-        sec->lightlevel         = saveg_read16();
-        sec->xoffset            = saveg_read32();
-        sec->yoffset            = saveg_read32();
-        sec->floorplane.a       = saveg_read32();
-        sec->floorplane.b       = saveg_read32();
-        sec->floorplane.c       = saveg_read32();
-        sec->floorplane.nc      = saveg_read32();
-        sec->floorplane.d       = saveg_read32();
-        sec->ceilingplane.a     = saveg_read32();
-        sec->ceilingplane.b     = saveg_read32();
-        sec->ceilingplane.c     = saveg_read32();
-        sec->ceilingplane.nc    = saveg_read32();
-        sec->ceilingplane.d     = saveg_read32();
+        sec->floorheight    = INT2F(saveg_read16());
+        sec->ceilingheight  = INT2F(saveg_read16());
+        sec->floorpic       = saveg_read16();
+        sec->ceilingpic     = saveg_read16();
+        sec->special        = saveg_read16();
+        sec->tag            = saveg_read16();
+        sec->flags          = saveg_read16();
+        sec->lightlevel     = saveg_read16();
+        sec->xoffset        = saveg_read32();
+        sec->yoffset        = saveg_read32();
 
         saveg_set_mobjtarget(&sec->soundtarget, saveg_read_mobjindex());
 
@@ -1529,7 +1523,7 @@ void P_UnArchiveWorld (void)
 
         for(j = 0; j < 2; j++)
         {
-            if(li->sidenum[j] == -1)
+            if(li->sidenum[j] == NO_SIDE_INDEX)
                 continue;
 
             si                  = &sides[li->sidenum[j]];

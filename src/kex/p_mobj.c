@@ -1,32 +1,31 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Moving object handling. Spawn functions.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include "i_system.h"
 #include "z_zone.h"
@@ -45,7 +44,6 @@ rcsid[] = "$Id$";
 #include "m_misc.h"
 #include "con_console.h"
 #include "m_password.h"
-#include "m_math.h"
 
 mapthing_t* spawnlist;
 int         numspawnlist;
@@ -159,6 +157,7 @@ void P_MissileHit(mobj_t* mo)
     mobj_t* missilething;
     
     missilething = (mobj_t*)mo->extradata;
+    damage = 0;
 
     if(missilething)
     {
@@ -249,9 +248,6 @@ void P_XYMovement(mobj_t* mo)
             ptryy = mo->y + ymove;
             xmove = ymove = 0;
         }
-
-        if(P_CheckSlopeWalk(mo, &ptryx, &ptryx))
-            mo->z = M_PointToZ(&mo->subsector->sector->floorplane, ptryx, ptryy);
         
         if(!P_TryMove(mo, ptryx, ptryy))
         {
@@ -305,7 +301,7 @@ void P_XYMovement(mobj_t* mo)
             || mo->momy > FRACUNIT/4
             || mo->momy < -FRACUNIT/4)
         {
-            if(mo->floorz != M_PointToZ(&mo->subsector->sector->floorplane, mo->x, mo->y))
+            if(mo->floorz != mo->subsector->sector->floorheight)
                 return;
         }
     }
@@ -426,7 +422,7 @@ void P_NightmareRespawn(mobj_t* mobj)
     if(mobj->movecount < 12*TICRATE)
         return;
     
-    if(leveltime&31)
+    if(leveltime & 31)
         return;
     
     if(P_Random() > 4)
@@ -438,6 +434,13 @@ void P_NightmareRespawn(mobj_t* mobj)
     // somthing is occupying it's position?
     if(!P_CheckPosition(mobj, x, y) )
         return; // no respawn
+
+    // 20120301 villsa - don't respawn in insta-kill sector
+    if(R_PointInSubsector(x, y)->sector->special == 666)
+    {
+        mobj->flags &= ~MF_COUNTKILL;   // don't bother checking for respawns again
+        return;
+    }
     
     // spawn the new monster
     mthing = &mobj->spawnpoint;
@@ -454,8 +457,15 @@ void P_NightmareRespawn(mobj_t* mobj)
     mo = P_SpawnMobj(x, y, z, mobj->type);
     mo->spawnpoint = mobj->spawnpoint;
     mo->angle = ANG45 * (mthing->angle / 45);
-    mo->alpha = 0;
-    P_CreateFadeThinker(mo, &junk);
+
+    // 20120212 villsa - fix for respawning spectures
+    if(mo->type != MT_DEMON2)
+    {
+        mo->alpha = 0;
+        P_CreateFadeThinker(mo, &junk);
+    }
+    else
+        mo->alpha = 0x30;
     
     // initiate spawn sound
     S_StartSound(mo, sfx_spawn);
@@ -616,11 +626,15 @@ mobj_t* P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
     mobj->tracer    = NULL;
     mobj->refcount  = 0;    // init reference counter to 0
 
-    if(sv_healthscale.value != 1 && type != MT_PLAYER && mobj->flags & MF_COUNTKILL)
-        mobj->health = (int)((float)mobj->health * sv_healthscale.value);
+    if(healthscale > 1 && type != MT_PLAYER && mobj->flags & MF_COUNTKILL)
+        mobj->health = mobj->health * healthscale;
     
-    if(mobj->flags & MF_SOLID && (!(mobj->flags & (MF_NOCLIP|MF_SPECIAL))))
+    if(mobj->flags & MF_SOLID &&
+        compatflags & COMPATF_MOBJPASS &&
+        !(mobj->flags & (MF_NOCLIP|MF_SPECIAL)))
+    {
         mobj->blockflag |= BF_MOBJPASS;
+    }
     
     if(gameskill != sk_nightmare)
         mobj->reactiontime = info->reactiontime;
@@ -646,8 +660,8 @@ mobj_t* P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
     
     P_SetThingPosition(mobj);   // set subsector and/or block links
     
-    mobj->floorz    = M_PointToZ(&mobj->subsector->sector->floorplane, x, y);
-    mobj->ceilingz  = M_PointToZ(&mobj->subsector->sector->ceilingplane, x, y);
+    mobj->floorz    = mobj->subsector->sector->floorheight;
+    mobj->ceilingz  = mobj->subsector->sector->ceilingheight;
     
     if(z == ONFLOORZ)
         mobj->z = mobj->frame_z = mobj->floorz;
@@ -757,7 +771,6 @@ void P_SpawnPlayer(mapthing_t* mthing)
     p->bfgcount         = 0;
     p->viewheight       = VIEWHEIGHT;
     p->recoilpitch      = 0;
-    p->extrapitch       = 0;
     p->palette          = mthing->type-1;
     p->cameratarget     = p->mo;
     
@@ -1077,8 +1090,12 @@ mobj_t* P_SpawnMapThing(mapthing_t* mthing)
     mobj->spawnpoint = *mthing;
     mobj->tid = mthing->tid;
     
-    if(mobj->flags & MF_SOLID && (!(mobj->flags & (MF_NOCLIP|MF_SPECIAL))))
+    if(mobj->flags & MF_SOLID &&
+        compatflags & COMPATF_MOBJPASS &&
+        !(mobj->flags & (MF_NOCLIP|MF_SPECIAL)))
+    {
         mobj->blockflag |= BF_MOBJPASS;
+    }
 
     //
     // [d64] check if spawn is valid
@@ -1114,12 +1131,9 @@ mobj_t* P_SpawnMapThing(mapthing_t* mthing)
         totalsecret++;
     }
     
-    // At least set MF_NOBLOCKMAP if no flags exist..
+    // At least set BF_MIDPOINTONLY if no flags exist..
     if(mobj->flags == 0)
-    {
-        mobj->flags |= MF_NOBLOCKMAP;
         mobj->blockflag |= BF_MIDPOINTONLY;
-    }
     
     return mobj;
 }
@@ -1137,23 +1151,11 @@ extern fixed_t attackrange;
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z)
 {
     mobj_t* th;
-    plane_t *plane;
-    fixed_t pz;
     
     z += P_RandomShift(10);
     
     th = P_SpawnMobj(x, y, z, MT_SMOKE_SMALL);
-    plane = &th->subsector->sector->ceilingplane;
-
-    //
-    // [kex] allow puffs to move downward if it touches the ceiling
-    //
-    if((plane->a | plane->b) != 0)
-        pz = M_PointToZ(plane, x, y);
-    else
-        pz = th->subsector->sector->ceilingheight;
-
-    th->momz = (th->z + th->height < pz) ? FRACUNIT : -FRACUNIT;
+    th->momz = FRACUNIT;
     th->tics -= P_Random() & 3;
     
     if(th->tics < 1)
@@ -1202,7 +1204,6 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 {
     mobj_t*     th;
     angle_t     an;
-    angle_t     pitch;
     fixed_t     x;
     fixed_t     y;
     fixed_t     z;
@@ -1235,19 +1236,18 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
     
     // see which target is to be aimed at
     an = source->angle;
-    pitch = source->pitch + source->player->extrapitch;
 
-    slope = P_AimLineAttack(source, an, pitch, missileheight, ATTACKRANGE);
+    slope = P_AimLineAttack(source, an, missileheight, ATTACKRANGE);
     
     if(!linetarget)
     {
         an += 1<<26;
-        slope = P_AimLineAttack(source, an, pitch, missileheight, ATTACKRANGE);
+        slope = P_AimLineAttack(source, an, missileheight, ATTACKRANGE);
         
         if(!linetarget)
         {
             an -= 2<<26;
-            slope = P_AimLineAttack(source, an, pitch, missileheight, ATTACKRANGE);
+            slope = P_AimLineAttack(source, an, missileheight, ATTACKRANGE);
         }
     }
 
@@ -1268,7 +1268,7 @@ void P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 
     // [kex] adjust velocity based on viewpitch
     if(!linetarget)
-        frac = FixedMul(th->info->speed, dcos(source->pitch + source->player->extrapitch));
+        frac = FixedMul(th->info->speed, dcos(source->pitch));
     else
         frac = th->info->speed;
 

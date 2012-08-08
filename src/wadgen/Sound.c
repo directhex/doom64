@@ -216,6 +216,32 @@ static void Sound_CreateMidiHeader(entry_t* entry, midiheader_t* mthd)
 
 //**************************************************************
 //**************************************************************
+//	Sound_GetSubPatchByNote
+//
+//  Returns a subpatch based on min/max note
+//**************************************************************
+//**************************************************************
+
+static subpatch_t* Sound_GetSubPatchByNote(patch_t* patch, int note)
+{
+    int i;
+
+    if(note >= 0)
+    {
+        for(i = 0; i < patch->length; i++)
+        {
+            subpatch_t* s = &subpatches[patch->offset + i];
+
+            if(note >= s->minnote && note <= s->maxnote)
+                return s;
+        }
+    }
+
+    return &subpatches[patch->offset];
+}
+
+//**************************************************************
+//**************************************************************
 //	Sound_CreateMidiTrack
 //
 //  Convert SSEQ midi to standard midi format
@@ -223,7 +249,7 @@ static void Sound_CreateMidiHeader(entry_t* entry, midiheader_t* mthd)
 //**************************************************************
 
 static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data,
-                           int chan, int index, bool instrument)
+                           int chan, int index, patch_t* patch)
 {
     miditrack_t* mtrk;
     byte* midi;
@@ -234,6 +260,15 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
     byte temp = 0;
     int tracksize;
     char unkevent[32];
+    subpatch_t* inst;
+    int note = -1;
+    int bendrange = 0;
+
+    //
+    // doesn't matter what order it's in. all subpatches per patch
+    // should all either be an instrument or a non-instrument
+    //
+    inst = &subpatches[patch->offset];
 
     //
     // I can only assume that all tracks for a midi song
@@ -244,7 +279,7 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
     //
     // update midi type
     //
-    mthd->type = WGen_Swap16(instrument);
+    mthd->type = WGen_Swap16(inst->instrument);
 
     mtrk = &mthd->tracks[chan];
     strncpy(mtrk->header, "MTrk", 4);
@@ -295,7 +330,7 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
     //
     // set initial bank
     //
-    if(!instrument)
+    if(!inst->instrument)
     {
         *buff++ = 0;
         *buff++ = ((0x0b << 4) | chan);
@@ -336,33 +371,6 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
     *buff++ = track->pan;
     tracksize += 4;
 
-    //
-    // set pitch wheel sensitivity
-    //
-    if(instrument)
-    {
-        *buff++ = 0;
-        *buff++ = ((0x0b << 4) | chan);
-        *buff++ = 0x65;
-        *buff++ = 0;
-        tracksize += 4;
-        *buff++ = 0;
-        *buff++ = ((0x0b << 4) | chan);
-        *buff++ = 0x64;
-        *buff++ = 0;
-        tracksize += 4;
-        *buff++ = 0;
-        *buff++ = ((0x0b << 4) | chan);
-        *buff++ = 0x06;
-        *buff++ = 12;
-        tracksize += 4;
-        *buff++ = 0;
-        *buff++ = ((0x0b << 4) | chan);
-        *buff++ = 0x26;
-        *buff++ = 0;
-        tracksize += 4;
-    }
-
     while(1)
     {
         do
@@ -371,6 +379,7 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
             tracksize++;
         } while(*midi++ & 0x80);
 
+        // end marker
         if(*midi == 0x22)
         {
             *buff++ = 0xff;
@@ -397,6 +406,46 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
 
             break;
         case 0x09:  // pitch bend
+
+            //
+            // set pitch wheel sensitivity
+            //
+            if(inst->instrument && inst->pwheelrange_h != bendrange)
+            {
+                bendrange = inst->pwheelrange_h;
+
+                *buff++ = ((0x0b << 4) | chan);
+                *buff++ = 0x65;
+                *buff++ = 0;
+                *buff++ = 0;
+                tracksize += 4;
+                *buff++ = ((0x0b << 4) | chan);
+                *buff++ = 0x64;
+                *buff++ = 0;
+                *buff++ = 0;
+                tracksize += 4;
+                *buff++ = ((0x0b << 4) | chan);
+                *buff++ = 0x06;
+                *buff++ = bendrange;
+                *buff++ = 0;
+                tracksize += 4;
+                *buff++ = ((0x0b << 4) | chan);
+                *buff++ = 0x26;
+                *buff++ = 0;
+                *buff++ = 0;
+                tracksize += 4;
+                *buff++ = ((0x0b << 4) | chan);
+                *buff++ = 0x65;
+                *buff++ = 127;
+                *buff++ = 0;
+                tracksize += 4;
+                *buff++ = ((0x0b << 4) | chan);
+                *buff++ = 0x64;
+                *buff++ = 127;
+                *buff++ = 0;
+                tracksize += 4;
+            }
+
             *buff++ = ((0x0e << 4) | chan); *midi++;
 
             temp = *midi++;
@@ -434,9 +483,11 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
             *buff++ = *midi++;
             tracksize += 3;
             break;
-        case 0x0e:  // channel aftertouch
-            *buff++ = ((0x0d << 4) | chan); *midi++;
+        case 0x0e:  // sustain pedal
+            *buff++ = ((0x0b << 4) | chan); *midi++;
+            *buff++ = 0x40;
             *buff++ = *midi++;
+            tracksize += 3;
             break;
         case 0x0f:  // unknown 0x0f
             PRINTSTRING(*midi);
@@ -445,7 +496,7 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
             break;
         case 0x11:  // play note
             *buff++ = ((0x09 << 4) | chan); *midi++;
-            *buff++ = *midi++;
+            *buff++ = note = *midi++;
             *buff++ = *midi++;
             tracksize += 3;
             break;
@@ -474,6 +525,8 @@ static void Sound_CreateMidiTrack(midiheader_t* mthd, track_t* track, byte* data
             tracksize += 5;
             break;
         }
+
+        inst = Sound_GetSubPatchByNote(patch, note);
     }
 
     tracksize++;
@@ -765,6 +818,8 @@ static void Sound_ProcessSN64(void)
     head = (int32*)(RomFile.data);
     rover = (int32*)(RomFile.data + RomFile.length) - 1;
 
+    WGen_UpdateProgress("Processing SN64 Banks...");
+
     while(rover - head)
     {
         if(*rover == ROM_SNDTITLE)
@@ -909,6 +964,8 @@ static void Sound_ProcessSSEQ(void)
     int i;
     byte *sseqfile;
 
+    WGen_UpdateProgress("Processing SSEQ Tracks...");
+
     head = (int32*)(RomFile.data);
     rover = (int32*)(RomFile.data + RomFile.length) - 1;
 
@@ -953,6 +1010,8 @@ static void Sound_ProcessSSEQ(void)
         int tptr = 0;
         byte *data;
 
+        WGen_UpdateProgress("Converting track %03d", i);
+
         entries[i].length   = WGen_Swap32(entries[i].length);
         entries[i].ntrack   = WGen_Swap16(entries[i].ntrack);
         entries[i].offset   = WGen_Swap32(entries[i].offset);
@@ -988,8 +1047,7 @@ static void Sound_ProcessSSEQ(void)
             if(!(track->flag & 0x100) && entries[i].ntrack > 1)
                 WGen_Complain("Sound_ProcessSSEQ: bad track %i offset [entry %03d]\n", j, i);
 
-            Sound_CreateMidiTrack(&midis[i], track, data,
-                j, i, subpatches[patches[track->id].offset].instrument);
+            Sound_CreateMidiTrack(&midis[i], track, data, j, i, &patches[track->id]);
 
             tptr += (sizeof(track_t) + track->datalen);
 
@@ -1044,6 +1102,7 @@ void Sound_Setup(void)
             if(wavtabledata[wavtable->ptrindex])
                 continue;
 
+            WGen_UpdateProgress("Decompressing audio...");
             Sound_ProcessData(subpatch, wavtable, 22050, &predictors[subpatch->id]);
         }
     }

@@ -26,13 +26,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 242, 35
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 242, 51
 STYLE DS_SYSMODAL | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",PBS_SMOOTH | 
-                    WS_BORDER,15,17,210,11
-    LTEXT           "Creating game files from ROM",IDC_STATIC,73,4,95,9
+                    WS_BORDER,15,33,210,11
+    CTEXT           "",IDC_PROGRESSTEXT,73,19,95,9
+    CTEXT           "Creating game files from ROM",IDC_STATIC,73,4,95,9
 END
 
 

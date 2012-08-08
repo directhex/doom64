@@ -157,6 +157,6 @@ void Texture_Setup(void)
 
 		d64ExTexture[pos++].lumpRef = i;
 
-		WGen_UpdateProgress();
+		WGen_UpdateProgress("Converting Textures...");
 	}
 }

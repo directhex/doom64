@@ -77,9 +77,6 @@ Basic Parameters
 -setvars <cvar name, value>
 	Set a cvar value. Can set multiple cvars following '-setvars'
 
--timedemo
-	TODO: Add description
-
 ---------------------------------------------
 Advanced Parameters
 ---------------------------------------------

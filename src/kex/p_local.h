@@ -1,21 +1,23 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:
-//	Play functions, animation, global header.
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -135,13 +137,14 @@ void    P_Thrust(player_t* player, angle_t angle, fixed_t move );
 angle_t P_AdjustAngle(angle_t angle, angle_t newangle, int threshold);
 void    P_SetStaticCamera(player_t* player);
 void    P_SetFollowCamera(player_t* player);
+void    P_ClearUserCamera(player_t* player);
 
 
 //
 // P_MOBJ
 //
-#define ONFLOORZ        MININT
-#define ONCEILINGZ      MAXINT
+#define ONFLOORZ        D_MININT
+#define ONCEILINGZ      D_MAXINT
 
 extern mapthing_t*  spawnlist;
 extern int          numspawnlist;
@@ -206,6 +209,7 @@ int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t* line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t* line);
 void 	P_MakeDivline (line_t* li, divline_t* dl);
 fixed_t P_InterceptVector (divline_t* v2, divline_t* v1);
+void	P_GetIntersectPoint(fixed_t *s1, fixed_t *s2, fixed_t *x, fixed_t *y);
 int 	P_BoxOnLineSide (fixed_t* tmbox, line_t* ld);
 
 extern fixed_t		opentop;
@@ -213,7 +217,7 @@ extern fixed_t 		openbottom;
 extern fixed_t		openrange;
 extern fixed_t		lowfloor;
 
-void        P_LineOpening(line_t *linedef, fixed_t x, fixed_t y, fixed_t refx, fixed_t refy);
+void 		P_LineOpening (line_t* linedef);
 dboolean	P_BlockLinesIterator (int x, int y, dboolean(*func)(line_t*) );
 dboolean	P_BlockThingsIterator (int x, int y, dboolean(*func)(mobj_t*) );
 
@@ -249,18 +253,17 @@ dboolean    P_UseLines (player_t* player, dboolean showcontext);
 dboolean    P_ChangeSector (sector_t* sector, dboolean crunch);
 mobj_t*     P_CheckOnMobj(mobj_t *thing);
 void        P_CheckChaseCamPosition(mobj_t* target, mobj_t* camera, fixed_t x, fixed_t y);
-dboolean    P_CheckSlopeWalk(mobj_t* thing, fixed_t* xmove, fixed_t* ymove);
 
 #define MAXSPECIALCROSS 64
 
 extern mobj_t*  linetarget;	// who got hit (or NULL)
 extern mobj_t*  blockthing;
-//extern fixed_t  aimfrac;
+extern fixed_t  aimfrac;
 extern line_t*  spechit[MAXSPECIALCROSS];
 extern int      numspechit;
 
-fixed_t P_AimLineAttack(mobj_t* t1, angle_t angle, angle_t pitch, fixed_t zheight, fixed_t distance);
-void	P_LineAttack(mobj_t* t1,angle_t angle, angle_t pitch, fixed_t distance, fixed_t slope, int damage);
+fixed_t P_AimLineAttack(mobj_t*	t1, angle_t angle, fixed_t zheight, fixed_t distance);
+void	P_LineAttack(mobj_t* t1,angle_t angle, fixed_t distance, fixed_t slope, int damage);
 void	P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage);
 
 

@@ -1,23 +1,24 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:
-//	Status bar code.
-//	Does the face/direction indicator animatin.
-//	Does palette indicators as well (red pain/berserk, bright pickup)
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -26,7 +27,6 @@
 
 #include "doomtype.h"
 #include "d_event.h"
-#include "r_gl.h"
 #include "p_mobj.h"
 
 #include "Ext/ChocolateDoom/net_client.h"
@@ -34,13 +34,6 @@
 //
 // STATUS BAR
 //
-
-#define ST_FONTWHSIZE	8
-#define ST_FONTNUMSET	32	//# of fonts per row in font pic
-#define ST_FONTSTART	'!'	// the first font characters
-#define ST_FONTEND		'_'	// the last font characters
-
-#define ST_FONTSIZE		(ST_FONTEND - ST_FONTSTART + 1) // Calculate # of glyphs in font.
 
 // Called by main loop.
 dboolean ST_Responder (event_t* ev);
@@ -63,6 +56,8 @@ void ST_DrawCrosshair(int x, int y, int slot, byte scalefactor, rcolor color);
 void ST_UpdateFlash(void);
 void ST_AddDamageMarker(mobj_t* target, mobj_t* source);
 void ST_ClearDamageMarkers(void);
+void ST_RegisterCvars(void);
+void ST_DisplayPendingWeapon(void);
 
 extern char player_names[MAXPLAYERS][MAXPLAYERNAME];
 extern dboolean st_chatOn;

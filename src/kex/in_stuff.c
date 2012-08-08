@@ -1,40 +1,41 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
-//
-// DESCRIPTION: Intermission screen functions
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char rcsid[] = "$Id$";
-#endif
+//
+// DESCRIPTION: Interlude screen functions
+//
+//-----------------------------------------------------------------------------
 
 #include "i_system.h"
 #include "d_englsh.h"
 #include "doomstat.h"
 #include "st_stuff.h"
 #include "f_finale.h"
-#include "m_misc.h"
 #include "r_local.h"
 #include "r_wipe.h"
 #include "p_setup.h"
 #include "s_sound.h"
+#include "gl_draw.h"
 
 static int              f_alpha = 0;
 static int              fInterFadeOut = false;
@@ -129,7 +130,7 @@ void IN_Drawer(void)
     int y = 0;
     rcolor color;
 
-    R_GLClearFrame(0xFF000000);
+    GL_ClearView(0xFF000000);
 
     if(fcluster->scrolltextend)
         color = D_RGBA(255, 255, 255, f_alpha);
@@ -137,7 +138,7 @@ void IN_Drawer(void)
         color = 0xFFFFFFFF;
     
     // Draw background
-    R_DrawGfx(fcluster->pic_x, fcluster->pic_y, fcluster->pic, color, false);
+    Draw_GfxImage(fcluster->pic_x, fcluster->pic_y, fcluster->pic, color, false);
 
     if(!fInterFadeOut)
     {
@@ -160,7 +161,7 @@ void IN_Drawer(void)
         else
             alpha = 0xff;
         
-        M_DrawSmbText(-1, y - fTextOffset, D_RGBA(255, 255, 255, alpha), fInterString[i]);
+        Draw_BigText(-1, y - fTextOffset, D_RGBA(255, 255, 255, alpha), fInterString[i]);
         y += 14;
         
         if(i == fInterSlot || !fInterString[i][0])

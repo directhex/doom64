@@ -121,7 +121,16 @@ bool File_Prepare(wgenfile_t *wgenfile, const char *filename)
 
 int File_Open(char const* name)
 {
-	int handle = open(name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
+	int handle;
+
+    if(File_Poke(name))
+    {
+        chmod(name, S_IWRITE);
+        if(remove(name))
+            WGen_Complain("File_Open: Unable to overwrite %s", name);
+    }
+
+    handle = open(name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 
 	if(handle == -1)
 		WGen_Complain("File_Open: Couldn't create %s", name);
@@ -182,7 +191,25 @@ int File_Read(char const* name, cache* buffer)
 	struct stat fileinfo;
 	byte *buf;
 
+#ifndef _WIN32
+	// on *NIX, look in the same places the game looks for the IWAD
+	path fullpath;
+
+	sprintf(fullpath, "%s", name); // current dir first
+	handle = open (fullpath, O_RDONLY | O_BINARY, 0666);
+
+	if(handle == -1) {
+		sprintf(fullpath, "/usr/share/games/doom64/%s", name);
+		handle = open (fullpath, O_RDONLY | O_BINARY, 0666);
+
+		if(handle == -1) {
+			sprintf(fullpath, "/usr/local/share/games/doom64/%s", name);
+			handle = open (fullpath, O_RDONLY | O_BINARY, 0666);
+		}
+	}
+#else
 	handle = open (name, O_RDONLY | O_BINARY, 0666);
+#endif
 
 	if(handle == -1) WGen_Complain("Couldn't read file %s", name);
 	if(fstat (handle,&fileinfo) == -1) WGen_Complain("Couldn't read file %s", name);
@@ -207,14 +234,7 @@ int File_Read(char const* name, cache* buffer)
 
 bool File_Poke(const char *file)
 {
-	int handle = open(file, O_RDONLY | O_BINARY, 0666);
-
-	if(handle == -1)
-		return false;
-
-	close(handle);
-
-	return true;
+	return access(file, 0) != -1;
 }
 
 //**************************************************************

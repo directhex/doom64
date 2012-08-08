@@ -245,6 +245,6 @@ void Gfx_Setup(void)
 			gfxEx[i].lumpRef = l;	// Need to point where we originally got the gfx from
 		}
 
-		WGen_UpdateProgress();
+		WGen_UpdateProgress("Converting GFX...");
 	}
 }

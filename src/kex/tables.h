@@ -1,31 +1,23 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:
-//	Lookup tables.
-//	Do not try to look them up :-).
-//	In the order of appearance:
-//
-//
-//	int finesine[10240]		- Sine lookup.
-//	 Guess what, serves as cosine, too.
-//	 Remarkable thing is, how to use BAMs with this?
-//
-//	int tantoangle[2049]	- ArcTan LUT,
-//	  maps tan(angle) to angle fast. Gotta search.
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -35,32 +27,32 @@
 
 #include "m_fixed.h"
 
-typedef unsigned angle_t;
+#define M_PI            3.14159265358979323846
 
-#define M_PI                3.14159265358979323846
+#define FINEANGLES		8192
+#define FINEMASK		(FINEANGLES-1)
 
-#define FINEANGLES          8192
-#define FINEMASK            (FINEANGLES-1)
 
 // 0x100000000 to 0x2000
-#define ANGLETOFINESHIFT    19
+#define ANGLETOFINESHIFT	19
 
 // Binary Angle Measument, BAM.
-#define ANG45               0x20000000
-#define ANG90               0x40000000
-#define ANG180              0x80000000
-#define ANG270              0xc0000000
-#define ANG1                (ANG45/45)
-#define ANG5                (ANG90/18)
-#define ANGLE_MAX           (0xffffffff)
+#define ANG45			0x20000000
+#define ANG90			0x40000000
+#define ANG180			0x80000000
+#define ANG270			0xc0000000
+#define ANG1			(ANG45/45)
+#define ANG5			(ANG90/18)
+#define ANGLE_MAX		(0xffffffff)
 
 
-#define SLOPERANGE          2048
-#define SLOPEBITS           11
-#define DBITS               (FRACBITS-SLOPEBITS)
+#define SLOPERANGE		2048
+#define SLOPEBITS		11
+#define DBITS			(FRACBITS-SLOPEBITS)
 
-#define TRUEANGLES(x)       (((x) >> ANGLETOFINESHIFT) * 360.0f / FINEANGLES)
-#define FINERADIANS         ((M_PI * 2) / FINEANGLES)
+#define TRUEANGLES(x) (((x) >> ANGLETOFINESHIFT) * 360.0f / FINEANGLES)
+
+typedef unsigned angle_t;
 
 // Effective size is 10240.
 extern  fixed_t		finesine[5*FINEANGLES/4];

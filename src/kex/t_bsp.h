@@ -1,20 +1,26 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//---------------------------------------------------------------------
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 
 #ifndef T_BSP_H
 #define T_BSP_H
@@ -22,7 +28,6 @@
 #include "m_fixed.h"
 #include "d_think.h"
 #include "p_mobj.h"
-#include "r_gl.h"
 
 //
 // INTERNAL MAP TYPES
@@ -68,7 +73,6 @@ typedef struct
     fixed_t a;
     fixed_t b;
     fixed_t c;
-    fixed_t nc;
     fixed_t d;
 } plane_t;
 
@@ -174,38 +178,38 @@ typedef enum
 typedef struct line_s
 {
     // Vertices, from v1 to v2.
-	vertex_t*		v1;
-	vertex_t*		v2;
+	vertex_t*       v1;
+	vertex_t*       v2;
 
     // Precalculated v2 - v1 for side checking.
-	fixed_t			dx;
-	fixed_t			dy;
+	fixed_t         dx;
+	fixed_t         dy;
 
-	int				flags;
-	short			special;
-	short			tag;
+	int             flags;
+	short           special;
+	short           tag;
 
     // Visual appearance: SideDefs.
     //  sidenum[1] will be -1 if one sided
-	short			sidenum[2];
+	word            sidenum[2];
 
     // Neat. Another bounding box, for the extent
     //  of the LineDef.
-	fixed_t			bbox[4];
+	fixed_t         bbox[4];
 
     // To aid move clipping.
-	slopetype_t		slopetype;
+	slopetype_t     slopetype;
 
     // Front and back sector.
     // Note: redundant? Can be retrieved from SideDefs.
-	sector_t*		frontsector;
-	sector_t*		backsector;
+	sector_t*       frontsector;
+	sector_t*       backsector;
 
     // if == validcount, already checked
-	int				validcount;
+	int             validcount;
 
     // thinker_t for reversable actions
-	void*			specialdata;
+	void*           specialdata;
 
     angle_t         angle;
 
@@ -224,11 +228,11 @@ typedef struct line_s
 // Also includes boundary vertices when gl-friendly nodes used
 typedef struct subsector_s
 {
-    sector_t*	sector;
-    short		numlines;
-    short		firstline;
-	short		numleafs;
-	short		leaf;
+    sector_t*   sector;
+    word        numlines;
+    word        firstline;
+	word        numleafs;
+	word        leaf;
 } subsector_t;
 
 //

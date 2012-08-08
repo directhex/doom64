@@ -1,33 +1,30 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Cheat sequence checking.
 //
 //-----------------------------------------------------------------------------
-
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -51,15 +48,10 @@ typedef struct
 } cheatinfo_t;
 
 static void M_CheatFa(player_t* player, char dat[4]);
-static void M_CheatKfa(player_t* player, char dat[4]);
 static void M_CheatBerserk(player_t* player, char dat[4]);
 static void M_CheatWarp(player_t* player, char dat[4]);
 static void M_CheatMyPos(player_t* player, char dat[4]);
 static void M_CheatAllMap(player_t* player, char dat[4]);
-static void M_CheatGiveWeapon(player_t* player, char dat[4]);
-static void M_CheatGiveKey(player_t* player, char dat[4]);
-static void M_CheatBoyISuck(player_t* player, char dat[4]);
-static void M_CheatArtifacts(player_t* player, char dat[4]);
 
 cheatinfo_t cheat[] =
 {
@@ -119,7 +111,7 @@ static void M_CheatFa(player_t* player, char dat[4])
     player->message = STSTR_FAADDED;
 }
 
-static void M_CheatKfa(player_t* player, char dat[4])
+void M_CheatKfa(player_t* player, char dat[4])
 {
     int i;
     
@@ -162,6 +154,7 @@ static void M_CheatBerserk(player_t* player, char dat[4])
     player->message = GOTBERSERK;
 }
 
+CVAR_EXTERNAL(sv_skill);
 static void M_CheatWarp(player_t* player, char dat[4])
 {
     int map;
@@ -170,7 +163,7 @@ static void M_CheatWarp(player_t* player, char dat[4])
     if(map < 1)
         return;
     
-    if(map > 34)
+    if(map > 33)
         return;
     
     // So be it.
@@ -193,7 +186,7 @@ static void M_CheatAllMap(player_t* player, char dat[4])
     amCheating = (amCheating+1) % 3;
 }
 
-static void M_CheatGiveWeapon(player_t* player, char dat[4])
+void M_CheatGiveWeapon(player_t* player, char dat[4])
 {
     char c = dat[0];
     int w = datoi(&c);
@@ -231,7 +224,7 @@ static void M_CheatGiveWeapon(player_t* player, char dat[4])
     player->message = WeapGotNames[w - 1];
 }
 
-static void M_CheatGiveKey(player_t* player, char dat[4])
+void M_CheatGiveKey(player_t* player, char dat[4])
 {
     char c = dat[0];
     int k = datoi(&c);
@@ -243,13 +236,13 @@ static void M_CheatGiveKey(player_t* player, char dat[4])
     player->message = player->cards[k-1] ? "Key Added" : "Key Removed";
 }
 
-static void M_CheatBoyISuck(player_t* player, char dat[4])
+void M_CheatBoyISuck(player_t* player, char dat[4])
 {
     D_BoyISuck();
     player->message = DEVKILLALL;
 }
 
-static void M_CheatArtifacts(player_t* player, char dat[4])
+void M_CheatArtifacts(player_t* player, char dat[4])
 {
     char c = dat[0];
     int a = datoi(&c);
@@ -391,7 +384,7 @@ void M_ParseNetCheat(int player, int type, char *buff)
 
 void M_CheatProcess(player_t* plyr, event_t* ev)
 {
-    if(netgame && !sv_allowcheats.value)
+    if(netgame && !(gameflags & GF_ALLOWCHEATS))
         return;
     
     // if a user keypress...

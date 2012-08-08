@@ -42,11 +42,11 @@ typedef struct
     byte            pan;            // left/right panning
     byte            instrument;     // (boolean) treat this as an instrument?
     byte            rootkey;        // instrument's root key
-    byte            unk_05;
+    byte            detune;         // detune key (20120327 villsa - identified)
     byte            minnote;        // use this subpatch if played note > minnote
     byte            maxnote;        // use this subpatch if played note < maxnote
-    byte            pwheelsens;     // pitch wheel sensitivity
-    byte            unk_09;
+    byte            pwheelrange_l;  // pitch wheel low range (20120326 villsa - identified)
+    byte            pwheelrange_h;  // pitch wheel high range (20120326 villsa - identified)
     word            id;             // sfx id
     short           attacktime;     // attack time (fade in)
     byte            unk_0e;

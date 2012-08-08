@@ -1,29 +1,30 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION: Sky rendering code
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char rcsid[] = "$Id$";
-#endif
 
 #include <stdlib.h>
 
@@ -39,7 +40,9 @@ static const char rcsid[] = "$Id$";
 #define close _close
 #include "i_png.h"
 #undef _close
-#include "r_texture.h"
+#include "gl_texture.h"
+#include "gl_draw.h"
+#include "r_drawlist.h"
 
 skydef_t*   sky;
 int         skypicnum = -1;
@@ -55,12 +58,13 @@ int         fireLump = -1;
 
 static word CloudOffsetY = 0;
 static word CloudOffsetX = 0;
+static float sky_cloudpan1 = 0;
+static float sky_cloudpan2 = 0;
 
 #define FIRESKYSIZE 64
 
-//
-// R_GetSkyViewPos
-//
+CVAR_EXTERNAL(r_texturecombiner);
+CVAR_EXTERNAL(r_skybox);
 
 #define SKYVIEWPOS(angle, amount, x) x = -(angle / (float)ANG90 * amount); while(x < 1.0f) x += 1.0f
 
@@ -117,6 +121,12 @@ static void R_CloudTicker(void)
 {
     CloudOffsetX -= (dcos(viewangle) >> 10);
     CloudOffsetY += (dsin(viewangle) >> 9);
+
+    if(r_skybox.value)
+    {
+        sky_cloudpan1 += 0.00225f;
+        sky_cloudpan2 += 0.00075f;
+    }
     
     if(sky->flags & SKF_THUNDER)
         R_CloudThunder();
@@ -140,68 +150,300 @@ static void R_TitleSkyTicker(void)
 }
 
 //
-// R_DrawSkyBackdrop
+// R_DrawSkyDome
 //
 
-static void R_DrawSkyBackdrop(void)
+static void R_DrawSkyDome(int tiles, float rows, int height,
+                          int radius, float offset, float topoffs,
+                          rcolor c1, rcolor c2)
 {
-    float pos1;
-    float pos2;
-    int gfxLmp;
-    int width;
-    int height;
-    dboolean looksky = (int)r_looksky.value;
-    
-    gfxLmp = R_BindGfxTexture(lumpinfo[skybackdropnum].name, true);
+    fixed_t x, y, z;
+    fixed_t lx, ly;
+    int i;
+    angle_t an;
+    float tu1, tu2;
+    int r;
+    vtx_t *vtx;
+    int count;
 
-    dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    lx = ly = count = 0;
 
-    width = gfxwidth[gfxLmp];
-    height = gfxheight[gfxLmp];
+#define NUM_SKY_DOME_FACES  32
+
+    //
+    // hack to force ortho scale back to 1
+    //
+    GL_SetOrthoScale(1.0f);
+
+    //
+    // setup view projection
+    //
+    dglMatrixMode(GL_PROJECTION);
+    dglLoadIdentity();
+    dglViewFrustum(video_width, video_height, r_fov.value, 0.1f);
+    dglMatrixMode(GL_MODELVIEW);
+    dglLoadIdentity();
+    dglPushMatrix();
+    dglRotatef(-TRUEANGLES(viewpitch), 1.0f, 0.0f, 0.0f);
+    dglRotatef(-TRUEANGLES(viewangle) + 90.0f, 0.0f, 0.0f, 1.0f);
+
+    //
+    // try to center view to the dome
+    //
+    dglTranslated(
+        -((float)radius / ((float)NUM_SKY_DOME_FACES / 2.0f)),
+        -((float)radius / (M_PI / 2)),
+        -offset);
+
+    //
+    // front faces are drawn here, so cull the back faces
+    //
+    dglCullFace(GL_BACK);
+    GL_SetState(GLSTATE_BLEND, 1);
+
+    r = radius / (NUM_SKY_DOME_FACES / 4);
+
+    //
+    // set pointer for the main vertex list
+    //
+    dglSetVertex(drawVertex);
+    vtx = drawVertex;
+
+#define SKYDOME_VERTEX() vtx->x = F2D3D(x); vtx->y = F2D3D(y); vtx->z = F2D3D(z)
+#define SKYDOME_UV(u, v) vtx->tu = u; vtx->tv = v
+#define SKYDOME_LEFT(v, h)                      \
+    x = lx;                                     \
+    y = ly;                                     \
+    z = INT2F(h);                               \
+    SKYDOME_UV(-tu1, v);                        \
+    SKYDOME_VERTEX();                           \
+    vtx++
+
+#define SKYDOME_RIGHT(v, h)                     \
+    x = lx + FixedMul(INT2F(r), dcos((angle))); \
+    y = ly + FixedMul(INT2F(r), dsin((angle))); \
+    z = INT2F(h);                               \
+    SKYDOME_UV(-(tu2 * (i + 1)), v);            \
+    SKYDOME_VERTEX();                           \
+    vtx++
     
-    SKYVIEWPOS(viewangle, 1, pos1);
-    pos2 = looksky ? ((float)dcos(viewpitch) / 512) : 0.0f;
+    tu1 = 0;
+    tu2 = (float)tiles / (float)NUM_SKY_DOME_FACES;
+    an = (ANGLE_MAX / NUM_SKY_DOME_FACES);
+
+    //
+    // setup vertex data
+    //
+    for(i = 0; i < NUM_SKY_DOME_FACES; i++)
+    {
+        angle_t angle = an * i;
+
+        dglSetVertexColor(&vtx[0], c2, 1);
+        dglSetVertexColor(&vtx[1], c1, 1);
+        dglSetVertexColor(&vtx[2], c1, 1);
+        dglSetVertexColor(&vtx[3], c2, 1);
+
+        SKYDOME_LEFT(rows, -height);
+        SKYDOME_LEFT(topoffs, height);
+        SKYDOME_RIGHT(topoffs, height);
+        SKYDOME_RIGHT(rows, -height);
+
+        lx = x;
+        ly = y;
+
+        dglTriangle(0+count, 1+count, 2+count);
+        dglTriangle(3+count, 0+count, 2+count);
+        count += 4;
+
+        tu1 += tu2;
+    }
+
+    //
+    // draw sky dome
+    //
+    dglDrawGeometry(count, drawVertex);
+
+    dglPopMatrix();
+    dglCullFace(GL_FRONT);
+
+    GL_SetState(GLSTATE_BLEND, 0);
+
+#undef SKYDOME_RIGHT
+#undef SKYDOME_LEFT
+#undef SKYDOME_UV
+#undef SKYDOME_VERTEX
+#undef NUM_SKY_DOME_FACES
+}
+
+//
+// R_DrawSkyboxCloud
+//
+
+static void R_DrawSkyboxCloud(void)
+{
+    rcolor color;
+    vtx_t v[4];
+
+#define SKYBOX_SETALPHA(c, x)           \
+    c ^= (((c >> 24) & 0xff) << 24);    \
+    c |= (x << 24)
+
+    //
+    // hack to force ortho scale back to 1
+    //
+    GL_SetOrthoScale(1.0f);
+
+    //
+    // setup view projection
+    //
+    dglMatrixMode(GL_PROJECTION);
+    dglLoadIdentity();
+    dglViewFrustum(video_width, video_height, r_fov.value, 0.1f);
+    dglMatrixMode(GL_MODELVIEW);
+    dglLoadIdentity();
+    dglPushMatrix();
+    dglRotatef(-TRUEANGLES(viewpitch), 1.0f, 0.0f, 0.0f);
+
+    //
+    // set vertex pointer
+    //
+    dglSetVertex(v);
+
+    //
+    // disable textures for horizon effect
+    //
+    dglDisable(GL_TEXTURE_2D);
+
+    //
+    // draw horizon ceiling
+    //
+    v[0].x = -MAX_COORD; v[0].y = -MAX_COORD; v[0].z = 512;
+    v[1].x = MAX_COORD; v[1].y = -MAX_COORD; v[1].z = 512;
+    v[2].x = MAX_COORD; v[2].y = MAX_COORD; v[2].z = 512;
+    v[3].x = -MAX_COORD; v[3].y = MAX_COORD; v[3].z = 512;
+
+    dglSetVertexColor(&v[0], sky->skycolor[0], 4);
+
+    dglTriangle(0, 1, 3);
+    dglTriangle(2, 3, 1);
+    dglDrawGeometry(4, v);
+
+    //
+    // draw horizon wall
+    //
+    v[0].x = -MAX_COORD; v[0].y = 512; v[0].z = 12;
+    v[1].x = -MAX_COORD; v[1].y = 512; v[1].z = 512;
+    v[2].x = MAX_COORD; v[2].y = 512; v[2].z = 512;
+    v[3].x = MAX_COORD; v[3].y = 512; v[3].z = 12;
+
+    dglSetVertexColor(&v[0], sky->skycolor[1], 1);
+    dglSetVertexColor(&v[1], sky->skycolor[0], 1);
+    dglSetVertexColor(&v[2], sky->skycolor[0], 1);
+    dglSetVertexColor(&v[3], sky->skycolor[1], 1);
+
+    dglTriangle(0, 1, 2);
+    dglTriangle(3, 0, 2);
+    dglDrawGeometry(4, v);
+    dglEnable(GL_TEXTURE_2D);
+    dglPopMatrix();
     
-    R_GLToggleBlend(1);
-    
-    R_GLDraw2DStrip(0, (float)(170-height) - pos2, SCREENWIDTH, height,
-        pos1, 1.25f + pos1, 0.006f, 1.0f, WHITE, 1);
-    
-    R_GLToggleBlend(0);
+    //
+    // setup model matrix for clouds
+    //
+    dglPushMatrix();
+    dglRotatef(-TRUEANGLES(viewpitch), 1.0f, 0.0f, 0.0f);
+    dglRotatef(-TRUEANGLES(viewangle) + 90.0f, 0.0f, 0.0f, 1.0f);
+
+    //
+    // bind cloud texture and set blending
+    //
+    GL_SetTextureUnit(0, true);
+    GL_BindGfxTexture(lumpinfo[skypicnum].name, false);
+    GL_SetState(GLSTATE_BLEND, 1);
+
+    //
+    // draw first cloud layer
+    //
+    v[0].tu = sky_cloudpan1; v[0].tv = sky_cloudpan1;
+    v[1].tu = 16 + sky_cloudpan1; v[1].tv = sky_cloudpan1;
+    v[2].tu = 16 + sky_cloudpan1; v[2].tv = 16 + sky_cloudpan1;
+    v[3].tu = sky_cloudpan1; v[3].tv = 16 + sky_cloudpan1;
+    v[0].x = -MAX_COORD; v[0].y = -MAX_COORD; v[0].z = 768;
+    v[1].x = MAX_COORD; v[1].y = -MAX_COORD; v[1].z = 768;
+    v[2].x = MAX_COORD; v[2].y = MAX_COORD; v[2].z = 768;
+    v[3].x = -MAX_COORD; v[3].y = MAX_COORD; v[3].z = 768;
+
+    color = sky->skycolor[2];
+    SKYBOX_SETALPHA(color, 0x3f);
+    dglSetVertexColor(&v[0], color, 4);
+
+    dglTriangle(0, 1, 3);
+    dglTriangle(2, 3, 1);
+    dglDrawGeometry(4, v);
+
+    //
+    // draw second cloud layer
+    //
+    // preserve color and xy and just update
+    // uv coords and z height
+    //
+    v[0].tu = sky_cloudpan2; v[0].tv = sky_cloudpan2;
+    v[1].tu = 32 + sky_cloudpan2; v[1].tv = sky_cloudpan2;
+    v[2].tu = 32 + sky_cloudpan2; v[2].tv = 32 + sky_cloudpan2;
+    v[3].tu = sky_cloudpan2; v[3].tv = 32 + sky_cloudpan2;
+    v[0].z = v[1].z = v[2].z = v[3].z = 1024;
+
+    dglTriangle(0, 1, 3);
+    dglTriangle(2, 3, 1);
+    dglDrawGeometry(4, v);
+
+    //
+    // add more contrast to the top cloud layer
+    // just draw a non-textured plane and blend it
+    //
+    dglDisable(GL_TEXTURE_2D);
+    SKYBOX_SETALPHA(color, 0x1f);
+    dglSetVertexColor(&v[0], color, 4);
+    dglTriangle(0, 1, 3);
+    dglTriangle(2, 3, 1);
+    dglDrawGeometry(4, v);
+    dglEnable(GL_TEXTURE_2D);
+
+    dglPopMatrix();
+    GL_SetState(GLSTATE_BLEND, 0);
+
+#undef SKYBOX_SETALPHA
 }
 
 //
 // R_DrawSimpleSky
 //
 
-static void R_DrawSimpleSky(int offset)
+static void R_DrawSimpleSky(int lump, int offset)
 {
     float pos1;
-    float pos2;
     float width;
     int height;
+    int lumpheight;
     int gfxLmp;
-    dboolean looksky = (int)r_looksky.value;
+    float row;
     
-    gfxLmp = R_BindGfxTexture(lumpinfo[skypicnum].name, false);
+    gfxLmp = GL_BindGfxTexture(lumpinfo[lump].name, true);
     height = gfxheight[gfxLmp];
+    lumpheight = gfxorigheight[gfxLmp];
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     
     SKYVIEWPOS(viewangle, 1, pos1);
-    if(looksky)
-    {
-        SKYVIEWPOS(viewpitch, 1, pos2);
-    }
-    else
-        pos2 = 0.0f;
 
     width = (float)SCREENWIDTH / (float)gfxwidth[gfxLmp];
+    row = (float)lumpheight / (float)height;
     
-    R_GLDraw2DStrip(0, (float)offset, SCREENWIDTH, -height,
-        pos1, width + pos1, -pos2, -1.0f - pos2, WHITE, 1);
+    GL_SetState(GLSTATE_BLEND, 1);
+    GL_SetupAndDraw2DQuad(0, (float)offset - lumpheight, SCREENWIDTH, lumpheight,
+        pos1, width + pos1, 0.006f, row, WHITE, 1);
+    GL_SetState(GLSTATE_BLEND, 0);
 }
 
 //
@@ -210,14 +452,14 @@ static void R_DrawSimpleSky(int offset)
 
 static void R_DrawVoidSky(void)
 {
-    R_GLEnable2D(1);
+    GL_SetOrtho(1);
     
     dglDisable(GL_TEXTURE_2D);
     dglColor4ubv((byte*)&sky->skycolor[2]);
     dglRecti(SCREENWIDTH, SCREENHEIGHT, 0, 0);
     dglEnable(GL_TEXTURE_2D);
     
-    R_GLDisable2D();
+    GL_ResetViewport();
 }
 
 //
@@ -226,8 +468,8 @@ static void R_DrawVoidSky(void)
 
 static void R_DrawTitleSky(void)
 {
-    R_DrawSimpleSky(240);
-    R_DrawGfx(63, 25, sky->backdrop, D_RGBA(255, 255, 255, logoAlpha), false);
+    R_DrawSimpleSky(skypicnum, 240);
+    Draw_GfxImage(63, 25, sky->backdrop, D_RGBA(255, 255, 255, logoAlpha), false);
 }
 
 //
@@ -239,17 +481,54 @@ static void R_DrawClouds(void)
     rfloat pos = 0.0f;
     vtx_t v[4];
 
-    dglMatrixMode(GL_PROJECTION);
-    dglLoadIdentity();
-    dglFrustum(SCREENWIDTH, SCREENHEIGHT, 45.0f, 0.1f);
+    GL_SetTextureUnit(0, true);
+    GL_BindGfxTexture(lumpinfo[skypicnum].name, false);
 
-    R_GLSetOrthoScale(1.0f); // force ortho mode to be set
-    R_BindGfxTexture(lumpinfo[skypicnum].name, false);
+    pos = (TRUEANGLES(viewangle) / 360.0f) * 2.0f;
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    pos = (TRUEANGLES(viewangle) / 360.0f) * 2.0f;
+    dglSetVertex(v);
+
+    if(r_texturecombiner.value > 0 && gl_max_texture_units > 2)
+    {
+        dglSetVertexColor(&v[0], sky->skycolor[0], 2);
+        dglSetVertexColor(&v[2], sky->skycolor[1], 2);
+
+        GL_UpdateEnvTexture(WHITE);
+
+        // pass 1: texture * skycolor
+        dglTexCombColor(GL_TEXTURE, sky->skycolor[2], GL_MODULATE);
+
+        // pass 2: result * const (though the original game uses the texture's alpha)
+        GL_SetTextureUnit(1, true);
+        dglTexCombColor(GL_PREVIOUS, 0xFF909090, GL_MODULATE);
+
+        // pass 3: result + fragment color
+        GL_SetTextureUnit(2, true);
+        dglTexCombAdd(GL_PREVIOUS, GL_PRIMARY_COLOR);
+    }
+    else
+    {
+        GL_Set2DQuad(v, 0, 0, SCREENWIDTH, 120, 0, 0, 0, 0, 0);
+        dglSetVertexColor(&v[0], sky->skycolor[0], 2);
+        dglSetVertexColor(&v[2], sky->skycolor[1], 2);
+
+        dglDisable(GL_TEXTURE_2D);
+
+        GL_Draw2DQuad(v, true);
+
+        dglEnable(GL_TEXTURE_2D);
+
+        GL_SetTextureUnit(1, true);
+        GL_SetTextureMode(GL_ADD);
+        GL_UpdateEnvTexture(sky->skycolor[1]);
+        GL_SetTextureUnit(0, true);
+
+        dglSetVertexColor(&v[0], sky->skycolor[2], 4);
+        v[0].a = v[1].a = v[2].a = v[3].a = 0x60;
+    }
 
     v[3].x = v[1].x = 1.1025f;
     v[0].x = v[2].x = -1.1025f;
@@ -262,42 +541,22 @@ static void R_DrawClouds(void)
     v[0].tv = v[1].tv = F2D3D(CloudOffsetY);
     v[2].tv = v[3].tv = F2D3D(CloudOffsetY) + 2.0f;
 
-    dglSetVertexColor(&v[0], sky->skycolor[0], 2);
-    dglSetVertexColor(&v[2], sky->skycolor[1], 2);
+    GL_SetOrthoScale(1.0f); // force ortho mode to be set
 
-    dglSetVertex(v);
-
-    // pass 1: texture * skycolor
-    dglTexCombReplaceAlpha(GL_TEXTURE0_ARB);
-    dglActiveTexture(GL_TEXTURE0_ARB);
-    dglTexCombColor(GL_TEXTURE, sky->skycolor[2], GL_MODULATE);
-
-    // pass 2: result * const (though the original game uses the texture's alpha)
-    dglActiveTexture(GL_TEXTURE1_ARB);
-    dglEnable(GL_TEXTURE_2D);
-    dglTexCombColor(GL_PREVIOUS, 0xFF909090, GL_MODULATE);
-
-    // pass 3: result + fragment color
-    dglActiveTexture(GL_TEXTURE2_ARB);
-    dglEnable(GL_TEXTURE_2D);
-    dglTexCombAdd(GL_PREVIOUS, GL_PRIMARY_COLOR);
-
-    dglAlphaFunc(GL_ALWAYS, 0);
-    dglEnable(GL_BLEND);
+    dglMatrixMode(GL_PROJECTION);
+    dglLoadIdentity();
+    dglViewFrustum(SCREENWIDTH, SCREENHEIGHT, 45.0f, 0.1f);
     dglMatrixMode(GL_MODELVIEW);
+    dglEnable(GL_BLEND);
     dglPushMatrix();
     dglTranslated(0.0f, 0.0f, -1.0f);
     dglTriangle(0, 1, 2);
-    dglTriangle(1, 2, 3);
+    dglTriangle(3, 2, 1);
     dglDrawGeometry(4, v);
     dglPopMatrix();
     dglDisable(GL_BLEND);
-    dglAlphaFunc(GL_GEQUAL, ALPHACLEARGLOBAL);
     
-    R_GLResetCombiners();
-
-    if(skybackdropnum >= 0)
-        R_DrawSkyBackdrop();
+    GL_SetDefaultCombiner();
 }
 
 //
@@ -426,9 +685,7 @@ static void R_FireTicker(void)
 
 static void R_DrawFire(void)
 {
-    dboolean looksky = (int)r_looksky.value;
     float pos1;
-    float pos2;
     vtx_t v[4];
     dtexture t = gfxptr[fireLump];
     int i;
@@ -452,8 +709,8 @@ static void R_DrawFire(void)
         dglGenTextures(1, &gfxptr[fireLump]);
 
     dglBindTexture(GL_TEXTURE_2D, gfxptr[fireLump]);
-    R_GLCheckFillMode();
-    R_GLSetFilter();
+    GL_CheckFillMode();
+    GL_SetTextureFilter();
 
     if(devparm)
         glBindCalls++;
@@ -494,20 +751,27 @@ static void R_DrawFire(void)
             );
     }
     
-    SKYVIEWPOS(viewangle, 4, pos1);
-    pos2 = looksky ? ((float)dcos(viewpitch) / 512) : 0.0f;
-    
-    //
-    // adjust UV by 0.0035f units due to the fire sky showing a 
-    // strip of color going along the top portion of the texture
-    //
-    R_GLSetupVertex(v, 0, -pos2, SCREENWIDTH, 120,
-        pos1, 5.0f + pos1, 0.0035f + (looksky ? 0.007f : 0.0f), 1.0f, 0);
+    if(r_skybox.value <= 0)
+    {
+        SKYVIEWPOS(viewangle, 4, pos1);
+        
+        //
+        // adjust UV by 0.0035f units due to the fire sky showing a 
+        // strip of color going along the top portion of the texture
+        //
+        GL_Set2DQuad(v, 0, 0, SCREENWIDTH, 120,
+            pos1, 5.0f + pos1, 0.0035f, 1.0f, 0);
 
-    dglSetVertexColor(&v[0], sky->skycolor[0], 2);
-    dglSetVertexColor(&v[2], sky->skycolor[1], 2);
-    
-    R_GLRenderVertex(v, 1);
+        dglSetVertexColor(&v[0], sky->skycolor[0], 2);
+        dglSetVertexColor(&v[2], sky->skycolor[1], 2);
+        
+        GL_Draw2DQuad(v, 1);
+    }
+    else
+    {
+        R_DrawSkyDome(16, 1, 1024, 4096, -896, 0.0075f,
+            sky->skycolor[0], sky->skycolor[1]);
+    }
 }
 
 //
@@ -527,11 +791,33 @@ void R_DrawSky(void)
     {
         if(sky->flags & SKF_CLOUD)
         {
-            R_DrawClouds();
+            if(r_skybox.value <= 0)
+            {
+                R_DrawClouds();
+            }
+            else
+            {
+                R_DrawSkyboxCloud();
+            }
         }
         else
         {
-            R_DrawSimpleSky(128);
+            if(r_skybox.value <= 0)
+            {
+                R_DrawSimpleSky(skypicnum, 128);
+            }
+            else
+            {
+                GL_SetTextureUnit(0, true);
+                GL_BindGfxTexture(lumpinfo[skypicnum].name, true);
+
+                //
+                // drawer will assume that the texture's
+                // dimensions is already in powers of 2
+                //
+                R_DrawSkyDome(4, 2, 512, 1024,
+                    0, 0, WHITE, WHITE);
+            }
         }
     }
 
@@ -548,7 +834,36 @@ void R_DrawSky(void)
         }
         else if(sky->flags & SKF_BACKGROUND)
         {
-            R_DrawSkyBackdrop();
+            if(r_skybox.value <= 0)
+            {
+                R_DrawSimpleSky(skybackdropnum, 170);
+            }
+            else
+            {
+                float h;
+                float origh;
+                int l;
+                int domeheight;
+                float offset;
+                float base;
+
+                GL_SetTextureUnit(0, true);
+                l = GL_BindGfxTexture(lumpinfo[skybackdropnum].name, true);
+
+                //
+                // handle the case for non-powers of 2 texture
+                // dimensions. height and offset is adjusted
+                // accordingly
+                //
+                origh = (float)gfxorigheight[l];
+                h = (float)gfxheight[l];
+                base = 160.0f - ((128 - origh) / 2.0f);
+                domeheight = (int)(base / (origh / h));
+                offset = (float)domeheight - base - 16.0f;
+
+                R_DrawSkyDome(5, 1, domeheight, 768,
+                    offset, 0.005f, WHITE, WHITE);
+            }
         }
     }
 }

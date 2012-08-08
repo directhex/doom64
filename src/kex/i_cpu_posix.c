@@ -45,7 +45,6 @@
 extern void     I_Printf(char* string, ...);
 extern int      M_CheckParm(const char *);
 extern int      datoi(const char *str);
-extern cvar_t   i_affinitymask;
 extern int      myargc;
 extern char**   myargv;
 
@@ -67,9 +66,9 @@ void I_SetAffinityMask(void)
    int p = M_CheckParm("-affinity");
 
    if(p && p < myargc - 1)
-      process_affinity_mask = datoi(myargv[p + 1]);
+       process_affinity_mask = datoi(myargv[p + 1]);
    else
-       process_affinity_mask = (unsigned int)i_affinitymask.value;
+       process_affinity_mask = 0;
 
    // Set the process affinity mask so that all threads
    // run on the same processor.  This is a workaround for a bug in

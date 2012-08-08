@@ -1,29 +1,32 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Movement, collision handling.
 //      Shooting and aiming.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include <stdlib.h>
 
@@ -40,7 +43,6 @@ rcsid[] = "$Id$";
 #include "tables.h"
 #include "r_sky.h"
 #include "con_console.h"
-#include "m_math.h"
 
 
 fixed_t         tmbbox[4];
@@ -80,7 +82,7 @@ static dboolean P_CheckThingCollision(mobj_t *thing)
     fixed_t blockdist;
     
     if(netgame && (tmthing->type == MT_PLAYER && thing->type == MT_PLAYER))
-        blockdist = (thing->radius>>1) + (tmthing->radius>>1);
+        return true;    // 20120122 villsa - allow players to go through each other
     else
         blockdist = thing->radius + tmthing->radius;
     
@@ -98,10 +100,18 @@ static dboolean P_CheckThingCollision(mobj_t *thing)
 // P_BlockMapBox
 //
 
+extern byte forcecollision;
+
 d_inline
 static void P_BlockMapBox(fixed_t* bbox, fixed_t x, fixed_t y, mobj_t* thing)
 {
-    fixed_t extent = compat_collision.value > 0 ? 0 : MAXRADIUS;
+    fixed_t extent = MAXRADIUS;
+    
+    if(forcecollision != 2)
+    {
+        if(compatflags & COMPATF_COLLISION || forcecollision)
+            extent = 0;
+    }
 
     tmbbox[BOXTOP]      = y + thing->radius;
     tmbbox[BOXBOTTOM]   = y - thing->radius;
@@ -209,48 +219,22 @@ dboolean PIT_CheckLine(line_t* ld)
 
     // [d64] check for valid sector heights
     if(sector->ceilingheight == sector->floorheight)
+    {
+        tmhitline = ld;
         return false;
+    }
 
     sector = ld->backsector;
 
     // [d64] check for valid sector heights
     if(sector->ceilingheight == sector->floorheight)
+    {
+        tmhitline = ld;
         return false;
+    }
     
     // set openrange, opentop, openbottom
-
-    if(((ld->frontsector->floorplane.a | ld->frontsector->floorplane.b) |
-        (ld->backsector->floorplane.a | ld->backsector->floorplane.b) |
-        (ld->frontsector->ceilingplane.a | ld->frontsector->ceilingplane.b) |
-        (ld->backsector->ceilingplane.a | ld->backsector->ceilingplane.b)) == 0)
-    {
-        P_LineOpening(ld, tmx, tmy, tmx, tmy);
-    }
-    else
-    {
-        // Find the point on the line closest to the actor's center, and use
-        // that to calculate openings
-
-        float dx = (float)ld->dx;
-        float dy = (float)ld->dy;
-        float tx = (float)(tmx - ld->v1->x);
-        float ty = (float)(tmy - ld->v1->y);
-        fixed_t r = (fixed_t)((tx * dx + ty * dy) / (dx * dx + dy * dy) * (float)INT2F(256));
-
-        if(r <= 0)
-        {
-            P_LineOpening(ld, ld->v1->x, ld->v1->y, tmx, tmy);
-        }
-        else if(r >= (1<<24))
-        {
-            P_LineOpening(ld, ld->v2->x, ld->v2->y, tmthing->x, tmthing->y);
-        }
-        else
-        {
-            P_LineOpening(ld, ld->v1->x + (FixedMul(r, ld->dx) >> 8),
-                ld->v1->y + (FixedMul(r, ld->dy) >> 8), tmx, tmy);
-        }
-    }
+    P_LineOpening(ld);
     
     // adjust floor / ceiling heights
     if(opentop < tmceilingz)
@@ -268,7 +252,7 @@ dboolean PIT_CheckLine(line_t* ld)
     // if contacted a special line, add it to the list
     if(ld->special & MLU_CROSS)
     {
-        if(numspechit > MAXSPECIALCROSS)
+        if(numspechit >= MAXSPECIALCROSS)
         {
             CON_Warnf("PIT_CheckLine: spechit overflow!\n");
         }
@@ -418,8 +402,8 @@ dboolean P_CheckPosition(mobj_t* thing, fixed_t x, fixed_t y)
     // that contains the point.
     // Any contacted lines the step closer together
     // will adjust them.
-    tmfloorz = tmdropoffz = M_PointToZ(&newsubsec->sector->floorplane, x, y);
-    tmceilingz = M_PointToZ(&newsubsec->sector->ceilingplane, x, y);
+    tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
+    tmceilingz = newsubsec->sector->ceilingheight;
     
     D_IncValidCount();
     numspechit = 0;
@@ -469,33 +453,32 @@ dboolean P_TryMove(mobj_t* thing, fixed_t x, fixed_t y)
     line_t*     ld;
     
     floatok = false;
-
-    if(!P_CheckPosition(thing, x, y))
+    if (!P_CheckPosition (thing, x, y))
         return false;           // solid wall or thing
     
-    if(!(thing->flags & MF_NOCLIP))
+    if ( !(thing->flags & MF_NOCLIP) )
     {
-        if(tmceilingz - tmfloorz < thing->height)
+        if (tmceilingz - tmfloorz < thing->height)
             return false;       // doesn't fit
         
         floatok = true;
         
-        if(!(thing->flags&MF_TELEPORT)
-            && tmceilingz - thing->z < thing->height)
+        if ( !(thing->flags&MF_TELEPORT)
+            &&tmceilingz - thing->z < thing->height)
             return false;       // mobj must lower itself to fit
         
-        if(!(thing->flags&MF_TELEPORT)
+        if ( !(thing->flags&MF_TELEPORT)
             && tmfloorz - thing->z > 24*FRACUNIT )
             return false;       // too big a step up
         
-        if(!(thing->flags&(MF_DROPOFF|MF_FLOAT))
-            && tmfloorz - tmdropoffz > 24*FRACUNIT)
+        if ( !(thing->flags&(MF_DROPOFF|MF_FLOAT))
+            && tmfloorz - tmdropoffz > 24*FRACUNIT )
             return false;       // don't stand over a dropoff
     }
     
     // the move is ok,
     // so link the thing into its new position
-    P_UnsetThingPosition(thing);
+    P_UnsetThingPosition (thing);
     
     oldx = thing->x;
     oldy = thing->y;
@@ -504,20 +487,20 @@ dboolean P_TryMove(mobj_t* thing, fixed_t x, fixed_t y)
     thing->x = x;
     thing->y = y;
     
-    P_SetThingPosition(thing);
+    P_SetThingPosition (thing);
     
     // if any special lines were hit, do the effect
-    if(!(thing->flags&(MF_TELEPORT|MF_NOCLIP)))
+    if (! (thing->flags&(MF_TELEPORT|MF_NOCLIP)) )
     {
-        while(numspechit--)
+        while (numspechit--)
         {
             // see if the line was crossed
             ld = spechit[numspechit];
             side = P_PointOnLineSide (thing->x, thing->y, ld);
             oldside = P_PointOnLineSide (oldx, oldy, ld);
-            if(side != oldside)
+            if (side != oldside)
             {
-                if(ld->special & MLU_CROSS)
+                if (ld->special & MLU_CROSS)
                     P_UseSpecialLine(thing, ld, oldside);
             }
         }
@@ -554,8 +537,8 @@ dboolean P_TeleportMove(mobj_t* thing, fixed_t x, fixed_t y)
     // that contains the point.
     // Any contacted lines the step closer together
     // will adjust them.
-    tmfloorz = tmdropoffz = M_PointToZ(&newsubsec->sector->floorplane, x, y);
-    tmceilingz = M_PointToZ(&newsubsec->sector->ceilingplane, x, y);
+    tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
+    tmceilingz = newsubsec->sector->ceilingheight;
     
     D_IncValidCount();
     numspechit = 0;
@@ -686,8 +669,8 @@ mobj_t *P_CheckOnMobj(mobj_t *thing)
     // the base floor / ceiling is from the subsector that contains the
     // point.  Any contacted lines the step closer together will adjust them
     //
-    tmfloorz = tmdropoffz = M_PointToZ(&newsubsec->sector->floorplane, x, y);
-    tmceilingz = M_PointToZ(&newsubsec->sector->ceilingplane, x, y);
+    tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
+    tmceilingz = newsubsec->sector->ceilingheight;
     
     validcount++;
     numspechit = 0;
@@ -755,11 +738,7 @@ dboolean PTR_SlideTraverse (intercept_t* in)
     }
     
     // set openrange, opentop, openbottom
-    P_LineOpening(li,
-        trace.x + FixedMul(trace.dx, in->frac),
-        trace.y + FixedMul(trace.dy, in->frac),
-        MININT,
-        MININT);
+    P_LineOpening(li);
     
     if(openrange < slidemo->height)
         goto isblocking;                // doesn't fit
@@ -809,8 +788,6 @@ void P_SlideMove(mobj_t* mo)
     line_t* ld;
     int     an1;
     int     an2;
-    fixed_t xmove;
-    fixed_t ymove;
     
     slidemo = mo;
     hitcount = 0;
@@ -857,29 +834,15 @@ retry:
     {
         // the move most have hit the middle, so stairstep
 stairstep:
-        xmove = 0;
-        ymove = mo->momy;
-
-        //
-        // [kex] things could pose a potential issue so stop
-        // momentum x or y if the move failed
-        //
-        if(!P_TryMove(mo, mo->x + xmove, mo->y + ymove))
+        if(!P_TryMove(mo, mo->x, mo->y + mo->momy))
         {
-            xmove = mo->momx;
-            ymove = 0;
-
-            if(!P_TryMove(mo, mo->x + xmove, mo->y + ymove))
+            if(!P_TryMove(mo, mo->x + mo->momx, mo->y))
             {
                 // [d64] set momx and momy to 0
                 mo->momx = 0;
                 mo->momy = 0;
             }
-            else
-                mo->momy = 0;
         }
-        else
-            mo->momx = 0;
 
         return;
     }
@@ -949,92 +912,9 @@ hitslideline:
     
     mo->momx = FixedMul(newx + newy, an1);
     mo->momy = FixedMul(newx + newy, an2);
-
-    if(P_CheckSlopeWalk(mo, &mo->momx, &mo->momy))
-        mo->z = M_PointToZ(&mo->subsector->sector->floorplane, mo->x + mo->momx, mo->y + mo->momy);
     
     if(!P_TryMove(mo, mo->x + mo->momx, mo->y + mo->momy))
         goto retry;
-}
-
-//
-// P_CheckSlopeWalk
-//
-// Adapted from Zdoom for Doom64EX
-//
-
-dboolean P_CheckSlopeWalk(mobj_t* thing, fixed_t* xmove, fixed_t* ymove)
-{
-    fixed_t destx;
-    fixed_t desty;
-    fixed_t t;
-    plane_t* plane;
-    fixed_t z;
-    
-    if(!(thing->flags & MF_GRAVITY))
-        return false;
-    
-    plane = &thing->subsector->sector->floorplane;
-    z = M_PointToZ(plane, thing->x, thing->y);
-    
-    if(z > thing->floorz + 4*FRACUNIT)
-        return false;
-    
-    if(thing->z - z > FRACUNIT)
-        return false;   // not on floor
-    
-    if((plane->a | plane->b) != 0)
-    {
-        destx = thing->x + *xmove;
-        desty = thing->y + *ymove;
-
-        t = -(M_DotProduct(plane->a, plane->b, plane->c, destx, desty, thing->z) + plane->d);
-
-        if(t < 0)
-        {
-            // Desired location is behind (below) the plane
-            // (i.e. Walking up the plane)
-            if(plane->c >= -(dcos(ANG45)))
-            {
-                // Can't climb up slopes of ~45 degrees or more
-                if(thing->flags & MF_NOCLIP)
-                    return true;
-                else
-                {
-                    *xmove = thing->momx = -plane->a * 4;
-                    *ymove = thing->momy = -plane->b * 4;
-
-                    return false;
-                }
-            }
-
-            // Slide the desired location along the plane's normal
-            // so that it lies on the plane's surface
-            destx -= FixedMul(-plane->a, t);
-            desty -= FixedMul(-plane->b, t);
-            *xmove = (destx - thing->x);
-            *ymove = (desty - thing->y);
-
-            return true;
-        }
-        else if(t > 0)
-        {
-            // Desired location is in front of (above) the plane
-            if(z == thing->z)
-            {
-                // mobj's current spot is on/in the plane, so walk down it
-                // Same principle as walking up, except reversed
-                destx += FixedMul(-plane->a, t);
-                desty += FixedMul(-plane->b, t);
-                *xmove = (destx - thing->x);
-                *ymove = (desty - thing->y);
-
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 
@@ -1100,11 +980,7 @@ dboolean PTR_AimTraverse(intercept_t* in)
         // Crosses a two sided line.
         // A two sided line will restrict
         // the possible target ranges.
-        P_LineOpening(li,
-            trace.x + FixedMul(trace.dx, in->frac),
-            trace.y + FixedMul(trace.dy, in->frac),
-            MININT,
-            MININT);
+        P_LineOpening(li);
         
         if(openbottom >= opentop)
             return false;               // stop
@@ -1207,12 +1083,10 @@ dboolean PTR_ShootTraverse(intercept_t* in)
     dboolean    hitplane = false;
     int         lineside;
     sector_t*   sidesector;
-    fixed_t     hitx;
-    fixed_t     hity;
     fixed_t     hitz;
-    fixed_t     fz;
-    fixed_t     cz;
     
+    x = y = z = 0;
+
     if(in->isaline)
     {
         li = in->d.line;
@@ -1220,62 +1094,43 @@ dboolean PTR_ShootTraverse(intercept_t* in)
         lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
         sidesector = lineside ? li->backsector : li->frontsector;
         dist = FixedMul(attackrange, in->frac);
-        hitx = trace.x + FixedMul(shootdirx, dist);
-		hity = trace.y + FixedMul(shootdiry, dist);
-        hitz = shootz + FixedMul(shootdirz, dist);
+        hitz = shootz + FixedMul(dcos(shootthing->pitch - ANG90), dist);
 
-        if (li->flags & ML_TWOSIDED)
+        if(li->flags & ML_TWOSIDED && li->backsector)
         {
-            fixed_t ffz, fcz;
-            fixed_t bfz, bcz;
-
             // crosses a two sided line
-            P_LineOpening(li,
-                trace.x + FixedMul(trace.dx, in->frac),
-                trace.y + FixedMul(trace.dy, in->frac),
-                MININT,
-                MININT);
-
-            ffz = M_PointToZ(&li->frontsector->floorplane, hitx, hitz);
-            fcz = M_PointToZ(&li->frontsector->ceilingplane, hitx, hitz);
-            bfz = M_PointToZ(&li->backsector->floorplane, hitx, hitz);
-            bcz = M_PointToZ(&li->backsector->ceilingplane, hitx, hitz);
+            P_LineOpening(li);
         
-            if((ffz == bfz 
+            if((li->frontsector->floorheight == li->backsector->floorheight 
                 || (slope = FixedDiv(openbottom - shootz , dist)) <= aimslope) 
-                && (fcz == bcz 
+                && (li->frontsector->ceilingheight == li->backsector->ceilingheight 
                 || (slope = FixedDiv(opentop - shootz , dist)) >= aimslope))
                 return true;      // shot continues
+        }
 
-            fz = lineside ? bfz : ffz;
-            cz = lineside ? bcz : fcz;
-        }
-        else
-        {
-            fz = M_PointToZ(&sidesector->floorplane, hitx, hitz);
-            cz = M_PointToZ(&sidesector->ceilingplane, hitx, hitz);
-        }
+        if(!(hitz > sidesector->floorheight && hitz < sidesector->ceilingheight))
+            hitplane = true;
 
         //
         // [kex] - hit ceiling/floor
         // set position based on intersection
         // 
-        if(hitz <= fz || hitz >= cz)
+        if(hitplane == true)
         {
             plane_t* plane;
             fixed_t den;
 
-            if(hitz <= fz)
+            if(hitz <= sidesector->floorheight)
                 plane = &sidesector->floorplane;
             else
                 plane = &sidesector->ceilingplane;
 
-            den = M_DotProduct(plane->a, plane->b, plane->c, shootdirx, shootdiry, shootdirz);
+            den = FixedDot(plane->a, plane->b, plane->c, shootdirx, shootdiry, shootdirz);
 
             if(den != 0)
             {
                 fixed_t hitdist;
-                fixed_t num = M_DotProduct(
+                fixed_t num = FixedDot(
                     plane->a, plane->b,
                     plane->c, trace.x,
                     trace.y, shootz) + plane->d;
@@ -1283,11 +1138,9 @@ dboolean PTR_ShootTraverse(intercept_t* in)
                 hitdist = FixedDiv(-num, den);
 
                 frac = FixedDiv(hitdist, attackrange);
-                x = trace.x + FixedMul(shootdirx, hitdist);
-                y = trace.y + FixedMul(shootdiry, hitdist);
-                z = shootz + FixedMul(shootdirz, hitdist);
-
-                hitplane = true;
+                x = trace.x + FixedMul(FixedMul(aimpitch, trace.dx), frac);
+                y = trace.y + FixedMul(FixedMul(aimpitch, trace.dy), frac);
+                z = hitz;
             }
         }
         else
@@ -1312,15 +1165,15 @@ dboolean PTR_ShootTraverse(intercept_t* in)
         if(li->frontsector->ceilingpic == skyflatnum)
         {
             // don't shoot the sky!
-            if(z + FRACUNIT >= M_PointToZ(&li->frontsector->ceilingplane, x, y))
+            if(z > li->frontsector->ceilingheight)
                 return false;
             
             // it's a sky hack wall
             if(li->backsector && li->backsector->ceilingpic == skyflatnum
-                && M_PointToZ(&li->backsector->ceilingplane, x, y) < z + FRACUNIT)
+                && li->backsector->ceilingheight < z)
                 return false;
         }
-
+        
         if(attackrange == LASERRANGE)
         {
             laserhit_x = x;
@@ -1339,10 +1192,10 @@ dboolean PTR_ShootTraverse(intercept_t* in)
     
     // shoot a thing
     th = in->d.thing;
-    if(th == shootthing)
+    if (th == shootthing)
         return true;            // can't shoot self
     
-    if(!(th->flags & MF_SHOOTABLE))
+    if (!(th->flags&MF_SHOOTABLE))
         return true;            // corpse or something
     
     // check angles to see if the thing can be aimed at
@@ -1362,9 +1215,9 @@ dboolean PTR_ShootTraverse(intercept_t* in)
     // position a bit closer
     frac = in->frac - FixedDiv(10*FRACUNIT,attackrange);
     
-    x = trace.x + FixedMul(trace.dx, frac);
-    y = trace.y + FixedMul(trace.dy, frac);
-    z = shootz + FixedMul(aimslope, FixedMul(frac, attackrange));
+    x = trace.x + FixedMul (trace.dx, frac);
+    y = trace.y + FixedMul (trace.dy, frac);
+    z = shootz + FixedMul (aimslope, FixedMul(frac, attackrange));
     
     // Spawn bullet puffs or blod spots,
     // depending on target type.
@@ -1396,12 +1249,12 @@ dboolean PTR_ShootTraverse(intercept_t* in)
 // P_AimLineAttack
 //
 
-fixed_t P_AimLineAttack(mobj_t*	t1, angle_t angle, angle_t pitch, fixed_t zheight, fixed_t distance)
+fixed_t P_AimLineAttack(mobj_t*	t1, angle_t angle, fixed_t zheight, fixed_t distance)
 {
     int flags;
     fixed_t x2;
     fixed_t y2;
-    fixed_t lookdir = 0;
+    fixed_t pitch = 0;
     
     angle >>= ANGLETOFINESHIFT;
     shootthing = t1;
@@ -1429,12 +1282,12 @@ fixed_t P_AimLineAttack(mobj_t*	t1, angle_t angle, angle_t pitch, fixed_t zheigh
 
     if(t1->player)
     {
-        lookdir = dcos(D_abs(pitch - ANG90));
+        pitch = dcos(D_abs(t1->pitch - ANG90));
         
         // [kex] set aimslope for special purposes
         /*if(distance == LASERRANGE)
         {
-            aimslope = lookdir;
+            aimslope = pitch;
             aimlaser = true;
         }*/
 
@@ -1455,7 +1308,7 @@ fixed_t P_AimLineAttack(mobj_t*	t1, angle_t angle, angle_t pitch, fixed_t zheigh
     // [kex] adjust slope based on view pitch
     else if(t1->player)
     {
-        aimslope = lookdir;
+        aimslope = pitch;
         
         if(D_abs(aimslope) > 0x40)
             return aimslope;
@@ -1471,7 +1324,7 @@ fixed_t P_AimLineAttack(mobj_t*	t1, angle_t angle, angle_t pitch, fixed_t zheigh
 // that will leave linetarget set.
 //
 
-void P_LineAttack(mobj_t* t1, angle_t angle, angle_t pitch, fixed_t distance, fixed_t slope, int damage)
+void P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage)
 {
     fixed_t x2;
     fixed_t y2;
@@ -1484,14 +1337,14 @@ void P_LineAttack(mobj_t* t1, angle_t angle, angle_t pitch, fixed_t distance, fi
     shootz = t1->z + (t1->height>>1) + 12*FRACUNIT; // [d64] changed from 8 to 12
     attackrange = distance;
     aimslope = slope;
-    aimpitch = dcos(pitch);
+    aimpitch = dcos(shootthing->pitch);
 
     //
     // [kex] - stuff for plane hit detection
     //
-    shootdirx   = FixedMul(aimpitch, finecosine[angle]);
-    shootdiry   = FixedMul(aimpitch, finesine[angle]);
-    shootdirz   = dsin(pitch);
+    shootdirx   = FixedMul(aimpitch, dcos(shootthing->angle));
+    shootdiry   = FixedMul(aimpitch, dsin(shootthing->angle));
+    shootdirz   = dsin(shootthing->pitch);
     laserhit_x  = t1->x;
     laserhit_y  = t1->y;
     laserhit_z  = t1->z;
@@ -1553,11 +1406,7 @@ dboolean PTR_UseTraverse(intercept_t* in)
 {
     if(!in->d.line->special)
     {
-        P_LineOpening(in->d.line,
-            trace.x + FixedMul(trace.dx, in->frac),
-            trace.y + FixedMul(trace.dy, in->frac),
-            MININT,
-            MININT);
+        P_LineOpening(in->d.line);
         
         if(openrange <= 0)
         {
@@ -1711,6 +1560,8 @@ void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage)
             P_BlockThingsIterator (x, y, PIT_RadiusAttack );
 }
 
+
+
 //
 // SECTOR HEIGHT CHANGING
 // After modifying a sectors floor or ceiling height,
@@ -1804,8 +1655,8 @@ dboolean PIT_ChangeSector(mobj_t* thing)
 //
 dboolean P_ChangeSector(sector_t* sector, dboolean crunch)
 {
-    int x;
-    int y;
+    int         x;
+    int         y;
     
     nofit = false;
     crushchange = crunch;
@@ -1818,6 +1669,7 @@ dboolean P_ChangeSector(sector_t* sector, dboolean crunch)
     for(x = sector->blockbox[BOXLEFT]; x <= sector->blockbox[BOXRIGHT]; x++)
         for(y = sector->blockbox[BOXBOTTOM]; y <= sector->blockbox[BOXTOP]; y++)
             P_BlockThingsIterator (x, y, PIT_ChangeSector);
+        
         return nofit;
 }
 
@@ -1851,11 +1703,7 @@ static dboolean PTR_ChaseCamTraverse(intercept_t* in)
                 sector_t* front;
                 sector_t* back;
 
-                P_LineOpening(li,
-                    trace.x + FixedMul(trace.dx, in->frac),
-                    trace.y + FixedMul(trace.dy, in->frac),
-                    MININT,
-                    MININT);
+                P_LineOpening(li);
 
                 front = li->frontsector;
                 back = li->backsector;

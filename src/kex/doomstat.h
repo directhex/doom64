@@ -1,26 +1,23 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DESCRIPTION:
-//   All the global variables that store the internal state.
-//   Theoretically speaking, the internal state of the engine
-//    should be found by looking at the variables collected
-//    here, and every relevant module will have to include
-//    this header file.
-//   In practice, things are a bit messy.
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
 //-----------------------------------------------------------------------------
 
@@ -78,12 +75,19 @@ extern	dboolean    netgame;
 extern	dboolean    netcheat;
 extern	dboolean    netkill;
 
+extern  int         gameflags;
+extern  int         compatflags;
+
+extern  int         damagescale;
+extern  int         healthscale;
+
 // Flag: true only if started as net deathmatch.
 // An enum might handle altdeath/cooperative better.
 extern int          deathmatch;
 
 extern int          video_width;
 extern int          video_height;
+extern float        video_ratio;
 extern int          window_focused;
 
 
@@ -102,9 +106,6 @@ extern  dboolean    allowmenu;          // Allow menu interaction?
 extern	dboolean    mainmenuactive;
 extern  dboolean    allowclearmenu;
 extern  dboolean    paused;             // Game Pause?
-
-extern  dboolean    nodrawers;
-extern  dboolean    noblit;
 
 extern	dboolean    InWindow;
 extern	dboolean    setWindow;
@@ -189,6 +190,8 @@ typedef struct
     dboolean    clearchts;
     dboolean    forcegodmode;
     dboolean    contmusexit;
+    int         oldcollision;
+    int         allowjump;
 } mapdef_t;
 
 typedef struct
@@ -251,6 +254,9 @@ extern  FILE*       debugfile;
 
 // if true, load all graphics at level load
 extern  dboolean    precache;
+
+// outdated iwad file?
+extern  dboolean    oldiwad;
 
 #define MAXSENSITIVITY	32
 

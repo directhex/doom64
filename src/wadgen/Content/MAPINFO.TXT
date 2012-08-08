@@ -309,21 +309,21 @@ cluster 1
 	pic = "EVIL"
 	pic_x = 64
 	pic_y = 30
-	entertext =	"you cackle as the
-			familiarity of the
-			situation occurs to you.
-			The gateway to the Demons
-			domain was too accessible.
-			You realize the demons mock
-			you with their invitation.
-			It does not matter...
-			The demons spawn like rats
-			and you have the grade AAA
-			U.A.C. poison they crave.
-			Your bloodthirsty scream
-			shatters the teleport haze.
-			Once again you find yourself
-			amidst..."
+	entertext =	"you cackle as the",
+			"familiarity of the",
+			"situation occurs to you.",
+			"The gateway to the Demons",
+			"domain was too accessible.",
+			"You realize the demons mock",
+			"you with their invitation.",
+			"It does not matter...",
+			"The demons spawn like rats",
+			"and you have the grade AAA",
+			"U.A.C. poison they crave.",
+			"Your bloodthirsty scream",
+			"shatters the teleport haze.",
+			"Once again you find yourself",
+			"amidst..."
 }
 
 cluster 2
@@ -331,17 +331,17 @@ cluster 2
 	pic = "EVIL"
 	pic_x = 64
 	pic_y = 30
-	entertext =	"The vast silence reminds
-			you of the military morgue.
-
-			You knew the installation
-			had a classified level.
-
-			The U.A.C. had some good
-			reason to hide this place.
-
-			You wonder what it
-			could be..."
+	entertext =	"The vast silence reminds",
+			"you of the military morgue.",
+			"",
+			"You knew the installation",
+			"had a classified level.",
+			"",
+			"The U.A.C. had some good",
+			"reason to hide this place.",
+			"",
+			"You wonder what it",
+			"could be..."
 }
 
 cluster 3
@@ -349,17 +349,17 @@ cluster 3
 	pic = "EVIL"
 	pic_x = 64
 	pic_y = 30
-	entertext =	"You smile.
-
-			What strange place have
-			you stumbled upon?
-
-			The Demons did not expect
-			you to survive this far.
-			You feel their demonic
-			presence waiting for you...
-
-			Let them taste their guts!"
+	entertext =	"You smile.",
+			"",
+			"What strange place have",
+			"you stumbled upon?",
+			"",
+			"The Demons did not expect",
+			"you to survive this far.",
+			"You feel their demonic",
+			"presence waiting for you...",
+			"",
+			"Let them taste their guts!"
 }
 
 cluster 4
@@ -367,17 +367,17 @@ cluster 4
 	pic = "EVIL"
 	pic_x = 64
 	pic_y = 30
-	entertext =	"You wretch as a strange
-			acrid odor assaults you.
-
-			Death and Demon carcass!
-
-			No nightmare could have
-			prepared you for this.
-
-			You realize that this
-			place was not meant for
-			living humans."
+	entertext =	"You wretch as a strange",
+			"acrid odor assaults you.",
+			"",
+			"Death and Demon carcass!",
+			"",
+			"No nightmare could have",
+			"prepared you for this.",
+			"",
+			"You realize that this",
+			"place was not meant for",
+			"living humans."
 }
 
 cluster 5
@@ -386,13 +386,13 @@ cluster 5
 	pic_x = 64
 	pic_y = 30
 	nointermission
-	entertext =	"Congratulations!
-			You found...
-
-			HECTIC
-
-			Only the best will reap
-			its rewards."
+	entertext =	"Congratulations!",
+			"You found...",
+			"",
+			"HECTIC",
+			"",
+			"Only the best will reap",
+			"its rewards."
 }
 
 cluster 6
@@ -402,20 +402,20 @@ cluster 6
 	pic_x = 0
 	pic_y = 0
 	scrolltextend
-	exittext =	"Finally...
-			The mother of all demons
-			is dead!
-
-			The blood pours from
-			your eyes as you stand
-			in defiance.
-
-			As the only marine to
-			endure the slaughter-
-			you decide to remain
-			in Hell and ensure no
-			demon ever rises again.
-
-			The End."
+	exittext =	"Finally...",
+			"The mother of all demons",
+			"is dead!",
+			"",
+			"The blood pours from",
+			"your eyes as you stand",
+			"in defiance.",
+			"",
+			"As the only marine to",
+			"endure the slaughter-",
+			"you decide to remain",
+			"in Hell and ensure no",
+			"demon ever rises again.",
+			"",
+			"The End."
 }
 

@@ -333,6 +333,8 @@ void SF_CreatePresets(patch_t* patch, int npatch,
     gentypes_t value;
     char name[20];
 
+    WGen_UpdateProgress("Building Soundfont Presets...");
+
     for(i = 0; i < npatch; i++)
     {
         patch_t* p;

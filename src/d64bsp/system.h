@@ -29,6 +29,9 @@
 #define INLINE_G  /* nothing */
 #endif
 
+#ifndef _MSC_VER
+#define _vsnprintf vsnprintf
+#endif
 
 // internal storage of node building parameters
 

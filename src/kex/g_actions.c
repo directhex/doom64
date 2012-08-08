@@ -1,38 +1,37 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1999-2000 Paul Brook
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 //
 // DESCRIPTION:
 //      Doom3D action parsing system
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id:";
-#endif
 
 #include <stdlib.h>
 #include "g_local.h"
 #include "m_keys.h"
 #include "i_system.h"
-#include "v_sdl.h"
+#include "i_video.h"
 #include "doomstat.h"
 #include "con_console.h"
 #include "z_zone.h"
@@ -55,8 +54,7 @@ struct action_s
     actionproc_t	proc;
     action_t		*children[2];
     action_t		*parent;
-    int				data;
-    dboolean        allownet;
+    int64			data;
 };
 
 static action_t	*Actions=NULL;
@@ -73,7 +71,7 @@ struct alist_s
     char		*param[MAX_ACTIONPARAM+1];//NULL terminated list
 };
 
-void G_RunAlias(int data, char **param);
+void G_RunAlias(int64 data, char **param);
 void G_DoOptimizeActionTree(void);
 
 alist_t	*CurrentActions[MAX_CURRENTACTIONS];
@@ -97,6 +95,10 @@ static int  Mouse2Buttons = 0;
 static dboolean OptimizeTree = false;
 dboolean        ButtonAction = false;
 
+static CMD(Alias);
+static CMD(Unbind);
+static CMD(UnbindAll);
+
 //
 // G_InitActions
 //
@@ -109,6 +111,10 @@ void G_InitActions(void)
     Mouse2Actions = AllActions + MOUSE2_ACTIONPOS;
     
     dmemset(CurrentActions, 0, MAX_CURRENTACTIONS*sizeof(alist_t *));
+
+    G_AddCommand("alias", CMD_Alias, 0);
+    G_AddCommand("unbind", CMD_Unbind, 0);
+    G_AddCommand("unbindall", CMD_UnbindAll, 0);
 }
 
 //
@@ -232,7 +238,7 @@ void DerefSingleAction(alist_t *al)
 
 alist_t *DoRunActions(alist_t *al, dboolean free)
 {
-    alist_t     *next;
+    alist_t     *next = NULL;
     action_t    *action;
     cvar_t      *cvar;
     
@@ -245,11 +251,6 @@ alist_t *DoRunActions(alist_t *al, dboolean free)
         action = FindAction(al->cmd);
         if(action)
         {
-            if(netgame && !action->allownet)
-            {
-                CON_Warnf("Cannot execute this command in a netgame\n");
-                goto next;
-            }
             action->proc(action->data, al->param);
         }
         else if(cvar = CON_CvarGet(al->cmd))
@@ -262,7 +263,7 @@ alist_t *DoRunActions(alist_t *al, dboolean free)
                     // player# 0 is the server..
                     if(consoleplayer != 0)
                     {
-                        CON_Warnf("Client cannot change server cvars\n");
+                        CON_Warnf("Cannot change cvar that's locked by server\n");
                         goto next;
                     }
                 }
@@ -299,8 +300,10 @@ next:
         if(free)
             DerefSingleAction(al);
         
-        return next;
+        if(next != NULL)
+            return next;
     }
+
     return al;
 }
 
@@ -371,7 +374,13 @@ void G_ActionTicker(void)
     }
 
     if(OptimizeTree)
+    {
         G_DoOptimizeActionTree();
+
+        // 20120310 villsa - do we really need to optimize this every tick?
+        // set back to false when we're done
+        OptimizeTree = false;
+    }
 }
 
 //
@@ -415,12 +424,6 @@ dboolean G_ActionResponder(event_t *ev)
     case ev_mouse:
         ProcessButtonActions(MouseActions, ev->data1, MouseButtons);
         MouseButtons = ev->data1;
-        G_DoCmdMouseMove(ev->data2, ev->data3);
-        break;
-
-    case ev_mouse2:
-        ProcessButtonActions(Mouse2Actions, ev->data1, Mouse2Buttons);
-        Mouse2Buttons = ev->data1;
         G_DoCmdMouseMove(ev->data2, ev->data3);
         break;
 
@@ -654,15 +657,10 @@ dboolean G_BindActionByEvent(event_t *ev, char *action)
         break;
 
     case ev_mouse:
+    case ev_mousedown:
         button = GetBitNum(ev->data1);
         if((button >= 0) && (button < MOUSE_BUTTONS))
             plist = &MouseActions[button];
-        break;
-
-    case ev_mouse2:
-        button = GetBitNum(ev->data1);
-        if((button >= 0) && (button < MOUSE_BUTTONS))
-            plist = &Mouse2Actions[button];
         break;
     }
     if(plist)
@@ -748,12 +746,7 @@ void G_OutputBindings(FILE *fh)
     
     // cvars
     for(var = cvarcap; var; var = var->next)
-    {
-        if(var->nonclient)
-            continue;
-
         fprintf(fh, "seta \"%s\" \"%s\"\n", var->name, var->string);
-    }
 }
 
 //
@@ -991,11 +984,11 @@ static void AddAction(action_t *action)
 }
 
 //
-// G_RegisterAction
+// G_AddCommand
 // Adds a new action to the list
 //
 
-void G_RegisterAction(char *name, actionproc_t proc, int data, dboolean allownet)
+void G_AddCommand(char *name, actionproc_t proc, int64 data)
 {
     action_t *action;
     
@@ -1004,7 +997,6 @@ void G_RegisterAction(char *name, actionproc_t proc, int data, dboolean allownet
     dstrlwr(action->name);
     action->proc = proc;
     action->data = data;
-    action->allownet = allownet;
     AddAction(action);
 }
 
@@ -1012,7 +1004,7 @@ void G_RegisterAction(char *name, actionproc_t proc, int data, dboolean allownet
 // G_RunAlias
 //
 
-void G_RunAlias(int data, char **param)
+void G_RunAlias(int64 data, char **param)
 {
     AddActions(DoRunActions((alist_t *)data, false));
 }
@@ -1081,10 +1073,10 @@ void G_UnregisterAction(char *name)
 }
 
 //
-// G_CmdAlias
+// CMD_Alias
 //
 
-void G_CmdAlias(int data, char **param)
+static CMD(Alias)
 {
     alist_t *al;
     
@@ -1098,7 +1090,7 @@ void G_CmdAlias(int data, char **param)
     if(!al)
         G_UnregisterAction(param[0]);
     else
-        G_RegisterAction(param[0], G_RunAlias, (int)al, true);
+        G_AddCommand(param[0], G_RunAlias, (int64)al);
 }
 
 //
@@ -1119,7 +1111,7 @@ static int ListCommandRecurse(action_t *action)
     if(action->name[0] == '-')
         count--;
     else
-        I_Printf(" %s\n", action->name);
+        CON_Printf(AQUA, " %s\n", action->name);
     
     if(action->children[1])
         count += ListCommandRecurse(action->children[1]);
@@ -1127,12 +1119,20 @@ static int ListCommandRecurse(action_t *action)
     return(count);
 }
 
+//
+// G_ListCommands
+//
+
 int G_ListCommands(void)
 {
     return(ListCommandRecurse(Actions));
 }
 
-static void G_Unbind(char *action)
+//
+// Unbind
+//
+
+static void Unbind(char *action)
 {
     alist_t **alist;
 
@@ -1150,10 +1150,10 @@ static void G_Unbind(char *action)
 }
 
 //
-// G_CmdUnbind
+// CMD_Unbind
 //
 
-void G_CmdUnbind(int data, char **param)
+static CMD(Unbind)
 {   
     if(!param[0])
     {
@@ -1161,11 +1161,11 @@ void G_CmdUnbind(int data, char **param)
         return;
     }
     
-    G_Unbind(param[0]);
+    Unbind(param[0]);
 }
 
 //
-// G_CmdUnbindAll
+// UnbindActions
 //
 
 static void UnbindActions(alist_t **alist, int num)
@@ -1182,7 +1182,12 @@ static void UnbindActions(alist_t **alist, int num)
     }
 }
 
-void G_CmdUnbindAll(int data, char **param)
+
+//
+// CMD_UnbindAll
+//
+
+static CMD(UnbindAll)
 {
     UnbindActions(AllActions, NUM_ACTIONS);
 }
@@ -1313,7 +1318,7 @@ void G_UnbindAction(char *action)
             char p[16];
 
             M_GetKeyName(p, i);
-            G_Unbind(p);
+            Unbind(p);
             return;
         }
     }
@@ -1329,7 +1334,7 @@ void G_UnbindAction(char *action)
                 p[5] = i + '1';
             }
 
-            G_Unbind(p);
+            Unbind(p);
             return;
         }
         if(IsSameAction(action, Mouse2Actions[i]))
@@ -1339,7 +1344,7 @@ void G_UnbindAction(char *action)
             dstrcpy(p, "mouse2?");
             p[6] = i + '1';
             
-            G_Unbind(p);
+            Unbind(p);
             return;
         }
     }

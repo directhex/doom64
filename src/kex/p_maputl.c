@@ -1,19 +1,25 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	Movement/collision utility functions,
@@ -22,11 +28,6 @@
 //	and some PIT_* functions to use for iteration.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
-
 
 #include <stdlib.h>
 
@@ -37,7 +38,6 @@ rcsid[] = "$Id$";
 #include "r_local.h"
 #include "doomstat.h"
 #include "z_zone.h"
-#include "m_math.h"
 
 
 //
@@ -78,49 +78,46 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
 // Considers the line to be infinite
 // Returns side 0 or 1, -1 if box crosses the line.
 //
-int
-P_BoxOnLineSide
-( fixed_t*	tmbox,
-  line_t*	ld )
+int P_BoxOnLineSide(fixed_t* tmbox, line_t* ld)
 {
-    int		p1;
-    int		p2;
+    int p1;
+    int p2;
 
     switch (ld->slopetype)
     {
-      case ST_HORIZONTAL:
-	p1 = tmbox[BOXTOP] > ld->v1->y;
-	p2 = tmbox[BOXBOTTOM] > ld->v1->y;
-	if (ld->dx < 0)
-	{
-	    p1 ^= 1;
-	    p2 ^= 1;
-	}
+    case ST_HORIZONTAL:
+        p1 = tmbox[BOXTOP] > ld->v1->y;
+        p2 = tmbox[BOXBOTTOM] > ld->v1->y;
+        if(ld->dx < 0)
+        {
+            p1 ^= 1;
+            p2 ^= 1;
+        }
+        break;
+    case ST_VERTICAL:
+        p1 = tmbox[BOXRIGHT] < ld->v1->x;
+        p2 = tmbox[BOXLEFT] < ld->v1->x;
+        if(ld->dy < 0)
+        {
+            p1 ^= 1;
+            p2 ^= 1;
+        }
 	break;
-
-      case ST_VERTICAL:
-	p1 = tmbox[BOXRIGHT] < ld->v1->x;
-	p2 = tmbox[BOXLEFT] < ld->v1->x;
-	if (ld->dy < 0)
-	{
-	    p1 ^= 1;
-	    p2 ^= 1;
-	}
+    case ST_POSITIVE:
+        p1 = P_PointOnLineSide (tmbox[BOXLEFT], tmbox[BOXTOP], ld);
+        p2 = P_PointOnLineSide (tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
+        break;
+    case ST_NEGATIVE:
+        p1 = P_PointOnLineSide (tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
+        p2 = P_PointOnLineSide (tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
 	break;
-
-      case ST_POSITIVE:
-	p1 = P_PointOnLineSide (tmbox[BOXLEFT], tmbox[BOXTOP], ld);
-	p2 = P_PointOnLineSide (tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
-	break;
-
-      case ST_NEGATIVE:
-	p1 = P_PointOnLineSide (tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
-	p2 = P_PointOnLineSide (tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
-	break;
+    default:
+        return -1;
     }
 
-    if (p1 == p2)
-	return p1;
+    if(p1 == p2)
+        return p1;
+
     return -1;
 }
 
@@ -188,6 +185,29 @@ P_MakeDivline
     dl->y = li->v1->y;
     dl->dx = li->dx;
     dl->dy = li->dy;
+}
+
+//
+// P_GetIntersectPoint
+//
+
+void P_GetIntersectPoint(fixed_t *s1, fixed_t *s2, fixed_t *x, fixed_t *y)
+{
+	float a1 = F2D3D(s1[3]) - F2D3D(s1[1]);
+	float b1 = F2D3D(s1[0]) - F2D3D(s1[2]);
+	float c1 = F2D3D(s1[2]) * F2D3D(s1[1]) - F2D3D(s1[0]) * F2D3D(s1[3]);
+   
+	float a2 = F2D3D(s2[3]) - F2D3D(s2[1]);
+	float b2 = F2D3D(s2[0]) - F2D3D(s2[2]);
+	float c2 = F2D3D(s2[2]) * F2D3D(s2[1]) - F2D3D(s2[0]) * F2D3D(s2[3]);
+
+	float d = a1 * b2 - a2 * b1;
+
+	if(d == 0.0)	// nothing can be done here..
+		return;
+
+	*x = INT2F((fixed_t)(float)((b1 * c2 - b2 * c1) / d));
+	*y = INT2F((fixed_t)(float)((a2 * c1 - a1 * c2) / d));
 }
 
 //
@@ -270,13 +290,9 @@ fixed_t lowfloor;
 sector_t *openfrontsector;
 sector_t *openbacksector;
 
-void P_LineOpening(line_t *linedef, fixed_t x, fixed_t y, fixed_t refx, fixed_t refy)
+void P_LineOpening(line_t *linedef)
 {
-    fixed_t fc, bc;
-    fixed_t ff, bf;
-    dboolean usefront;
-
-	if(linedef->sidenum[1] == -1)      // single sided line
+	if (linedef->sidenum[1] == NO_SIDE_INDEX)   // single sided line
 	{
 		openrange = 0;
 		return;
@@ -285,45 +301,21 @@ void P_LineOpening(line_t *linedef, fixed_t x, fixed_t y, fixed_t refx, fixed_t 
 	openfrontsector = linedef->frontsector;
 	openbacksector = linedef->backsector;
 
-    fc = M_PointToZ(&openfrontsector->ceilingplane, x, y);
-    ff = M_PointToZ(&openfrontsector->floorplane, x, y);
-    bc = M_PointToZ(&openbacksector->ceilingplane, x, y);
-    bf = M_PointToZ(&openbacksector->floorplane, x, y);
-
-	if(fc < bc)
-		opentop = fc;
+	if(openfrontsector->ceilingheight < openbacksector->ceilingheight)
+		opentop = openfrontsector->ceilingheight;
 	else
-		opentop = bc;
+		opentop = openbacksector->ceilingheight;
 
-    // fudge a bit for actors that are moving across lines
-    // bordering a slope/non-slope that meet on the floor. Note
-    // that imprecisions in the plane equation mean there is a
-    // good chance that even if a slope and non-slope look like
-    // they line up, they won't be perfectly aligned.
-
-    if(refx == MININT || D_abs (ff - bf) > 256)
-        usefront = (ff > bf);
-    else
-    {
-        if((openfrontsector->floorplane.a | openfrontsector->floorplane.b) == 0)
-            usefront = true;
-        else if((openbacksector->floorplane.a | openfrontsector->floorplane.b) == 0)
-            usefront = false;
-        else
-            usefront = !P_PointOnLineSide(refx, refy, linedef);
-    }
-
-    if(usefront)
-    {
-        openbottom = ff;
-        lowfloor = bf;
-    }
-    else
-    {
-        openbottom = bf;
-        lowfloor = ff;
-    }
-
+	if(openfrontsector->floorheight > openbacksector->floorheight)
+	{
+		openbottom = openfrontsector->floorheight;
+		lowfloor = openbacksector->floorheight;
+	}
+	else
+	{
+		openbottom = openbacksector->floorheight;
+		lowfloor = openfrontsector->floorheight;
+	}
 	openrange = opentop - openbottom;
 }
 
@@ -702,7 +694,7 @@ P_TraverseIntercepts
 
     while (count--)
     {
-	dist = MAXINT;
+	dist = D_MAXINT;
 	for (scan = intercepts ; scan<intercept_p ; scan++)
 	{
 	    if (scan->frac < dist)
@@ -730,7 +722,7 @@ P_TraverseIntercepts
         if ( !func (in) )
 	    return false;	// don't bother going farther
 
-	in->frac = MAXINT;
+	in->frac = D_MAXINT;
     }
 
     return true;		// everything was traversed

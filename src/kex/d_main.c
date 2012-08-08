@@ -1,22 +1,26 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 //
 // DESCRIPTION:
@@ -26,10 +30,6 @@
 //	and call the startup functions.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-
-static const char rcsid[] = "$Id$";
-#endif
 
 #ifdef _WIN32
 #include <io.h>
@@ -39,7 +39,7 @@ static const char rcsid[] = "$Id$";
 
 #include "doomdef.h"
 #include "doomstat.h"
-#include "v_sdl.h"
+#include "i_video.h"
 #include "d_englsh.h"
 #include "sounds.h"
 #include "m_shift.h"
@@ -61,6 +61,8 @@ static const char rcsid[] = "$Id$";
 #include "r_local.h"
 #include "r_wipe.h"
 #include "g_controls.h"
+#include "p_saveg.h"
+#include "gl_draw.h"
 
 #include "Ext/ChocolateDoom/net_client.h"
 
@@ -82,36 +84,43 @@ static int      creditstage;
 static int      creditscreenstage;
 
 
-int             video_width;
-int             video_height;
 dboolean        InWindow;
-dboolean        setWindow = true;
-int             validcount=1;
-dboolean        windowpause = false;
-dboolean        devparm=false;	    // started game with -devparm
-dboolean        nomonsters=false;	// checkparm of -nomonsters
-dboolean        respawnparm=false;	// checkparm of -respawn
-dboolean        respawnitem=false;	// checkparm of -respawnitem
-dboolean        fastparm=false;	    // checkparm of -fast
-dboolean        BusyDisk=false;
-dboolean        nolights = false;
+dboolean        setWindow       = true;
+int             validcount      = 1;
+dboolean        windowpause     = false;
+dboolean        devparm         = false;    // started game with -devparm
+dboolean        nomonsters      = false;    // checkparm of -nomonsters
+dboolean        respawnparm     = false;    // checkparm of -respawn
+dboolean        respawnitem     = false;    // checkparm of -respawnitem
+dboolean        fastparm        = false;    // checkparm of -fast
+dboolean        BusyDisk        = false;
+dboolean        nolights        = false;
 skill_t         startskill;
 int             startmap;
-dboolean        autostart=false;
-FILE*           debugfile=NULL;
-dboolean        advancedemo=false;
-//char			wadfile[1024];		// primary wad file
-char            mapdir[1024];		// directory of development maps
-char            basedefault[1024];	// default file
-dboolean        rundemo4 = false;   // run demo lump #4?
+dboolean        autostart       = false;
+dboolean        oldiwad         = false;
+FILE*           debugfile       = NULL;
+//char			wadfile[1024];              // primary wad file
+char            mapdir[1024];               // directory of development maps
+char            basedefault[1024];          // default file
+dboolean        rundemo4        = false;    // run demo lump #4?
+int             gameflags       = 0;
+int             compatflags     = 0;
+int             damagescale     = 0;
+int             healthscale     = 0;
 
 
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd);
-void D_DoAdvanceDemo(void);
 
 #define STRPAUSED	"Paused"
+
+CVAR_EXTERNAL(sv_nomonsters);
+CVAR_EXTERNAL(sv_fastmonsters);
+CVAR_EXTERNAL(sv_respawnitems);
+CVAR_EXTERNAL(sv_respawn);
+CVAR_EXTERNAL(sv_skill);
 
 
 //
@@ -150,10 +159,14 @@ void D_ProcessEvents(void)
     {
         ev = &events[eventtail];
 
-        if(CON_Responder(ev))
-            continue;               // console ate the event
+        // 20120404 villsa - don't do console inputs for demo playbacks
+        if(!demoplayback)
+        {
+            if(CON_Responder(ev))
+                continue;               // console ate the event
+        }
 
-        if(devparm && !netgame && usergame)
+        if(devparm && !netgame)
         {
             if(D_DevKeyResponder(ev))
                 continue;           // dev keys ate the event
@@ -179,6 +192,8 @@ void D_IncValidCount(void)
 //
 // D_MiniLoop
 //
+
+CVAR_EXTERNAL(i_interpolateframes);
 
 extern dboolean renderinframe;
 extern int      gametime;
@@ -207,7 +222,7 @@ static void D_DrawInterface(void)
     
     // draw pause pic
     if(paused)
-        M_DrawSmbText(-1, 64, WHITE, STRPAUSED);
+        Draw_BigText(-1, 64, WHITE, STRPAUSED);
 }
 
 static void D_FinishDraw(void)
@@ -448,8 +463,8 @@ freealloc:
 
 static void Title_Drawer(void)
 {
-    R_GLClearFrame(0xFF000000);
-    R_DrawGfx(58, 50, "TITLE", WHITEALPHA(0x64), true);
+    GL_ClearView(0xFF000000);
+    Draw_GfxImage(58, 50, "TITLE", WHITEALPHA(0x64), true);
 }
 
 //
@@ -488,7 +503,7 @@ static void Title_Start(void)
     allowclearmenu = false;
 
     S_StartMusic(mus_title);
-    M_StartControlPanel();
+    M_StartControlPanel(false);
 }
 
 //
@@ -509,6 +524,8 @@ static void Title_Stop(void)
 //
 // Legal_Start
 //
+
+CVAR_EXTERNAL(p_regionmode);
 
 static char* legalpic = "USLEGAL";
 static int legal_x = 32;
@@ -550,8 +567,8 @@ static void Legal_Start(void)
 
 static void Legal_Drawer(void)
 {
-    R_GLClearFrame(0xFF000000);
-    R_DrawGfx(legal_x, legal_y, legalpic, WHITE, true);
+    GL_ClearView(0xFF000000);
+    Draw_GfxImage(legal_x, legal_y, legalpic, WHITE, true);
 }
 
 //
@@ -575,31 +592,31 @@ static int Legal_Ticker(void)
 
 static void Credits_Drawer(void)
 {
-    R_GLClearFrame(0xFF000000);
+    GL_ClearView(0xFF000000);
 
     switch(creditscreenstage)
     {
     case 0:
-        R_DrawGfx(72, 24, "IDCRED1",
+        Draw_GfxImage(72, 24, "IDCRED1",
             D_RGBA(255, 255, 255, (byte)screenalpha), true);
 
-        R_DrawGfx(40, 40, "IDCRED2",
+        Draw_GfxImage(40, 40, "IDCRED2",
             D_RGBA(255, 255, 255, (byte)screenalphatext), true);
         break;
 
     case 1:
-        R_DrawGfx(16, 80, "WMSCRED1",
+        Draw_GfxImage(16, 80, "WMSCRED1",
             D_RGBA(255, 255, 255, (byte)screenalpha), true);
 
-        R_DrawGfx(32, 24, "WMSCRED2",
+        Draw_GfxImage(32, 24, "WMSCRED2",
             D_RGBA(255, 255, 255, (byte)screenalphatext), true);
         break;
 
     case 2:
-        R_DrawGfx(64, 30, "EVIL",
+        Draw_GfxImage(64, 30, "EVIL",
             D_RGBA(255, 255, 255, (byte)screenalpha), true);
 
-        R_DrawGfx(40, 52, "FANCRED",
+        Draw_GfxImage(40, 52, "FANCRED",
             D_RGBA(255, 255, 255, (byte)screenalphatext), true);
         break;
 
@@ -836,185 +853,19 @@ static void FindResponseFile(void)
 }
 
 //
-// DoLooseFiles
-//
-// Take any file names on the command line before the first switch parm
-// and insert the appropriate -file, -deh or -playdemo switch in front
-// of them.
-//
-// Note that more than one -file, etc. entry on the command line won't
-// work, so we have to go get all the valid ones if any that show up
-// after the loose ones.  This means that boom fred.wad -file wilma
-// will still load fred.wad and wilma.wad, in that order.
-// The response file code kludges up its own version of myargv[] and
-// unfortunately we have to do the same here because that kludge only
-// happens if there _is_ a response file.  Truth is, it's more likely
-// that there will be a need to do one or the other so it probably
-// isn't important.  We'll point off to the original argv[], or the
-// area allocated in FindResponseFile, or our own areas from strdups.
-//
-// CPhipps - OUCH! Writing into *myargv is too dodgy, damn
-//
-// e6y
-// Fixed crash if numbers of wads/lmps/dehs is greater than 100
-// Fixed bug when length of argname is smaller than 3
-// Refactoring of the code to avoid use the static arrays
-// The logic of DoLooseFiles has been rewritten in more optimized style
-// MAXARGVS has been removed.
-
-static void DoLooseFiles(void)
-{
-    char **wads;  // store the respective loose filenames
-    char **lmps;
-    int wadcount = 0;      // count the loose filenames
-    int lmpcount = 0;
-    int i,k,n,p;
-    char **tmyargv;  // use these to recreate the argv array
-    int tmyargc;
-    dboolean *skip; // CPhipps - should these be skipped at the end
-
-    struct
-    {
-        const char *ext;
-        char ***list;
-        int *count;
-    } looses[] =
-    {
-        { ".wad", &wads, &wadcount  },
-        { ".lmp", &lmps, &lmpcount  },
-        // assume wad if no extension or length of the extention is not equal to 3
-        // must be last entrie
-        { "",     &wads, &wadcount  },
-        { 0                         }
-    };
-
-    struct
-    {
-        char *cmdparam;
-        char ***list;
-        int *count;
-    } params[] =
-    {
-        { "-file"    , &wads, &wadcount },
-        { "-playdemo", &lmps, &lmpcount },
-        { 0                             }
-    };
-
-    wads = malloc(myargc * sizeof(*wads));
-    lmps = malloc(myargc * sizeof(*lmps));
-    skip = malloc(myargc * sizeof(dboolean));
-
-    for(i = 0; i < myargc; i++)
-        skip[i] = false;
-
-    for(i = 1; i < myargc; i++)
-    {
-        int arglen, extlen;
-
-        if(*myargv[i] == '-')
-            break;  // quit at first switch
-
-        // so now we must have a loose file.  Find out what kind and store it.
-        arglen = dstrlen(myargv[i]);
-
-        k = 0;
-
-        while (looses[k].ext)
-        {
-            extlen = strlen(looses[k].ext);
-            if(arglen - extlen >= 0 && !dstricmp(&myargv[i][arglen - extlen], looses[k].ext))
-            {
-                (*(looses[k].list))[(*looses[k].count)++] = strdup(myargv[i]);
-                break;
-            }
-
-            k++;
-        }
-        
-        skip[i] = true; // nuke that entry so it won't repeat later
-    }
-
-    // Now, if we didn't find any loose files, we can just leave.
-    if(wadcount + lmpcount != 0)
-    {
-        n = 0;
-        k = 0;
-
-        while(params[k].cmdparam)
-        {
-            if((p = M_CheckParm(params[k].cmdparam)))
-            {
-                skip[p] = true;    // nuke the entry
-                while (++p != myargc && *myargv[p] != '-')
-                {
-                    (*(params[k].list))[(*params[k].count)++] = strdup(myargv[p]);
-                    skip[p] = true;  // null any we find and save
-                }
-            }
-            else
-            {
-                if(*(params[k].count) > 0)
-                    n++;
-            }
-            
-            k++;
-        }
-
-        // Now go back and redo the whole myargv array with our stuff in it.
-        // First, create a new myargv array to copy into
-        tmyargv = calloc(myargc + n);
-        tmyargv[0] = myargv[0]; // invocation
-        tmyargc = 1;
-
-        k = 0;
-
-        while(params[k].cmdparam)
-        {
-            // put our stuff into it
-            if(*(params[k].count) > 0)
-            {
-                tmyargv[tmyargc++] = strdup(params[k].cmdparam); // put the switch in
-                for(i = 0; i < *(params[k].count);)
-                    tmyargv[tmyargc++] = (*(params[k].list))[i++]; // allocated by strdup above
-            }
-            
-            k++;
-        }
-
-        // then copy everything that's there now
-        for (i = 1; i < myargc; i++)
-        {
-            if(!skip[i])  // skip any zapped entries
-                tmyargv[tmyargc++] = myargv[i];  // pointers are still valid
-        }
-        
-        // now make the global variables point to our array
-        myargv = tmyargv;
-        myargc = tmyargc;
-    }
-
-    free(wads);
-    free(lmps);
-    free(skip);
-}
-
-//
 // D_Init
 //
 
 static void D_Init(void)
 {
     int     p;
-    char    file[256];
 
     FindResponseFile();
-    DoLooseFiles();
     
-    nomonsters		= M_CheckParm("-nomonsters");
-    respawnparm		= M_CheckParm("-respawn");
-    respawnitem		= M_CheckParm("-respawnitem");
-    fastparm		= M_CheckParm("-fast");
-    devparm			= M_CheckParm("-devparm");
+    nomonsters      = M_CheckParm("-nomonsters");
+    respawnparm     = M_CheckParm("-respawn");
+    respawnitem     = M_CheckParm("-respawnitem");
+    fastparm        = M_CheckParm("-fast");
 
     if(p = M_CheckParm("-setvars"))
     {
@@ -1103,8 +954,9 @@ static void D_Init(void)
     p = M_CheckParm ("-loadgame");
     if (p && p < myargc-1)
     {
-        sprintf(file, SAVEGAMENAME"%c.dsg",myargv[p+1][0]);
-        G_LoadGame (file);
+        // sprintf(file, SAVEGAMENAME"%c.dsg",myargv[p+1][0]);
+        G_LoadGame(P_GetSaveGameName( myargv[p+1][0]-'0' ));
+            autostart = true; // 20120105 bkw: this was missing
     }
     
     if(M_CheckParm("-nogun"))
@@ -1146,18 +998,25 @@ static int D_CheckDemo(void)
 //
 
 void D_DoomMain(void)
-{   
+{
+    devparm = M_CheckParm("-devparm");
+
+    // init subsystems
+
     I_Printf("Z_Init: Init Zone Memory Allocator\n");
     Z_Init();
 
     I_Printf("CON_Init: Init Game Console\n");
     CON_Init();
 
-    // load before initing other systems
-    I_Printf("M_LoadDefaults: Loading Game Configuration\n");
+    I_Printf("G_Init: Setting up game input and commands\n");
+    G_Init();
+
+    I_Printf("M_LoadDefaults: Loading game configuration\n");
     M_LoadDefaults();
-    
-    // init subsystems
+
+    I_Printf("I_Init: Setting up machine state.\n");
+    I_Init();
 
     I_Printf("D_Init: Init DOOM parameters\n");
     D_Init();
@@ -1168,32 +1027,30 @@ void D_DoomMain(void)
     I_Printf("M_Init: Init miscellaneous info.\n");
     M_Init();
     
-    I_Printf("I_Init: Setting up machine state.\n");
-    I_Init();
-    
     I_Printf("R_Init: Init DOOM refresh daemon.\n");
     R_Init();
     
     I_Printf("P_Init: Init Playloop state.\n");
     P_Init();
     
-    I_Printf("G_Init: Setting up gamestate\n");
-    G_Init();
-    
     I_Printf("NET_Init: Init network subsystem.\n");
     NET_Init();
     
-    I_Printf("D_CheckNetGame: Checking network game status.\n");
-    D_CheckNetGame();
-    
     I_Printf("S_Init: Setting up sound.\n");
     S_Init();
+
+    I_Printf("D_CheckNetGame: Checking network game status.\n");
+    D_CheckNetGame();
     
     I_Printf("ST_Init: Init status bar.\n");
     ST_Init();
     
-    I_Printf("V_InitGL: Starting OpenGL\n");
-    V_InitGL();
+    I_Printf("GL_Init: Init OpenGL\n");
+    GL_Init();
+
+#ifdef USESYSCONSOLE
+    I_ShowSysConsole(false);
+#endif
 
     // garbage collection
     Z_FreeAlloca();

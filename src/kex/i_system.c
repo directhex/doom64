@@ -1,32 +1,29 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION: System Interface
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
-
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,7 +37,7 @@ rcsid[] = "$Id$";
 #include "doomstat.h"
 #include "doomdef.h"
 #include "m_misc.h"
-#include "v_sdl.h"
+#include "i_video.h"
 #include "d_net.h"
 #include "g_game.h"
 #include "d_main.h"
@@ -48,7 +45,13 @@ rcsid[] = "$Id$";
 #include "z_zone.h"
 #include "i_system.h"
 #include "i_audio.h"
+#include "gl_draw.h"
 
+#ifdef _WIN32
+#include "i_xinput.h"
+#endif
+
+CVAR(i_interpolateframes, 0);
 
 #ifdef USESYSCONSOLE
 #include <windows.h>
@@ -98,7 +101,7 @@ LRESULT CALLBACK SysConsoleProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         {
         case QUIT_ID:
             I_DestroySysConsole();
-            V_Shutdown();
+            I_ShutdownVideo();
             exit(0);
             break;
             
@@ -461,6 +464,7 @@ void I_Init(void)
     //I_SpawnLauncher(hwndMain);
 #endif
 
+    I_InitVideo();
     I_InitClockRate();
 }
 
@@ -472,9 +476,6 @@ void I_Error(char* string, ...)
 {
     char buff[1024];
     va_list	va;
-    
-    if(usingGL)
-        R_GLClearFrame(0xFF000000);
 
     I_ShutdownSound();
 
@@ -490,11 +491,20 @@ void I_Error(char* string, ...)
 
     if(usingGL)
     {
-        M_DrawText(0, 0, WHITE, 1, 1, "Error - %s\n", buff);
-        V_ShutdownWait();
+        while(1)
+        {
+            GL_ClearView(0xFF000000);
+            Draw_Text(0, 0, WHITE, 1, 1, "Error - %s\n", buff);
+            GL_SwapBuffers();
+
+            if(I_ShutdownWait())
+                break;
+
+            I_Sleep(1);
+        }
     }
     else
-        V_Shutdown();
+        I_ShutdownVideo();
 
 #ifdef USESYSCONSOLE
     {
@@ -532,7 +542,7 @@ void I_Quit(void)
 #endif
 
     I_ShutdownSound();
-    V_Shutdown();
+    I_ShutdownVideo();
     
     exit(0);
 }
@@ -582,7 +592,7 @@ void I_Printf(char* string, ...)
 #endif
 
     printf(buff);
-    if(ConsoleInitialized)
+    if(console_initialized)
         CON_AddText(buff);
 }
 
@@ -604,20 +614,29 @@ void I_BeginRead(void)
     BusyDisk=true;
 }
 
-void I_FinishUpdate(void)
-{
-    V_FinishUpdate();
-    BusyDisk = false;
-}
-
 //
-// I_StartTic
+// I_RegisterCvars
 //
 
-void I_StartTic(void)
+#ifdef _USE_XINPUT
+CVAR_EXTERNAL(i_rsticksensitivity);
+CVAR_EXTERNAL(i_rstickthreshold);
+CVAR_EXTERNAL(i_xinputscheme);
+#endif
+
+CVAR_EXTERNAL(i_gamma);
+CVAR_EXTERNAL(i_brightness);
+
+void I_RegisterCvars(void)
 {
-    V_StartTic();
+#ifdef _USE_XINPUT
+    CON_CvarRegister(&i_rsticksensitivity);
+    CON_CvarRegister(&i_rstickthreshold);
+    CON_CvarRegister(&i_xinputscheme);
+#endif
+
+    CON_CvarRegister(&i_gamma);
+    CON_CvarRegister(&i_brightness);
+    CON_CvarRegister(&i_interpolateframes);
 }
-
-
 

@@ -1,20 +1,25 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//---------------------------------------------------------------------
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 
 #ifndef D3DR_MAIN_H
 #define D3DR_MAIN_H
@@ -22,7 +27,7 @@
 #include "t_bsp.h"
 #include "d_player.h"
 #include "w_wad.h"
-#include "r_gl.h"
+#include "gl_main.h"
 #include "con_cvar.h"
 
 extern fixed_t      viewx;
@@ -50,9 +55,13 @@ extern int          vertCount;
 extern unsigned int renderTic;
 extern unsigned int spriteRenderTic;
 extern unsigned int glBindCalls;
-extern unsigned int drawListSize;
 
 extern dboolean     bRenderSky;
+
+CVAR_EXTERNAL(r_fov);
+CVAR_EXTERNAL(r_fillmode);
+CVAR_EXTERNAL(r_uniformtime);
+CVAR_EXTERNAL(r_drawtrace);
 
 void R_Init(void);
 void R_RenderPlayerView(player_t *player);
@@ -66,8 +75,11 @@ fixed_t R_Interpolate(fixed_t ticframe, fixed_t updateframe, dboolean enable);
 void R_SetupLevel(void);
 void R_SetViewAngleOffset(angle_t angle);
 void R_SetViewOffset(int offset);
-void R_DrawGfx(int x, int y, const char* name, rcolor color, dboolean alpha);
-void R_DrawHudSprite(int type, int rot, int frame, int x, int y, float scale, int pal, rcolor c);
 void R_DrawWireframe(dboolean enable);	//villsa
+void R_RegisterCvars(void);
+void R_SetViewMatrix(void);
+void R_RenderWorld(void);
+void R_RenderBSPNode(int bspnum);
+void R_AllocSubsectorBuffer(void);
 
 #endif

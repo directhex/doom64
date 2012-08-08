@@ -1647,11 +1647,11 @@ void NET_SV_UpdateCvars(cvar_t* cvar)
     if(!cvar->nonclient)
         return;
 
-    packet = NET_NewPacket(64);
+    packet = NET_NewPacket(96);
 
     NET_WriteInt16(packet, NET_PACKET_TYPE_CVAR_UPDATE);
     NET_WriteString(packet, cvar->name);
-    NET_WriteInt8(packet, (unsigned int)cvar->value);
+    NET_WriteString(packet, cvar->string);
 
     // Send packet
 

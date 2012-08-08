@@ -1,23 +1,26 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 1997 Midway Home Entertainment, Inc
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 //
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	Enemy thinking, AI.
@@ -25,10 +28,6 @@
 //	that are associated with states/frames.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char
-rcsid[] = "$Id$";
-#endif
 
 #include <stdlib.h>
 
@@ -46,7 +45,6 @@ rcsid[] = "$Id$";
 #include "tables.h"
 #include "info.h"
 #include "z_zone.h"
-#include "m_math.h"
 
 
 typedef enum
@@ -106,9 +104,9 @@ mobj_t* soundtarget;
 
 void P_RecursiveSound(sector_t* sec, int soundblocks)
 {
-    int         i;
-    line_t*     check;
-    sector_t*   other;
+    int		i;
+    line_t*	check;
+    sector_t*	other;
     
     // wake up all monsters in this sector
     if(sec->validcount == validcount && sec->soundtraversed <= soundblocks+1)
@@ -121,38 +119,19 @@ void P_RecursiveSound(sector_t* sec, int soundblocks)
     
     for(i = 0; i < sec->linecount; i++)
     {
-        plane_t* pf1;
-        plane_t* pc1;
-        plane_t* pf2;
-        plane_t* pc2;
-
         check = sec->lines[i];
         if(!(check->flags & ML_TWOSIDED))
             continue;
+        
+        P_LineOpening(check);
+        
+        if(openrange <= 0)
+            continue;	// closed door
         
         if(sides[check->sidenum[0] ].sector == sec)
             other = sides[check->sidenum[1]].sector;
         else
             other = sides[check->sidenum[0]].sector;
-
-        pf1 = &sec->floorplane;
-        pc1 = &sec->ceilingplane;
-        pf2 = &other->floorplane;
-        pc2 = &other->ceilingplane;
-
-        // check for closed door
-		if((M_PointToZ(pf1, check->v1->x, check->v1->y) >=
-            M_PointToZ(pc2, check->v1->x, check->v1->y) &&
-            M_PointToZ(pf1, check->v2->x, check->v2->y) >=
-            M_PointToZ(pc2, check->v2->x, check->v2->y))
-            ||
-            (M_PointToZ(pf2, check->v1->x, check->v1->y) >=
-            M_PointToZ(pc1, check->v1->x, check->v1->y) &&
-            M_PointToZ(pf2, check->v2->x, check->v2->y) >=
-            M_PointToZ(pc1, check->v2->x, check->v2->y)))
-		{
-			continue;
-		}
         
         if(check->flags & ML_SOUNDBLOCK)
         {
@@ -634,7 +613,7 @@ dboolean P_LookForPlayers(mobj_t* actor, dboolean allaround)
         
         else    // special case for player bots
         {
-            fixed_t dist2 = MAXINT;
+            fixed_t dist2 = D_MAXINT;
             mobj_t* mobj;
             
             for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
@@ -973,12 +952,12 @@ void A_PosAttack(mobj_t* actor)
     A_FaceTarget(actor);
 
     angle = actor->angle;
-    slope = P_AimLineAttack(actor, angle, 0, 0, MISSILERANGE);
+    slope = P_AimLineAttack(actor, angle, 0, MISSILERANGE);
 
     angle += P_RandomShift(20);
     hitdice = (P_Random() & 7);
     damage = ((hitdice<<2) - hitdice) + 3;
-    P_LineAttack(actor, angle, actor->pitch, MISSILERANGE, slope, damage);
+    P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -999,13 +978,13 @@ void A_SPosAttack(mobj_t* actor)
     S_StartSound(actor, sfx_shotgun);
     A_FaceTarget(actor);
     bangle = actor->angle;
-    slope = P_AimLineAttack (actor, bangle, 0, 0, MISSILERANGE);
+    slope = P_AimLineAttack (actor, bangle, 0, MISSILERANGE);
     
     for(i = 0; i < 3; i++)
     {
         angle = bangle + P_RandomShift(20);
         damage = ((P_Random() % 5) * 3) + 3;
-        P_LineAttack(actor, angle, actor->pitch, MISSILERANGE, slope, damage);
+        P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
     }
 }
 
@@ -1027,12 +1006,12 @@ void A_PlayAttack(mobj_t* actor)
     A_FaceTarget(actor);
 
     angle = actor->angle;
-    slope = P_AimLineAttack (actor, angle, 0, 0, MISSILERANGE);
+    slope = P_AimLineAttack (actor, angle, 0, MISSILERANGE);
 
     angle += P_RandomShift(20);
     hitdice = (P_Random()%5);
     damage = ((hitdice << 2) - hitdice) + 3;
-    P_LineAttack(actor, angle, actor->pitch, MISSILERANGE, slope, damage);
+    P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -1610,9 +1589,12 @@ void A_PainShootSkull(mobj_t* actor, angle_t angle)
             count++;
     }
 
+    //
     // if there are all ready 17 skulls on the level,
     // don't spit another one
-    if(count > 0x11)
+    // 20120212 villsa - new compatibility flag to disable limit
+    //
+    if(compatflags & COMPATF_LIMITPAIN && count > 0x11)
         return;
 
 
@@ -1874,7 +1856,7 @@ void A_TargetCamera(mobj_t* actor)
 {
     mobj_t* mo;
     
-    actor->threshold = MAXINT;
+    actor->threshold = D_MAXINT;
     
     for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
     {

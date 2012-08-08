@@ -1,41 +1,41 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id$
+// Copyright(C) 1993-1997 Id Software, Inc.
+// Copyright(C) 2007-2012 Samuel Villarreal
 //
-// Copyright (C) 1993-1996 by id Software, Inc.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
-// This source is available for distribution and/or modification
-// only under the terms of the DOOM Source Code License as
-// published by id Software. All rights reserved.
-//
-// The source is distributed in the hope that it will be useful,
+// This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
-// for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// $Author$
-// $Revision$
-// $Date$
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION: Main rendering code.
 //
 //-----------------------------------------------------------------------------
-#ifdef RCSID
-static const char rcsid[] = "$Id$";
-#endif
 
 #include <math.h>
 
 #include "doomdef.h"
 #include "doomstat.h"
-#include "v_sdl.h"
+#include "i_video.h"
 #include "d_devstat.h"
 #include "r_local.h"
 #include "r_sky.h"
 #include "r_clipper.h"
-#include "r_texture.h"
-#include "r_gl.h"
+#include "gl_texture.h"
+#include "gl_main.h"
 #include "m_fixed.h"
 #include "tables.h"
 #include "i_system.h"
@@ -44,8 +44,9 @@ static const char rcsid[] = "$Id$";
 #include "p_local.h"
 #include "z_zone.h"
 #include "con_console.h"
-#include "r_vertices.h"
-#include "m_misc.h"
+#include "r_drawlist.h"
+#include "gl_draw.h"
+#include "g_actions.h"
 
 lumpinfo_t      *lumpinfo;
 int             skytexture;
@@ -76,9 +77,57 @@ int             vertCount = 0;
 unsigned int    renderTic = 0;
 unsigned int    spriteRenderTic = 0;
 unsigned int    glBindCalls = 0;
-unsigned int    drawListSize = 0;
 
 dboolean        bRenderSky = false;
+
+CVAR(r_fov, 74.0);
+CVAR(r_fillmode, 1);
+CVAR(r_uniformtime, 0);
+CVAR(r_fog, 1);
+CVAR(r_wipe, 1);
+CVAR(r_drawtris, 0);
+CVAR(r_drawmobjbox, 0);
+CVAR(r_drawblockmap, 0);
+CVAR(r_drawtrace, 0);
+CVAR(r_rendersprites, 1);
+CVAR(r_drawfill, 0);
+CVAR(r_skybox, 0);
+
+CVAR_CMD(r_filter, 0)
+{
+    GL_DumpTextures();
+    GL_SetTextureFilter();
+}
+
+CVAR_CMD(r_texnonpowresize, 0)
+{
+    GL_DumpTextures();
+}
+
+CVAR_CMD(r_anisotropic, 0)
+{
+    GL_DumpTextures();
+    GL_SetTextureFilter();
+}
+
+CVAR_EXTERNAL(r_texturecombiner);
+CVAR_EXTERNAL(i_interpolateframes);
+CVAR_EXTERNAL(p_usecontext);
+
+//
+// CMD_Wireframe
+//
+
+static CMD(Wireframe)
+{
+    dboolean b;
+    
+    if(!param[0])
+        return;
+    
+    b = datoi(param[0]) & 1;
+    R_DrawWireframe(b);
+}
 
 //
 // R_PointToAngle
@@ -261,11 +310,10 @@ void R_Init(void)
         a += 2;
     }
 
-    R_InitTextures();
+    GL_InitTextures();
+    GL_ResetTextures();
 
-    curtexture      = -1;
-    curgfx          = -1;
-    cursprite       = -1;
+    G_AddCommand("wireframe", CMD_Wireframe, 0);
 }
 
 //
@@ -318,13 +366,139 @@ void R_SetViewOffset(int offset)
 
 void R_SetupLevel(void)
 {
-    R_CountSubsectorVerts();
+    R_AllocSubsectorBuffer();
     R_RefreshBrightness();
 
     DL_Init();
     
-    drawListSize = 0;
     bRenderSky = true;
+}
+
+//
+// R_PrecacheLevel
+// Loads and binds all world textures before level startup
+//
+
+void R_PrecacheLevel(void)
+{
+    char *texturepresent;
+    char *spritepresent;
+    int	i;
+    int j;
+    int	p;
+    int num;
+    mobj_t* mo;
+
+    CON_DPrintf("--------R_PrecacheLevel--------\n");
+    GL_DumpTextures();
+    
+    texturepresent = (char*)Z_Alloca(numtextures);
+    spritepresent = (char*)Z_Alloca(NUMSPRITES);
+    
+    for(i = 0; i < numsides; i++)
+    {
+        texturepresent[sides[i].toptexture] = 1;
+        texturepresent[sides[i].midtexture] = 1;
+        texturepresent[sides[i].bottomtexture] = 1;
+    }
+    
+    for(i = 0; i < numsectors; i++)
+    {
+        texturepresent[sectors[i].ceilingpic] = 1;
+        texturepresent[sectors[i].floorpic] = 1;
+
+        if(sectors[i].flags & MS_LIQUIDFLOOR)
+            texturepresent[sectors[i].floorpic + 1] = 1;
+    }
+
+    num = 0;
+    
+    for(i = 0; i < numtextures; i++)
+    {
+        if(texturepresent[i])
+        {
+            GL_BindWorldTexture(i, 0, 0);
+            num++;
+
+            for(p = 0; p < numanimdef; p++)
+            {
+                int lump = W_GetNumForName(animdefs[p].name) - t_start;
+            
+                if(lump != i)
+                    continue;
+
+                //
+                // TODO - add support for precaching palettes
+                //
+                if(!animdefs[p].palette)
+                {
+                    for(j = 1; j < animdefs[p].frames; j++)
+                    {
+                        GL_BindWorldTexture(i + j, 0, 0);
+                        num++;
+                    }
+                }
+            }
+        }
+    }
+
+    CON_DPrintf("%i world textures cached\n", num);
+
+    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
+        spritepresent[mo->sprite] = 1;
+
+    num = 0;
+
+    //
+    // TODO - add support for precaching palettes
+    //
+    for(i = 0; i < NUMSPRITES; i++)
+    {
+        if(spritepresent[i])
+        {
+            spritedef_t	*sprdef;
+            int k;
+
+            sprdef = &spriteinfo[i];
+
+            for(k = 0; k < sprdef->numframes; k++)
+            {
+                spriteframe_t *sprframe;
+                int p;
+
+                sprframe = &sprdef->spriteframes[k];
+                if(sprframe->rotate)
+                {
+                    for(p = 0; p < 8; p++)
+                    {
+                        GL_BindSpriteTexture(sprframe->lump[p], 0);
+                        num++;
+                    }
+                }
+                else
+                {
+                    GL_BindSpriteTexture(sprframe->lump[0], 0);
+                    num++;
+                }
+            }
+        }
+    }
+
+    CON_DPrintf("%i sprites cached\n", num);
+
+    if(has_GL_ARB_multitexture)
+    {
+        GL_SetTextureUnit(1, true);
+        GL_BindEnvTexture();
+
+        GL_SetTextureUnit(2, true);
+        GL_BindDummyTexture();
+
+        GL_SetTextureUnit(3, true);
+        GL_BindDummyTexture();
+    }
+
+    GL_SetDefaultCombiner();
 }
 
 //
@@ -338,12 +512,19 @@ void R_SetupFrame(player_t *player)
     fixed_t cam_z;
     mobj_t* viewcamera;
 
+    //
+    // reset list indexes
+    //
+    drawlist[DLT_WALL].index = 0;
+    drawlist[DLT_FLAT].index = 0;
+    drawlist[DLT_SPRITE].index = 0;
+
     renderplayer = player;
 
     //
     // reset active textures
     //
-    curtexture = cursprite = curgfx = -1;
+    GL_ResetTextures();
 
     //
     // setup view rotation/position
@@ -354,10 +535,7 @@ void R_SetupFrame(player_t *player)
     cam_z = (viewcamera == player->mo ? player->viewz : viewcamera->z) + quakeviewy;
 
     if(viewcamera == player->mo)
-    {
         pitch += player->recoilpitch;
-        pitch += player->extrapitch;
-    }
 
     viewangle   = R_Interpolate(angle, frame_angle, (int)i_interpolateframes.value);
     viewpitch   = R_Interpolate(pitch, frame_pitch, (int)i_interpolateframes.value);
@@ -376,65 +554,17 @@ void R_SetupFrame(player_t *player)
     viewcos[1]  = F2D3D(dcos(viewpitch - ANG90));
     
     D_IncValidCount();
+}
 
-    //
-    // setup fog
-    //
-    dglFogi(GL_FOG_MODE, GL_LINEAR);
+//
+// R_SetViewClipping
+//
 
-    if(r_fillmode.value)
-    {
-        if(!skyflatnum)
-            dglDisable(GL_FOG);
-        else if(r_fog.value)
-        {
-            rfloat color[4] = { 0, 0, 0, 0 };
-            rcolor fogcolor = 0;
-            int fognear = 0;
-            int fogfactor;
-
-            fognear = sky ? sky->fognear : 985;
-            fogfactor = (1000 - fognear);
-
-            if(fogfactor <= 0)
-                fogfactor = 1;
-
-            dglEnable(GL_FOG);
-
-            if(sky && (sky->fogcolor & 0xFFFFFF) != 0)
-            {
-                int min;
-                int max;
-
-                max = 128000 / fogfactor;
-                min = ((fognear - 500) * 256) / fogfactor;
-
-                fogcolor = sky->fogcolor;
-                dglFogi(GL_FOG_MODE, GL_EXP);
-                dglFogf(GL_FOG_DENSITY, 14.0f / (max + min));
-            }
-            else
-            {
-                float min;
-                float max;
-                float position;
-
-                position = ((float)fogfactor / 1000.0f);
-
-                if(position <= 0.0f)
-                    position = 0.00001f;
-
-                min = 5.0f / position;
-                max = 30.0f / position;
-
-                dglFogf(GL_FOG_START, min);
-                dglFogf(GL_FOG_END, max);
-            }
-
-            dglGetColorf(fogcolor, color);
-            dglFogfv(GL_FOG_COLOR, color);
-        }
-    }
+static void R_SetViewClipping(angle_t angle)
+{
+    R_Clipper_Clear();
+    R_Clipper_SafeAddClipRange(viewangle + angle, viewangle - angle);
+    R_FrustrumSetup();
 }
 
 //
@@ -473,76 +603,9 @@ static void R_InterpolateSectors(void)
     {
         sector_t* s = &sectors[i];
 
-        s->frame_z1[1] = R_Interpolate(s->floorplane.d, s->frame_z1[0], 1);
-        s->frame_z2[1] = R_Interpolate(s->ceilingplane.d, s->frame_z2[0], 1);
+        s->frame_z1[1] = R_Interpolate(s->floorheight, s->frame_z1[0], 1);
+        s->frame_z2[1] = R_Interpolate(s->ceilingheight, s->frame_z2[0], 1);
     }
-}
-
-//
-// R_DrawGfx
-//
-
-void R_DrawGfx(int x, int y, const char* name, rcolor color, dboolean alpha)
-{
-    int gfxIdx = R_BindGfxTexture(name, alpha);
-
-    dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, DGL_CLAMP);
-    dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, DGL_CLAMP);
-
-    R_GLToggleBlend(1);
-
-    R_GLDraw2DStrip((float)x, (float)y, 
-        gfxwidth[gfxIdx], gfxheight[gfxIdx], 0, 1.0f, 0, 1.0f, color, 0);
-
-    R_GLToggleBlend(0);
-}
-
-//
-// R_DrawHudSprite
-//
-
-void R_DrawHudSprite(int type, int rot, int frame, int x, int y, float scale, int pal, rcolor c)
-{
-    spritedef_t	*sprdef;
-    spriteframe_t *sprframe;
-    float flip = 0.0f;
-    int w;
-    int h;
-    int offsetx = 0;
-    int offsety = 0;
-    
-    R_GLToggleBlend(1);
-    
-    sprdef=&spriteinfo[type];
-    sprframe = &sprdef->spriteframes[frame];
-
-    R_BindSpriteTexture(sprframe->lump[rot], pal);
-
-    w = spritewidth[sprframe->lump[rot]];
-    h = spriteheight[sprframe->lump[rot]];
-        
-    if(scale <= 1.0f)
-    {
-        if(sprframe->flip[rot])
-            flip = 1.0f;
-        else
-            flip = 0.0f;
-            
-        offsetx = (int)spriteoffset[sprframe->lump[rot]];
-        offsety = (int)spritetopoffset[sprframe->lump[rot]];
-    }
-
-    R_GLSetOrthoScale(scale);
-
-    R_GLDraw2DStrip(flip ? (float)(x + offsetx) - w : (float)x - offsetx, (float)y - offsety, w, h,
-        flip, 1.0f - flip, 0, 1.0f, c, 0);
-
-   R_GLSetOrthoScale(1.0f);
-    
-    cursprite = -1;
-    curgfx = -1;
-    
-    R_GLToggleBlend(0);
 }
 
 //
@@ -554,7 +617,7 @@ static void R_DrawReadDisk(void)
     if(!BusyDisk)
         return;
     
-    M_DrawText(296, 8, WHITE, 1, 0, "**");
+    Draw_Text(296, 8, WHITE, 1, 0, "**");
     
     BusyDisk=true;
 }
@@ -572,7 +635,6 @@ static void R_DrawBlockMap(void)
     int     y;
     mobj_t* mo;
 
-    dglDisable(GL_FOG);
     dglDisable(GL_TEXTURE_2D);
     dglDepthRange(0.0f, 0.0f);
     dglColor4ub(0, 128, 255, 255);
@@ -599,7 +661,6 @@ static void R_DrawBlockMap(void)
 
     dglDepthRange(0.0f, 1.0f);
     dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    dglEnable(GL_FOG);
     dglEnable(GL_TEXTURE_2D);
 }
 
@@ -731,7 +792,7 @@ static void R_DrawContextWall(line_t* line)
     {
         int i;
         vtx_t v[4];
-        seg_t* seg;
+        seg_t* seg = NULL;
 
         for(i = 0; i < numsegs; i++)
         {
@@ -741,6 +802,9 @@ static void R_DrawContextWall(line_t* line)
                 break;
             }
         }
+
+        if(seg == NULL)
+            return;
 
         R_GenerateSwitchPlane(seg, v);
 
@@ -761,11 +825,11 @@ static void R_DrawContextWall(line_t* line)
     //
     // do the actual drawing
     //
-    R_GLToggleBlend(1);
+    GL_SetState(GLSTATE_BLEND, 1);
 
-    dglDisable(GL_FOG);
     dglDepthRange(0.0f, 0.0f);
     dglDisable(GL_TEXTURE_2D);
+    dglDisable(GL_CULL_FACE);
     dglColor4ub(128, 128, 128, 64);
     dglBegin(GL_POLYGON);
     dglVertex3f(vtx[0].x, vtx[0].y, vtx[0].z);
@@ -783,10 +847,10 @@ static void R_DrawContextWall(line_t* line)
     dglEnd();
     dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     dglEnable(GL_TEXTURE_2D);
+    dglEnable(GL_CULL_FACE);
     dglDepthRange(0.0f, 1.0f);
-    dglEnable(GL_FOG);
 
-    R_GLToggleBlend(0);
+    GL_SetState(GLSTATE_BLEND, 0);
 }
 
 //
@@ -795,8 +859,6 @@ static void R_DrawContextWall(line_t* line)
 
 void R_RenderPlayerView(player_t *player)
 {
-    angle_t a1;
-
     if(!r_fillmode.value)
         dglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
@@ -804,19 +866,24 @@ void R_RenderPlayerView(player_t *player)
         renderTic = I_GetTimeMS();
     
     //
-    // reset list indexes
+    // clear sprite list
     //
-    drawlist[DLT_WALL].index = 0;
-    drawlist[DLT_FLAT].index = 0;
-    drawlist[DLT_SPRITE].index = 0;
-    drawlist[DLT_TWALL].index = 0;
-    
     R_ClearSprites();
     
     //
     // setup draw frame
     //
     R_SetupFrame(player);
+
+    //
+    // check for t-junction cracks
+    //
+    if(r_drawfill.value >= 1)
+    {
+        dglClearColor(1, 0, 1, 0);
+		dglClear(GL_COLOR_BUFFER_BIT);
+        bRenderSky = false;
+    }
 
     //
     // draw sky
@@ -829,14 +896,7 @@ void R_RenderPlayerView(player_t *player)
     //
     // setup view matrix
     //
-    dglMatrixMode(GL_PROJECTION);
-    dglLoadIdentity();
-    dglFrustum(video_width, video_height, r_fov.value, 0.1f);
-    dglMatrixMode(GL_MODELVIEW);
-    dglLoadIdentity();
-    dglRotatef(-TRUEANGLES(viewpitch), 1.0f, 0.0f, 0.0f);
-    dglRotatef(-TRUEANGLES(viewangle) + 90.0f, 0.0f, 0.0f, 1.0f);
-    dglTranslatef(-fviewx, -fviewy, -fviewz);
+    R_SetViewMatrix();
 
     //
     // check for new console commands
@@ -846,11 +906,11 @@ void R_RenderPlayerView(player_t *player)
     //
     // setup clipping
     //
-    a1 = R_FrustumAngle();
-    R_Clipper_Clear();
-    R_Clipper_SafeAddClipRange(viewangle + a1, viewangle - a1);
-    R_FrustrumSetup();
+    R_SetViewClipping(R_FrustumAngle());
 
+    //
+    // interpolate moving sectors before draw
+    //
     if(i_interpolateframes.value)
         R_InterpolateSectors();
 
@@ -858,80 +918,16 @@ void R_RenderPlayerView(player_t *player)
     // traverse BSP for rendering
     //
     R_RenderBSPNode(numnodes-1);
-    
-    if(devparm)
-        spriteRenderTic = I_GetTimeMS();
-    
-    //
-    // setup sprites for rendering
-    //
-    if(r_rendersprites.value)
-        R_SetupSprites();
 
     //
     // check for new console commands
     //
     NetUpdate();
 
-    dglEnable(GL_DEPTH_TEST);
-
     //
     // render world
     //
-    DL_BeginDrawList(r_fillmode.value >= 1, r_texturecombiner.value >= 1);
-
-    // setup texture environment for effects
-    if(r_texturecombiner.value)
-    {
-        if(!nolights)
-        {
-            dglActiveTexture(GL_TEXTURE1_ARB);
-            dglEnable(GL_TEXTURE_2D);
-            dglTexCombModulate(GL_PREVIOUS, GL_PRIMARY_COLOR);
-        }
-
-        if(st_flashoverlay.value <= 0)
-        {
-            dglActiveTexture(GL_TEXTURE2_ARB);
-            dglEnable(GL_TEXTURE_2D);
-            dglTexCombColor(GL_PREVIOUS, flashcolor, GL_ADD);
-        }
-
-        dglTexCombReplaceAlpha(GL_TEXTURE0_ARB);
-        dglActiveTexture(GL_TEXTURE0_ARB);
-    }
-    else
-        dglTexCombReplace();
-
-    dglEnable(GL_ALPHA_TEST);
-    
-    // begin draw list loop
-    
-    // -------------- Draw walls (segs) --------------------------
-
-    DL_ProcessDrawList(DLT_WALL, DL_ProcessWalls);
-    
-    // -------------- Draw floors/ceilings (leafs) ---------------
-    
-    R_GLToggleBlend(1);
-    DL_ProcessDrawList(DLT_FLAT, DL_ProcessLeafs);
-    
-    // -------------- Draw things (sprites) ----------------------
-    
-    dglDepthMask(0);
-    DL_ProcessDrawList(DLT_SPRITE, DL_ProcessSprites);
-
-    // -------------- Draw translucent walls (segs) --------------
-
-    DL_ProcessDrawList(DLT_TWALL, DL_ProcessWalls);
-    
-    // -------------- Restore states -----------------------------
-    
-    dglDisable(GL_ALPHA_TEST);
-    dglDepthMask(1);
-
-    R_GLToggleBlend(0);
-    R_GLResetCombiners();
+    R_RenderWorld();
 
     if(r_drawblockmap.value)
         R_DrawBlockMap();
@@ -944,10 +940,6 @@ void R_RenderPlayerView(player_t *player)
 
     if(p_usecontext.value)
         R_DrawContextWall(contextline);
-
-    dglDisable(GL_FOG);
-    dglDisable(GL_DEPTH_TEST);
-    R_GLSetOrthoScale(1.0f);
     
     //
     // render player weapon sprites
@@ -972,5 +964,30 @@ void R_RenderPlayerView(player_t *player)
     //
     NetUpdate();
 }
+
+//
+// R_RegisterCvars
+//
+
+void R_RegisterCvars(void)
+{
+    CON_CvarRegister(&r_fov);
+    CON_CvarRegister(&r_fillmode);
+    CON_CvarRegister(&r_uniformtime);
+    CON_CvarRegister(&r_fog);
+    CON_CvarRegister(&r_filter);
+    CON_CvarRegister(&r_anisotropic);
+    CON_CvarRegister(&r_wipe);
+    CON_CvarRegister(&r_drawtris);
+    CON_CvarRegister(&r_drawmobjbox);
+    CON_CvarRegister(&r_drawblockmap);
+    CON_CvarRegister(&r_drawtrace);
+    CON_CvarRegister(&r_texturecombiner);
+    CON_CvarRegister(&r_rendersprites);
+    CON_CvarRegister(&r_texnonpowresize);
+    CON_CvarRegister(&r_drawfill);
+    CON_CvarRegister(&r_skybox);
+}
+
 
 
