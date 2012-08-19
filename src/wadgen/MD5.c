@@ -23,7 +23,7 @@
 #include <string.h>             /* for memcpy() */
 #include <sys/types.h>          /* for stupid systems */
 
-#include "md5.h"
+#include "MD5.h"
 
 static bool md5_init = false;
 

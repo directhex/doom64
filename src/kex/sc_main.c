@@ -209,7 +209,7 @@ static int SC_Find(dboolean forceupper)
 
     while(sc_parser.readtokens())
     {
-        c = sc_parser.getchar();
+        c = sc_parser.fgetchar();
 
         if(c == '/')
             comment = true;
@@ -225,7 +225,7 @@ static int SC_Find(dboolean forceupper)
                 }
                 else if(havetoken)
                 {
-                    c = sc_parser.getchar();
+                    c = sc_parser.fgetchar();
 
                     if(c != ',')
                         return true;
@@ -237,9 +237,9 @@ static int SC_Find(dboolean forceupper)
                 }
                 else
                 {
-                    if(sc_parser.getchar() == '"')
+                    if(sc_parser.fgetchar() == '"')
                     {
-                        if(sc_parser.getchar() == ',')
+                        if(sc_parser.fgetchar() == ',')
                             continue;
                         else
                         {
@@ -340,7 +340,7 @@ void SC_Init(void)
     sc_parser.close         = SC_Close;
     sc_parser.compare       = SC_Compare;
     sc_parser.find          = SC_Find;
-    sc_parser.getchar       = SC_GetChar;
+    sc_parser.fgetchar      = SC_GetChar;
     sc_parser.rewind        = SC_Rewind;
     sc_parser.getstring     = SC_GetString;
     sc_parser.getint        = SC_GetInteger;

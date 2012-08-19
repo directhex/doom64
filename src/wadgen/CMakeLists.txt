@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(WadGen)
 
+find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 
 include_directories(${PNG_INCLUDE_DIR})
@@ -12,6 +13,7 @@ add_executable(WadGen
 	Level.c
 	Mem.c
 	Png.c
+	MD5.c
 	Rom.c
 	SndFont.c
 	Sound.c
@@ -21,7 +23,7 @@ add_executable(WadGen
 	WadGen.c
 )
 
-target_link_libraries(WadGen ${PNG_LIBRARY})
+target_link_libraries(WadGen -lm ${ZLIB_LIBRARY} ${PNG_LIBRARY})
 if(WIN32)
 	target_link_libraries(WadGen comctl32)
 endif(WIN32)

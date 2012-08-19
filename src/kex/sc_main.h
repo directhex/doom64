@@ -38,7 +38,7 @@ typedef struct
     void    (*close)(void);
     void    (*compare)(void*);
     int     (*find)(dboolean);
-    char    (*getchar)(void);
+    char    (*fgetchar)(void);
     void    (*rewind)(void);
     char*   (*getstring)(void);
     int     (*getint)(void);

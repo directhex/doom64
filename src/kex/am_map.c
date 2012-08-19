@@ -47,6 +47,7 @@
 #include "m_random.h"
 #include "gl_draw.h"
 #include "g_actions.h"
+#include "g_controls.h"
 
 #ifdef _WIN32
 #include "i_xinput.h"

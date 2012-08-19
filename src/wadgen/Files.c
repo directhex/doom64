@@ -205,7 +205,12 @@ int File_Read(char const* name, cache* buffer)
 		if(handle == -1) {
 			sprintf(fullpath, "/usr/local/share/games/doom64/%s", name);
 			handle = open (fullpath, O_RDONLY | O_BINARY, 0666);
-		}
+
+                        if(handle == -1) {
+                                sprintf(fullpath, "/usr/local/share/doom64/%s", name);
+                                handle= open (fullpath, O_RDONLY | O_BINARY, 0666);
+                        }
+               }
 	}
 #else
 	handle = open (name, O_RDONLY | O_BINARY, 0666);

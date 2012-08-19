@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <stdarg.h>
 #include "doomtype.h"
 #include "doomstat.h"
 #include "dgl.h"

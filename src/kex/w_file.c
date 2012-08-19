@@ -163,6 +163,7 @@ static void BuildIWADDirList(void)
 
     AddIWADDir("/usr/share/games/doom64");
     AddIWADDir("/usr/local/share/games/doom64");
+    AddIWADDir("/usr/local/share/doom64");
 
 #endif
 

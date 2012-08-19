@@ -56,7 +56,7 @@ CVAR(s_soundfont, DOOMSND.SF2);
 #ifdef _WIN32
 CVAR_CMD(s_driver, dsound)
 #else
-CVAR_CMD(s_driver, alsa)
+CVAR_CMD(s_driver, sndio)
 #endif
 {
     char* driver = cvar->string;
@@ -79,13 +79,14 @@ CVAR_CMD(s_driver, alsa)
         !dstrcmp(driver, "coreaudio")   ||
         !dstrcmp(driver, "dsound")      ||
         !dstrcmp(driver, "portaudio")   ||
+        !dstrcmp(driver, "sndio")       ||
         !dstrcmp(driver, "sndman")      ||
         !dstrcmp(driver, "dart")        ||
         !dstrcmp(driver, "file")
         ) return;
 
     CON_Warnf("Invalid driver name\n");
-    CON_Warnf("Valid driver names: jack, alsa, oss, pulseaudio, coreaudio, dsound, portaudio, sndman, dart, file\n");
+    CON_Warnf("Valid driver names: jack, alsa, oss, pulseaudio, coreaudio, dsound, portaudio, sndio, sndman, dart, file\n");
     CON_CvarSet(cvar->name, DEFAULT_FLUID_DRIVER);
 }
 
@@ -1256,6 +1257,8 @@ void I_InitSequencer(void)
             sfpath = "/usr/local/share/games/doom64/DOOMSND.SF2";
         else if(!stat("/usr/share/games/doom64/DOOMSND.SF2", &buf))
             sfpath = "/usr/share/games/doom64/DOOMSND.SF2";
+        else if(!stat("/usr/local/share/doom64/DOOMSND.SF2", &buf))
+            sfpath = "/usr/local/share/doom64/DOOMSND.SF2";
         else
             sfpath = s_soundfont.string;
 
