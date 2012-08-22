@@ -24,6 +24,9 @@
 #include "common.h"
 #include "script.h"
 
+dboolean verbose = false;
+FILE *debugfile;
+
 scparser_t *sc_parsers[MAX_NESTED_PARSERS];
 int sc_numparsers;
 scparser_t *sc_parser;
@@ -49,17 +52,40 @@ typedef enum
     CHAR_LETTER,
     CHAR_SYMBOL,
     CHAR_QUOTE,
-    CHAR_SPECIAL
+    CHAR_SPECIAL,
+    CHAR_EOF
 } chartype_t;
 
 static byte sc_charcode[256];
 
 //
+// SC_DebugPrintf
+//
+
+static void SC_DebugPrintf(const char *str, ...)
+{
+    char buf[1024];
+    va_list v;
+
+    if(!verbose)
+    {
+        return;
+    }
+    
+    va_start(v, str);
+    vsprintf(buf, str,v);
+    va_end(v);
+
+    fprintf(debugfile, buf);
+}
+
+//
 // SC_PushNestedFilename
 //
 
-static SC_PushNestedFilename(char *name)
+static void SC_PushNestedFilename(char *name)
 {
+    SC_DebugPrintf("push nested file %s\n", name);
     strcpy(sc_nested_filenames[sc_num_nested_filenames++], name);
 }
 
@@ -67,8 +93,9 @@ static SC_PushNestedFilename(char *name)
 // SC_PopNestedFilename
 //
 
-static SC_PopNestedFilename(void)
+static void SC_PopNestedFilename(void)
 {
+    SC_DebugPrintf("nested file pop\n");
     memset(sc_nested_filenames[--sc_num_nested_filenames], 0, 256);
 }
 
@@ -91,6 +118,7 @@ static char *SC_GetNestedFilename(void)
 void SC_Open(char* name)
 {
     Com_Printf("--------SC_Open: Reading %s--------\n", name);
+    SC_DebugPrintf("opening %s\n", name);
 
     sc_parser->buffsize = Com_ReadBinaryFile(name, &sc_parser->buffer);
     
@@ -110,6 +138,7 @@ void SC_Open(char* name)
     sc_parser->stack            = NULL;
     sc_parser->tokentype        = TK_NONE;
     sc_parser->isamacro         = false;
+    sc_parser->name             = name;
 }
 
 //
@@ -118,6 +147,7 @@ void SC_Open(char* name)
 
 void SC_Close(void)
 {
+    SC_DebugPrintf("sc_close\n");
     Com_Free(&sc_parser->buffer);
 
     sc_parser->buffer           = NULL;
@@ -156,6 +186,9 @@ void SC_Error(const char *msg, ...)
 
 int SC_ReadTokens(void)
 {
+    SC_DebugPrintf("(%s): read tokens: %i : %i\n",
+        sc_parser->name, sc_parser->buffpos, sc_parser->buffsize);
+
     if(sc_parser->buffpos < sc_parser->buffsize)
     {
         return true;
@@ -174,8 +207,6 @@ int SC_ReadTokens(void)
 
 void SC_CheckKeywords(void)
 {
-    SC_ReadTokens();
-
     if(!strcasecmp(sc_parser->token, "define"))
     {
         sc_parser->tokentype = TK_DEFINE;
@@ -222,6 +253,7 @@ static void SC_ClearToken(void)
 
 int SC_GetNumber(void)
 {
+    SC_DebugPrintf("get number (%s)\n", sc_parser->token);
     if(sc_parser->tokentype != TK_NUMBER)
     {
         SC_Error("%s is not a number", sc_parser->token);
@@ -246,7 +278,8 @@ void SC_GetString(void)
 
 void SC_MustMatchToken(int type)
 {
-    SC_ReadTokens();
+    SC_DebugPrintf("must match %i\n", type);
+    SC_DebugPrintf("tokentype %i\n", sc_parser->tokentype);
 
     if(sc_parser->tokentype != type)
     {
@@ -289,8 +322,8 @@ void SC_MustMatchToken(int type)
             break;
         }
 
-        SC_Error("Expected %s, but found: %s",
-            string, sc_parser->token);
+        SC_Error("Expected %s, but found: %s (%i : %i)",
+            string, sc_parser->token, sc_parser->tokentype, type);
     }
 }
 
@@ -300,6 +333,7 @@ void SC_MustMatchToken(int type)
 
 void SC_ExpectNextToken(int type)
 {
+    SC_DebugPrintf("expect %i\n", type);
     SC_Find();
     SC_MustMatchToken(type);
 }
@@ -316,8 +350,6 @@ static void SC_CheckIdentifierArgs(void)
 
     if(sc_parser->stack == NULL || sc_parser->identifier == NULL)
         return;
-
-    SC_ReadTokens();
 
     id = sc_parser->identifier;
 
@@ -353,6 +385,8 @@ static void SC_GetNumberToken(char initial)
 
     sc_parser->tokentype = TK_NUMBER;
 
+    SC_DebugPrintf("get number (%s)\n", sc_parser->token);
+
     SC_Rewind();
     SC_CheckIdentifierArgs();
 }
@@ -373,6 +407,8 @@ static void SC_GetLetterToken(char initial)
     }
 
     sc_parser->tokentype = TK_IDENIFIER;
+
+    SC_DebugPrintf("get letter (%s)\n", sc_parser->token);
 
     SC_Rewind();
     SC_CheckKeywords();
@@ -423,6 +459,8 @@ static void SC_GetSymbolToken(char c)
         SC_Error("Unknown symbol: %c", c);
         break;
     }
+
+    SC_DebugPrintf("get symbol (%s)\n", sc_parser->token);
 }
 
 //
@@ -441,6 +479,8 @@ static void SC_GetStringToken(void)
     }
 
     sc_parser->tokentype = TK_STRING;
+
+    SC_DebugPrintf("get string (%s)\n", sc_parser->token);
 }
 
 //
@@ -519,6 +559,10 @@ int SC_Find(void)
                 case CHAR_SYMBOL:
                     SC_GetSymbolToken(c);
                     return true;
+                case CHAR_EOF:
+                    sc_parser->tokentype = TK_EOF;
+                    SC_DebugPrintf("EOF token\n");
+                    return true;
                 default:
                     break;
                 }
@@ -545,7 +589,7 @@ char SC_GetChar(void)
 {
     int c;
 
-    SC_ReadTokens();
+    SC_DebugPrintf("(%s): get char\n", sc_parser->name);
 
     sc_parser->rowpos++;
     c = sc_parser->buffer[sc_parser->buffpos++];
@@ -555,6 +599,12 @@ char SC_GetChar(void)
         sc_parser->linepos++;
         sc_parser->rowpos = 1;
     }
+    else if(c == 127)
+    {
+        c = 0;
+    }
+
+    SC_DebugPrintf("get char: %i\n", c);
 
     return c;
 }
@@ -565,7 +615,7 @@ char SC_GetChar(void)
 
 void SC_Rewind(void)
 {
-    SC_ReadTokens();
+    SC_DebugPrintf("(%s): rewind\n", sc_parser->name);
 
     sc_parser->rowpos--;
     sc_parser->buffpos--;
@@ -647,7 +697,7 @@ void SC_AddIdentifier(void)
     id->buffer = (char*)Com_Alloc(len);
     strncpy(id->buffer, buffer, len);
 
-    id->buffer[len-1] = 0;
+    id->buffer[len-1] = 127;
 
     identifier_cap.prev->next = id;
     id->next = &identifier_cap;
@@ -656,6 +706,8 @@ void SC_AddIdentifier(void)
 
     sc_parser->rowpos += len;
     sc_parser->buffpos += len;
+
+    SC_DebugPrintf("add identifier\n");
 }
 
 //
@@ -677,6 +729,8 @@ void SC_RemoveIdentifier(void)
 
             Com_Free(&id->buffer);
             Com_Free(&id);
+
+            SC_DebugPrintf("remove identifier\n");
 
             return;
         }
@@ -705,6 +759,7 @@ void SC_PushIdStack(char *name)
     strncpy(id_stack[id_stack_count].value, sc_parser->token, len);
 
     id_stack_count++;
+    SC_DebugPrintf("push id stack\n");
 }
 
 //
@@ -727,6 +782,8 @@ static void SC_PopIdStack(identifier_t *id,
         memset(id_stack[id_stack_count].value, 0, MAX_IDENTIFER_VALUE_LEN);
         id_stack_count--;
     }
+
+    SC_DebugPrintf("pop id stack\n");
 }
 
 //
@@ -809,6 +866,7 @@ void SC_Init(void)
 
     sc_charcode['"'] = CHAR_QUOTE;
     sc_charcode['_'] = CHAR_LETTER;
+    sc_charcode[127] = CHAR_EOF;
 
     // push the initial parser
     SC_PushParser();

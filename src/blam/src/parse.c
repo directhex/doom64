@@ -82,7 +82,7 @@ void PS_ParseIdentifier(void)
 
             SC_PushParser();
 
-            sc_parser->buffsize         = current_identifier->bufsize+1;
+            sc_parser->buffsize         = current_identifier->bufsize;
             sc_parser->buffer           = current_identifier->buffer;
             sc_parser->pointer_start    = sc_parser->buffer;
             sc_parser->pointer_end      = sc_parser->buffer + sc_parser->buffsize;
@@ -93,6 +93,7 @@ void PS_ParseIdentifier(void)
             sc_parser->stack            = stack;
             sc_parser->tokentype        = TK_NONE;
             sc_parser->isamacro         = true;
+            sc_parser->name             = "identifier";
 
             return;
         }
@@ -127,6 +128,8 @@ static void PS_ParseInner(void)
         {
         case TK_NONE:
             break;
+        case TK_EOF:
+            return;
         case TK_NUMBER:
             {
                 int special;
@@ -196,6 +199,8 @@ static void PS_ParseOuter(void)
         {
         case TK_NONE:
             break;
+        case TK_EOF:
+            return;
         case TK_IDENIFIER:
             PS_ParseIdentifier();
             break;

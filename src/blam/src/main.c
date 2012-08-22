@@ -85,6 +85,11 @@ int main(int argc, char **argv)
         {
             decompile = true;
         }
+        else if(!strcmp(myargv[i], "-v"))
+        {
+            verbose = true;
+            debugfile = fopen("blamdebug.txt", "w");
+        }
         else if(!strcmp(myargv[i], "-i"))
         {
             int tail;

@@ -45,7 +45,8 @@ typedef enum
     TK_SETDIR,
     TK_WAIT,
     TK_MACRO,
-    TK_LOOP
+    TK_LOOP,
+    TK_EOF
 } tokentype_t;
 
 #define MAX_IDENTIFIER_LEN  16
@@ -93,11 +94,14 @@ typedef struct
     dboolean            isamacro;
     identifier_t        *identifier;
     identifer_stack_t   *stack;
+    const char          *name;
 } scparser_t;
 
 extern scparser_t *sc_parsers[MAX_NESTED_PARSERS];
 extern scparser_t *sc_parser;
 extern char sc_stringbuffer[256];
+extern dboolean verbose;
+extern FILE *debugfile;
 
 void SC_Open(char* name);
 void SC_Close(void);
