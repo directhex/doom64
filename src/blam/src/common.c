@@ -55,7 +55,7 @@ void Com_Error(char *fmt, ...)
     vsprintf(buff, fmt, va);
     va_end(va);
     Com_Printf("\n**************************\n");
-    Com_Printf("ERROR: %s", buff);
+    Com_Printf("ERROR: %s\n", buff);
     Com_Printf("**************************\n");
 
     Com_SetWriteFile("blam_err.txt");
@@ -119,8 +119,10 @@ int Com_ReadFile(const char* name, byte** buffer)
         
         fclose(fp);
    }
-   
-   return -1;
+    
+    Com_Error("Com_ReadFile: Couldn't find %s", name);
+
+    return -1;
 }
 
 //
@@ -150,9 +152,11 @@ int Com_ReadBinaryFile(const char* name, byte** buffer)
         }
         
         fclose(fp);
-   }
-   
-   return -1;
+    }
+
+    Com_Error("Com_ReadBinaryFile: Couldn't find %s", name);
+    
+    return -1;
 }
 
 //
@@ -169,7 +173,10 @@ dboolean Com_SetWriteFile(char const* name, ...)
     va_end(v);
 
     if(!(com_file = fopen(filename, "w")))
+    {
+        Com_Error("Com_SetWriteFile: Couldn't write %s", name);
         return 0;
+    }
    
     return 1;
 }
@@ -188,7 +195,10 @@ dboolean Com_SetWriteBinaryFile(char const* name, ...)
     va_end(v);
 
     if(!(com_file = fopen(filename, "wb")))
+    {
+        Com_Error("Com_SetWriteBinaryFile: Couldn't write %s", name);
         return 0;
+    }
    
     return 1;
 }
