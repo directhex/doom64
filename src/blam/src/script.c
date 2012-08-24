@@ -866,6 +866,7 @@ void SC_Init(void)
 
     sc_charcode['"'] = CHAR_QUOTE;
     sc_charcode['_'] = CHAR_LETTER;
+    sc_charcode['-'] = CHAR_NUMBER;
     sc_charcode[127] = CHAR_EOF;
 
     // push the initial parser
