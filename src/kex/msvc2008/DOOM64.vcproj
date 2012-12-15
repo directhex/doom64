@@ -150,6 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(OutDir)\&quot;;&quot;$(OutDir)\..\hqx-1.1\src\&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -176,7 +177,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng13.lib fluidsynth.lib"
+				AdditionalDependencies="sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng15.lib fluidsynth.lib"
 				OutputFile="$(OutDir)\msvc2008\bin\DOOM64.EXE"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -1914,6 +1915,26 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="HQX"
+				>
+				<File
+					RelativePath="..\..\hqx-1.1\src\hq2x.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\hqx-1.1\src\hq3x.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\hqx-1.1\src\hq4x.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\hqx-1.1\src\init.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -2332,6 +2353,14 @@
 				</File>
 				<File
 					RelativePath="..\gl_texture.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="HQX"
+				>
+				<File
+					RelativePath="..\..\hqx-1.1\src\hqx.h"
 					>
 				</File>
 			</Filter>

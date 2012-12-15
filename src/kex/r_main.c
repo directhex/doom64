@@ -113,6 +113,7 @@ CVAR_CMD(r_anisotropic, 0)
 CVAR_EXTERNAL(r_texturecombiner);
 CVAR_EXTERNAL(i_interpolateframes);
 CVAR_EXTERNAL(p_usecontext);
+CVAR_EXTERNAL(r_hqscale);
 
 //
 // CMD_Wireframe
@@ -987,6 +988,7 @@ void R_RegisterCvars(void)
     CON_CvarRegister(&r_texnonpowresize);
     CON_CvarRegister(&r_drawfill);
     CON_CvarRegister(&r_skybox);
+    CON_CvarRegister(&r_hqscale);
 }
 
 
