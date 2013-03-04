@@ -63,7 +63,7 @@ bool __stdcall LoadingDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     switch(uMsg)
     {
     case WM_INITDIALOG:
-        hwndLoadBar = GetDlgItem(hWnd, IDC_PROGRESS);
+        hwndLoadBar = GetDlgItem(hWnd, IDC_PROGRESS1);
         SendMessage(hwndLoadBar, PBM_SETRANGE, 0, MAKELPARAM(0, TOTALSTEPS));
         SendMessage(hwndLoadBar, PBM_SETSTEP, (WPARAM)(int)1, 0);
         return TRUE;
@@ -341,7 +341,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     // Start looking for the rom..
     if(File_Dialog(&wgenfile, FILEDLGTYPE, "Select Doom64 Rom..", hwnd))
     {
-        hwndWait = CreateDialog(hAppInst, MAKEINTRESOURCE(IDD_DIALOG2), NULL, (DLGPROC)LoadingDlgProc);
+        hwndWait = CreateDialog(hAppInst, MAKEINTRESOURCE(IDD_DIALOG1), NULL, (DLGPROC)LoadingDlgProc);
         WGen_Process();
         WGen_ShutDownApplication();
     }

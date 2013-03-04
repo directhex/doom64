@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(OutDir)\&quot;;&quot;$(OutDir)\..\hqx-1.1\src\&quot;"
+				AdditionalIncludeDirectories="&quot;$(OutDir)\&quot;;&quot;$(OutDir)\..\..\lib\SDL-1.2.15\include\&quot;;&quot;$(OutDir)\..\..\lib\lpng1514\&quot;;&quot;$(OutDir)\..\..\lib\fluidsynth-1.1.3\include\&quot;;&quot;$(OutDir)\..\..\lib\SDL_net-1.2.8\&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -177,7 +177,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sdl.lib sdlmain.lib SDL_net.lib opengl32.lib glu32.lib libpng15.lib fluidsynth.lib"
+				AdditionalDependencies="$(OutDir)\..\..\lib\sdl.lib $(OutDir)\..\..\lib\sdlmain.lib $(OutDir)\..\..\lib\SDL_net.lib opengl32.lib glu32.lib $(OutDir)\..\..\lib\libpng15.lib $(OutDir)\..\..\lib\fluidsynth.lib"
 				OutputFile="$(OutDir)\msvc2008\bin\DOOM64.EXE"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
