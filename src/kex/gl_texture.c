@@ -37,8 +37,6 @@
 #include "con_console.h"
 #include "g_actions.h"
 
-#include "hqx.h"
-
 #define GL_MAX_TEX_UNITS    4
 
 int         curtexture;
@@ -98,8 +96,6 @@ static int curunit = -1;
 
 CVAR_EXTERNAL(r_texnonpowresize);
 CVAR_EXTERNAL(r_fillmode);
-CVAR_EXTERNAL(r_hqscale);
-
 CVAR_CMD(r_texturecombiner, 1)
 {
     int i;
@@ -108,28 +104,6 @@ CVAR_CMD(r_texturecombiner, 1)
 
     for(i = 0; i < GL_MAX_TEX_UNITS; i++)
         dmemset(&gl_env_state[i], 0, sizeof(gl_env_state_t));
-}
-
-CVAR_CMD(r_hqscale, 1)
-{
-    static dboolean hqxinitialized = false;
-
-    if(r_hqscale.value != 1)
-    {
-        if(hqxinitialized == false)
-        {
-            hqxInit();
-            hqxinitialized = true;
-        }
-    }
-
-    GL_DumpTextures();
-    
-    if(r_hqscale.value < 1)
-        CON_CvarSetValue(r_hqscale.name, 1);
-
-    if(r_hqscale.value > 4)
-        CON_CvarSetValue(r_hqscale.name, 4);
 }
 
 //
@@ -198,43 +172,6 @@ static void InitWorldTextures(void)
 }
 
 //
-// GL_UploadTexture
-//
-
-static void GL_UploadTexture(byte *data, byte bits, int format, int type, int width, int height)
-{
-    if(bits == 3 || r_hqscale.value == 1)
-        dglTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, type, GL_UNSIGNED_BYTE, data);
-    else
-    {
-        byte *hires;
-        int hqsize = (int)r_hqscale.value;
-
-        hires = Z_Calloc((width*hqsize)*(height*hqsize)*4, PU_STATIC, 0);
-
-        switch(hqsize)
-        {
-        case 2:
-            hq2x_32((uint32_t*)data, (uint32_t*)hires, width, height);
-            break;
-        case 3:
-            hq3x_32((uint32_t*)data, (uint32_t*)hires, width, height);
-            break;
-        case 4:
-            hq4x_32((uint32_t*)data, (uint32_t*)hires, width, height);
-            break;
-        default:
-            break;
-        }
-
-        dglTexImage2D(GL_TEXTURE_2D, 0, format,
-            width*hqsize, height*hqsize, 0, type, GL_UNSIGNED_BYTE, hires);
-
-        Z_Free(hires);
-    }
-}
-
-//
 // GL_BindWorldTexture
 //
 
@@ -276,8 +213,7 @@ void GL_BindWorldTexture(int texnum, int *width, int *height)
     
     dglGenTextures(1, &textureptr[texnum][palettetranslation[texnum]]);
     dglBindTexture(GL_TEXTURE_2D, textureptr[texnum][palettetranslation[texnum]]);
-
-    GL_UploadTexture(png, 4, GL_RGBA8, GL_RGBA, w, h);
+    dglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, png);
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -351,13 +287,33 @@ static void SetTextureImage(byte* data, int bits, int *origwidth, int *origheigh
             *origheight = hp;
         }
 
-        GL_UploadTexture(pad, bits, format, type, wp, hp);
+        dglTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            format,
+            wp,
+            hp,
+            0,
+            type,
+            GL_UNSIGNED_BYTE,
+            pad
+            );
 
         Z_Free(pad);
     }
     else
     {
-        GL_UploadTexture(data, bits, format, type, *origwidth, *origheight);
+        dglTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        format,
+        *origwidth,
+        *origheight,
+        0,
+        type,
+        GL_UNSIGNED_BYTE,
+        data
+        );
     }
 
     GL_CheckFillMode();

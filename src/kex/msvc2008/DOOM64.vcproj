@@ -1915,26 +1915,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="HQX"
-				>
-				<File
-					RelativePath="..\..\hqx-1.1\src\hq2x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\hqx-1.1\src\hq3x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\hqx-1.1\src\hq4x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\hqx-1.1\src\init.c"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
