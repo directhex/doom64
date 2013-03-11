@@ -180,6 +180,7 @@ NETCVAR_PARAM(compat_limitpain, 1,  compatflags,    COMPATF_LIMITPAIN);
 
 CVAR_EXTERNAL(v_mlook);
 CVAR_EXTERNAL(v_mlookinvert);
+CVAR_EXTERNAL(v_yaxismove);
 CVAR_EXTERNAL(p_autorun);
 CVAR_EXTERNAL(p_fdoubleclick);
 CVAR_EXTERNAL(p_sdoubleclick);
@@ -672,6 +673,9 @@ void G_BuildTiccmd(ticcmd_t* cmd)
         if((int)v_mlook.value)
             cmd->pitch -= (int)v_mlookinvert.value ? pc->mousey * 0x8 : -(pc->mousey * 0x8);
     }
+
+    if((int)v_yaxismove.value)
+        forward += pc->mousey;
     
     if(pc->key[PCKEY_CENTER])
         cmd->buttons2 |= BT2_CENTER;

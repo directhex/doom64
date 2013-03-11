@@ -2336,14 +2336,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="HQX"
-				>
-				<File
-					RelativePath="..\..\hqx-1.1\src\hqx.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

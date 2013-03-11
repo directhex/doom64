@@ -38,8 +38,6 @@
 
 #ifdef _USE_XINPUT
 
-#pragma comment(lib,"xinput.lib")
-
 xinputgamepad_t xgamepad;
 
 //

@@ -50,6 +50,7 @@ CVAR(v_msensitivityy, 5);
 CVAR(v_macceleration, 0);
 CVAR(v_mlook, 0);
 CVAR(v_mlookinvert, 0);
+CVAR(v_yaxismove, 0);
 CVAR(v_width, 640);
 CVAR(v_height, 480);
 CVAR(v_windowed, 1);
@@ -616,6 +617,7 @@ void V_RegisterCvars(void)
     CON_CvarRegister(&v_macceleration);
     CON_CvarRegister(&v_mlook);
     CON_CvarRegister(&v_mlookinvert);
+    CON_CvarRegister(&v_yaxismove);
     CON_CvarRegister(&v_width);
     CON_CvarRegister(&v_height);
     CON_CvarRegister(&v_windowed);
