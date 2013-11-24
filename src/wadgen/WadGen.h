@@ -93,11 +93,11 @@ cache Png_Create(int width, int height, int numpal, dPalette_t* pal,
 #ifndef _WIN32
 static inline char* strupr(char* in)
 {
-    char* ptr = in;
+    unsigned char * ptr = (unsigned char *)in;
     while(*ptr != '\0')
     {
-        *ptr = toupper(*ptr);
-        ptr++;
+        int c = toupper(*ptr);
+        *ptr++ = c;
     }
     return in;
 }
