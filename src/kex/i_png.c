@@ -252,7 +252,7 @@ byte* I_PNGReadData(int lump, dboolean palette, dboolean nopack, dboolean alpha,
                     // villsa 12/04/13: if we're loading texture palette as normal
                     // but palindex is not zero, then just copy out a single row from the
                     // palette in case world textures have a 8-32 bit depth color table
-                    else if(palindex != 0)
+                    else
                     {
                         for(i = 0; i < 16; i++)
                             dmemcpy(&pal[i], &pal[(16 * palindex) + i], sizeof(png_color));
