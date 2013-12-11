@@ -91,6 +91,13 @@ CVAR_CMD(s_driver, sndio)
 }
 
 //
+// Mutex
+//
+static SDL_mutex *lock = NULL;
+#define MUTEX_LOCK()    SDL_mutexP(lock);
+#define MUTEX_UNLOCK()  SDL_mutexV(lock);
+
+//
 // Semaphore stuff
 //
 
@@ -256,13 +263,14 @@ typedef struct
     // game code signals the sequencer to do stuff. game will
     // wait (while loop) until the audio thread signals itself
     // to be ready again
+    // MP2E 12102013 - Only change using Seq_SetStatus
     seqsignal_e             signal;
 
     // 20120316 villsa - gain property (tweakable)
     float                   gain;
 } doomseq_t;
 
-static doomseq_t doomseq;   // doom sequencer
+static doomseq_t doomseq = {0};   // doom sequencer
 
 typedef void(*eventhandler)(doomseq_t*, channel_t*);
 typedef int(*signalhandler)(doomseq_t*);
@@ -317,21 +325,23 @@ static double Song_GetTimeDivision(song_t* song)
 
 static void Seq_SetStatus(doomseq_t* seq, int status)
 {
+    MUTEX_LOCK()
     seq->signal = status;
+    MUTEX_UNLOCK()
 }
 
 //
 // Seq_WaitOnSignal
 //
 
-static void Seq_WaitOnSignal(doomseq_t* seq)
+/*static void Seq_WaitOnSignal(doomseq_t* seq)
 {
     while(1)
     {
         if(seq->signal == SEQ_SIGNAL_READY)
             break;
     }
-}
+}*/
 
 //
 // Chan_SetMusicVolume
@@ -988,6 +998,7 @@ static void Seq_RunSong(doomseq_t* seq, dword msecs)
     int i;
     channel_t* chan;
 
+    SEMAPHORE_LOCK()
     for(i = 0; i < MIDI_CHANNELS; i++)
     {
         chan = &playlist[i];
@@ -1000,6 +1011,7 @@ static void Seq_RunSong(doomseq_t* seq, dword msecs)
 
         Chan_RunSong(seq, chan, msecs);
     }
+    SEMAPHORE_UNLOCK()
 }
 
 //
@@ -1176,6 +1188,16 @@ static int SDLCALL Thread_PlayerHandler(void *param)
 void I_InitSequencer(void)
 {
     CON_DPrintf("--------Initializing Software Synthesizer--------\n");
+
+    //
+    // init mutex
+    //
+    lock = SDL_CreateMutex();
+    if(lock == NULL)
+    {
+        CON_Warnf("I_InitSequencer: failed to create mutex");
+        return;
+    }
 
     //
     // init semaphore
@@ -1394,7 +1416,7 @@ void I_ResetSound(void)
         return;
 
     Seq_SetStatus(&doomseq, SEQ_SIGNAL_RESET);
-    Seq_WaitOnSignal(&doomseq);
+    //Seq_WaitOnSignal(&doomseq);
 }
 
 //
@@ -1407,7 +1429,7 @@ void I_PauseSound(void)
         return;
 
     Seq_SetStatus(&doomseq, SEQ_SIGNAL_PAUSE);
-    Seq_WaitOnSignal(&doomseq);
+    //Seq_WaitOnSignal(&doomseq);
 }
 
 //
@@ -1420,7 +1442,7 @@ void I_ResumeSound(void)
         return;
 
     Seq_SetStatus(&doomseq, SEQ_SIGNAL_RESUME);
-    Seq_WaitOnSignal(&doomseq);
+    //Seq_WaitOnSignal(&doomseq);
 }
 
 //
@@ -1435,7 +1457,7 @@ void I_SetGain(float db)
     doomseq.gain = db;
 
     Seq_SetStatus(&doomseq, SEQ_SIGNAL_SETGAIN);
-    Seq_WaitOnSignal(&doomseq);
+    //Seq_WaitOnSignal(&doomseq);
 }
 
 //
