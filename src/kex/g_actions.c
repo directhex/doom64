@@ -420,12 +420,15 @@ dboolean G_ActionResponder(event_t *ev)
         TryActions(KeyActions[ev->data1], ev->type == ev_keyup);
         break;
 
-    // villsa 12/20/2013: properly handle mouse button actions and
+    // villsa 12/10/2013: properly handle mouse button actions and
     // handle mouse movement in its own event state
     case ev_mousedown:
     case ev_mouseup:
         ProcessButtonActions(MouseActions, ev->data1, MouseButtons);
         MouseButtons = ev->data1;
+
+        // MP2E 12/10/2013: ev_mousedown and mouseup need G_DoCmdMouseMove
+        G_DoCmdMouseMove(ev->data2, ev->data3);
         break;
 
     case ev_mouse:
