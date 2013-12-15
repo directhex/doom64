@@ -25,8 +25,8 @@
 // DESCRIPTION:
 //      Main loop menu stuff.
 //      Default Config File.
-//		Executable arguments
-//		BBox stuff
+//        Executable arguments
+//        BBox stuff
 //
 //-----------------------------------------------------------------------------
 
@@ -49,8 +49,8 @@
 #include "gl_texture.h"
 #include "p_saveg.h"
 
-int		myargc;
-char**	myargv;
+int        myargc;
+char**    myargv;
 
 
 //
@@ -62,7 +62,7 @@ char**	myargv;
 
 int M_CheckParm (char *check)
 {
-    int		i;
+    int        i;
     
     for (i = 1;i<myargc;i++)
     {
@@ -268,7 +268,7 @@ int M_FileExists(char *filename)
 
 void M_SaveDefaults(void)
 {
-    FILE		*fh;
+    FILE        *fh;
     
     fh=fopen(G_GetConfigFileName(), "wt");
     if (fh)
@@ -293,12 +293,12 @@ void M_LoadDefaults(void)
 
 void M_ScreenShot(void)
 {
-    char	name[13];
-    int		shotnum=0;
-    FILE	*fh;
-    byte	*buff;
-    byte	*png;
-    int		size;
+    char    name[13];
+    int     shotnum=0;
+    FILE    *fh;
+    byte    *buff;
+    byte    *png;
+    int     size;
     
     while(shotnum < 1000)
     {
@@ -315,7 +315,7 @@ void M_ScreenShot(void)
     if(!fh)
         return;
     
-    if((video_height % 2))	// height must be power of 2
+    if((video_height % 2))    // height must be power of 2
         return;
     
     buff = GL_GetScreenBuffer(0, 0, video_width, video_height);

@@ -47,8 +47,8 @@ NULL
 #endif
 ;
 
-char	DefaultConfig[] =
-#include "defconfig.inc"	// wtf?
+char    DefaultConfig[] =
+#include "defconfig.inc"    // wtf?
 ;
 
 //
@@ -85,10 +85,10 @@ char *G_GetConfigFileName(void) {
 
 void G_ExecuteMultipleCommands(char *data)
 {
-    char	*p;
-    char	*q;
-    char	c;
-    char	line[1024];
+    char    *p;
+    char    *q;
+    char    c;
+    char    line[1024];
     
     p=data;
     c=*p;
@@ -114,9 +114,9 @@ void G_ExecuteMultipleCommands(char *data)
 
 void G_ExecuteFile(char *name)
 {
-    FILE	*fh;
-    char	*buff;
-    int		len;
+    FILE    *fh;
+    char    *buff;
+    int        len;
     
     if(!name)
         I_Error("G_ExecuteFile: No config name specified");
@@ -154,7 +154,7 @@ void G_ExecuteFile(char *name)
 
 void G_LoadSettings(void)
 {
-    int		p;
+    int        p;
     
     p = M_CheckParm("-config");
     if(p && (p < myargc - 1))

@@ -23,7 +23,7 @@
 //
 //
 // DESCRIPTION:
-//		Game completion, final screen animation.
+//        Game completion, final screen animation.
 //
 //-----------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ castinfo_t castorder[] =
     {   CC_ZOMBIE,  MT_POSSESSED1   },
     {   CC_SHOTGUN, MT_POSSESSED2   },
     {   CC_IMP,     MT_IMP1         },
-    {   CC_IMP2,	MT_IMP2         },
+    {   CC_IMP2,    MT_IMP2         },
     {   CC_DEMON,   MT_DEMON1       },
     {   CC_DEMON2,  MT_DEMON2       },
     {   CC_LOST,    MT_SKULL        },
@@ -201,23 +201,23 @@ int F_Ticker(void)
             
             switch(st)
             {
-            case S_007: sound = sfx_sht2fire; break;     // player
+            case S_007: sound = sfx_sht2fire; break;    // player
             case S_055: sound = sfx_sargatk; break;     // demon
-            case S_084:                             // mancubus
-            case S_086:                             // mancubus
-            case S_170:                             // imp
-            case S_201:                             // cacodemon
-            case S_245:                             // hell knight
-            case S_224:                             // bruiser
-            case S_088: sound = sfx_bdmissile; break;     // mancubus
+            case S_084:                                 // mancubus
+            case S_086:                                 // mancubus
+            case S_170:                                 // imp
+            case S_201:                                 // cacodemon
+            case S_245:                                 // hell knight
+            case S_224:                                 // bruiser
+            case S_088: sound = sfx_bdmissile; break;   // mancubus
             case S_168: sound = sfx_scratch; break;     // imp scratch
-            case S_109: sound = sfx_pistol; break;     // possessed
+            case S_109: sound = sfx_pistol; break;      // possessed
             case S_138: sound = sfx_shotgun; break;     // shotgun guy
-            case S_331:                             // pain
-            case S_261: sound = sfx_skullatk; break;     // skull
-            case S_288: sound = sfx_plasma; break;     // baby
-            case S_308:                             // cyborg
-            case S_310:                             // cyborg
+            case S_331:                                 // pain
+            case S_261: sound = sfx_skullatk; break;    // skull
+            case S_288: sound = sfx_plasma; break;      // baby
+            case S_308:                                 // cyborg
+            case S_310:                                 // cyborg
             case S_312: sound = sfx_missile; break;     // cyborg
             default: sound = 0; break;
             }

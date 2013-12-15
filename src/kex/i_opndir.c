@@ -47,8 +47,8 @@
 #include <windows.h> /* for GetFileAttributes */
 
 #include <tchar.h>
-#define SUFFIX	_T("*")
-#define	SLASH	_T("\\")
+#define SUFFIX    _T("*")
+#define    SLASH    _T("\\")
 
 // haleyjd: this should be the only DOOM header needed.
 #include "i_opndir.h"
@@ -64,7 +64,7 @@ DIR *opendir(const _TCHAR *szPath)
    DIR *nd;
    unsigned int rc;
    _TCHAR szFullPath[MAX_PATH];
-	
+    
    errno = 0;
    
    if(!szPath)
@@ -117,9 +117,9 @@ DIR *opendir(const _TCHAR *szPath)
    /* Add on a slash if the path does not end with one. */
    if(nd->dd_name[0] != _T('\0')
       && _tcsrchr(nd->dd_name, _T('/'))  != nd->dd_name
-					    + _tcslen(nd->dd_name) - 1
+                        + _tcslen(nd->dd_name) - 1
       && _tcsrchr(nd->dd_name, _T('\\')) != nd->dd_name
-      					    + _tcslen(nd->dd_name) - 1)
+                              + _tcslen(nd->dd_name) - 1)
    {
       _tcscat(nd->dd_name, SLASH);
    }
@@ -190,7 +190,7 @@ struct dirent *readdir(DIR *dirp)
       /* Get the next search entry. */
       if(_tfindnext(dirp->dd_handle, &(dirp->dd_dta)))
       {
-         /* We are off the end or otherwise error.	
+         /* We are off the end or otherwise error.    
             _findnext sets errno to ENOENT if no more file
             Undo this. */ 
          DWORD winerr = GetLastError();

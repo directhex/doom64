@@ -23,9 +23,9 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//	Enemy thinking, AI.
-//	Action Pointer Functions
-//	that are associated with states/frames.
+//    Enemy thinking, AI.
+//    Action Pointer Functions
+//    that are associated with states/frames.
 //
 //-----------------------------------------------------------------------------
 
@@ -104,9 +104,9 @@ mobj_t* soundtarget;
 
 void P_RecursiveSound(sector_t* sec, int soundblocks)
 {
-    int		i;
-    line_t*	check;
-    sector_t*	other;
+    int        i;
+    line_t*    check;
+    sector_t*    other;
     
     // wake up all monsters in this sector
     if(sec->validcount == validcount && sec->soundtraversed <= soundblocks+1)
@@ -126,7 +126,7 @@ void P_RecursiveSound(sector_t* sec, int soundblocks)
         P_LineOpening(check);
         
         if(openrange <= 0)
-            continue;	// closed door
+            continue;    // closed door
         
         if(sides[check->sidenum[0] ].sector == sec)
             other = sides[check->sidenum[1]].sector;
@@ -167,8 +167,8 @@ void P_NoiseAlert(mobj_t* target, mobj_t* emmiter)
 
 dboolean P_CheckMeleeRange(mobj_t* actor)
 {
-    mobj_t*	pl;
-    fixed_t	dist;
+    mobj_t*    pl;
+    fixed_t    dist;
     
     if(!(actor->flags & MF_SEETARGET))
         return false;
@@ -191,8 +191,8 @@ dboolean P_CheckMeleeRange(mobj_t* actor)
 
 dboolean P_CheckMissileRange(mobj_t* actor)
 {
-    fixed_t	dist;
-    int		idist;
+    fixed_t    dist;
+    int        idist;
     
     if(!(actor->flags & MF_SEETARGET))
         return false;
@@ -206,14 +206,14 @@ dboolean P_CheckMissileRange(mobj_t* actor)
     }
     
     if(actor->reactiontime)
-        return false;	// do not attack yet
+        return false;    // do not attack yet
     
     // OPTIMIZE: get this from a global checksight
     dist = P_AproxDistance( actor->x-actor->target->x,
         actor->y-actor->target->y) - 64 * FRACUNIT;
     
     if(!actor->info->meleestate)
-        dist -= 128*FRACUNIT;	// no melee attack, so fire more
+        dist -= 128*FRACUNIT;    // no melee attack, so fire more
     
     idist = F2INT(dist);
     
@@ -364,16 +364,16 @@ void T_MobjExplode(mobjexp_t *mexp)
 // returns false if the move is blocked.
 //
 
-fixed_t	xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
+fixed_t    xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
 fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 
 dboolean P_Move(mobj_t* actor)
 {
-    fixed_t		tryx;
-    fixed_t		tryy;
-    line_t*		ld;
-    dboolean	try_ok;
-    dboolean	good;
+    fixed_t    tryx;
+    fixed_t    tryy;
+    line_t*    ld;
+    dboolean   try_ok;
+    dboolean   good;
     
     if(actor->movedir == DI_NODIR)
         return false;
@@ -454,12 +454,12 @@ dboolean P_TryWalk(mobj_t* actor)
 
 void P_NewChaseDir(mobj_t* actor)
 {
-    fixed_t		deltax;
-    fixed_t		deltay;
-    dirtype_t	d[3];
-    int			tdir;
-    dirtype_t	olddir;
-    dirtype_t	turnaround;
+    fixed_t        deltax;
+    fixed_t        deltay;
+    dirtype_t    d[3];
+    int            tdir;
+    dirtype_t    olddir;
+    dirtype_t    turnaround;
     
     if(!actor->target)
         I_Error("P_NewChaseDir: called with no target");
@@ -509,7 +509,7 @@ void P_NewChaseDir(mobj_t* actor)
     {
         actor->movedir = d[1];
         if(P_TryWalk(actor))
-            return;	// either moved forward or attacked
+            return;    // either moved forward or attacked
     }
     
     if(d[2]!=DI_NODIR)
@@ -561,7 +561,7 @@ void P_NewChaseDir(mobj_t* actor)
             return;
     }
     
-    actor->movedir = DI_NODIR;	// can not move
+    actor->movedir = DI_NODIR;    // can not move
 }
 
 
@@ -668,11 +668,11 @@ dboolean P_LookForPlayers(mobj_t* actor, dboolean allaround)
 
 void A_Look(mobj_t* actor)
 {
-    mobj_t*	targ;
+    mobj_t*    targ;
     
     if(!P_LookForPlayers(actor, false))
     {
-        actor->threshold = 0;	// any shot will wake up
+        actor->threshold = 0;    // any shot will wake up
         targ = actor->subsector->sector->soundtarget;
         
         if(!targ)
@@ -690,7 +690,7 @@ void A_Look(mobj_t* actor)
     // go into chase state
     if(actor->info->seesound)
     {
-        int		sound;
+        int sound;
         
         switch(actor->info->seesound)
         {
@@ -730,7 +730,7 @@ void A_Look(mobj_t* actor)
 //
 void A_Chase(mobj_t* actor)
 {
-    int	delta;
+    int delta;
     
     if(actor->reactiontime)
         actor->reactiontime--;
@@ -761,7 +761,7 @@ void A_Chase(mobj_t* actor)
     {
         // look for a new target
         if(P_LookForPlayers(actor,true))
-            return; 	// got a new target
+            return;     // got a new target
         
         P_SetMobjState (actor, actor->info->spawnstate);
         return;
@@ -805,7 +805,7 @@ nomissile:
     if(netgame && !actor->threshold && !(actor->flags & MF_SEETARGET))
     {
         if(P_LookForPlayers(actor,true))
-            return;	// got a new target
+            return;    // got a new target
     }
     
     // chase towards player
@@ -838,15 +838,15 @@ void A_FaceTarget (mobj_t* actor)
 // A_Tracer
 //
 
-#define	TRACEANGLE 0x10000000;
+#define    TRACEANGLE 0x10000000;
 
 void A_Tracer(mobj_t* actor)
 {
-    angle_t	exact;
-    fixed_t	dist;
-    fixed_t	slope;
-    mobj_t*	dest;
-    mobj_t*	th;
+    angle_t    exact;
+    fixed_t    dist;
+    fixed_t    slope;
+    mobj_t*    dest;
+    mobj_t*    th;
     
     th = P_SpawnMobj(actor->x - actor->momx,
         actor->y - actor->momy, actor->z, MT_SMOKE_RED);
@@ -913,7 +913,7 @@ void A_Tracer(mobj_t* actor)
 
 void A_OnDeathTrigger(mobj_t* actor)
 {
-    mobj_t*	mo;
+    mobj_t* mo;
     
     if(!(actor->flags & MF_TRIGDEATH))
         return;
@@ -994,10 +994,10 @@ void A_SPosAttack(mobj_t* actor)
 
 void A_PlayAttack(mobj_t* actor)
 {
-    int	angle;
-    int	damage;
-    int	hitdice;
-    int	slope;
+    int    angle;
+    int    damage;
+    int    hitdice;
+    int    slope;
     
     if(!actor->target)
         return;
@@ -1072,7 +1072,7 @@ void A_SpidRefire(mobj_t* actor)
 
 void A_TroopMelee(mobj_t* actor)
 {
-    int	damage;
+    int    damage;
     int hitdice;
     
     if(!actor->target)
@@ -1108,8 +1108,8 @@ void A_TroopAttack(mobj_t* actor)
 
 void A_SargAttack(mobj_t* actor)
 {
-    int	damage;
-    int	hitdice;	
+    int    damage;
+    int    hitdice;    
     
     if(!actor->target)
         return;
@@ -1129,7 +1129,7 @@ void A_SargAttack(mobj_t* actor)
 
 void A_HeadAttack(mobj_t* actor)
 {
-    int	damage;
+    int    damage;
     int hitdice;
     
     if(!actor->target)
@@ -1188,7 +1188,7 @@ void A_CyberDeathEvent(mobj_t* actor)
 
 void A_BruisAttack(mobj_t* actor)
 {
-    int	damage;
+    int    damage;
     int hitdice;
     
     if(!actor->target)
@@ -1438,7 +1438,7 @@ void A_FatRaise(mobj_t *actor)
 // A_FatAttack1
 //
 
-#define	FATSPREAD	0x10000000
+#define    FATSPREAD    0x10000000
 
 void A_FatAttack1(mobj_t* actor)
 {
@@ -1515,13 +1515,13 @@ void A_FatAttack3(mobj_t* actor)
 // A_SkullAttack
 // Fly at the player like a missile.
 //
-#define	SKULLSPEED      (40*FRACUNIT)
+#define    SKULLSPEED      (40*FRACUNIT)
 
 void A_SkullAttack(mobj_t* actor)
 {
-    mobj_t*		dest;
-    angle_t		an;
-    int			dist;
+    mobj_t*        dest;
+    angle_t        an;
+    int            dist;
     
     if(!actor->target)
         return;
@@ -1810,7 +1810,7 @@ void A_BabyMetal(mobj_t* mo)
 
 void A_PlayerScream(mobj_t* mo)
 {
-    int	sound = sfx_plrdie;
+    int    sound = sfx_plrdie;
     S_StartSound (mo, sound);
 }
 

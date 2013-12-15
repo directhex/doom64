@@ -530,7 +530,7 @@ static void PrintStack(void)
           stacktop = stackptr + STACKTOPRINT;
 
        stackstart = stackptr;
-		
+        
        while(stackptr + 1 <= stacktop)
        {
           if((cnt % 4) == 0)
