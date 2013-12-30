@@ -146,6 +146,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories="&quot;../../../lib/SDL-1.2.15/include/&quot;;../../../lib/lpng1514/"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -171,7 +172,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib comctl32.lib libpng15.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib comctl32.lib ../../../lib/libpng15.lib"
 				OutputFile="bin/WadGen.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

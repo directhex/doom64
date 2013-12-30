@@ -14,6 +14,7 @@ add_executable(WadGen
 	Mem.c
 	Png.c
 	MD5.c
+
 	Rom.c
 	SndFont.c
 	Sound.c
@@ -23,7 +24,8 @@ add_executable(WadGen
 	WadGen.c
 )
 
-target_link_libraries(WadGen -lm ${ZLIB_LIBRARY} ${PNG_LIBRARY})
 if(WIN32)
-	target_link_libraries(WadGen comctl32)
-endif(WIN32)
+	target_link_libraries(WadGen ${PNG_LIBRARY} ${ZLIB_LIBRARY} comctl32)
+	else()
+	target_link_libraries(WadGen ${PNG_LIBRARY} ${ZLIB_LIBRARY} m)
+endif()
