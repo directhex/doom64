@@ -152,6 +152,7 @@ extern  int         totalitems;
 extern  int         totalsecret;
 
 // Timer, for scores.
+extern  int         basetic;
 extern  int         leveltime;      // tics in game play for par
 
 

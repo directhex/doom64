@@ -500,6 +500,10 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\g_demo.c"
+					>
+				</File>
+				<File
 					RelativePath="..\g_game.c"
 					>
 					<FileConfiguration
@@ -2038,6 +2042,10 @@
 				</File>
 				<File
 					RelativePath="..\g_controls.h"
+					>
+				</File>
+				<File
+					RelativePath="..\g_demo.h"
 					>
 				</File>
 				<File
