@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 Simon Howard
@@ -30,8 +30,7 @@
 
 typedef struct _wad_file_s wad_file_t;
 
-typedef struct
-{
+typedef struct {
     // Open a file for reading.
 
     wad_file_t *(*OpenFile)(char *path);
@@ -40,7 +39,7 @@ typedef struct
 
     void (*CloseFile)(wad_file_t *file);
 
-    // Read data from the specified position in the file into the 
+    // Read data from the specified position in the file into the
     // provided buffer.  Returns the number of bytes read.
 
     size_t (*Read)(wad_file_t *file, unsigned int offset,
@@ -48,8 +47,7 @@ typedef struct
 
 } wad_file_class_t;
 
-struct _wad_file_s
-{
+struct _wad_file_s {
     // Class of this file.
 
     wad_file_class_t *file_class;
@@ -64,7 +62,7 @@ struct _wad_file_s
     unsigned int length;
 };
 
-// Open the specified file. Returns a pointer to a new wad_file_t 
+// Open the specified file. Returns a pointer to a new wad_file_t
 // handle for the WAD file, or NULL if it could not be opened.
 
 wad_file_t *W_OpenFile(char *path);

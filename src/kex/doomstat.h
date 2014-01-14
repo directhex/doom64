@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -179,8 +179,7 @@ extern  gamestate_t gamestate;
 // MAPINFO
 //
 
-typedef struct
-{
+typedef struct {
     char        mapname[64];
     int         mapid;
     int         music;
@@ -196,8 +195,7 @@ typedef struct
     int         allowfreelook;
 } mapdef_t;
 
-typedef struct
-{
+typedef struct {
     int         id;
     int         music;
     dboolean    enteronly;

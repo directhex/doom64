@@ -13,12 +13,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    
+//
 //   CPU-related system-specific module for POSIX systems
 //
 //-----------------------------------------------------------------------------
@@ -55,39 +55,42 @@ unsigned int process_affinity_mask;
 //
 // Due to ongoing problems with the SDL_mixer library and/or the SDL audio
 // core, it is necessary to support the restriction of Eternity to a single
-// core or CPU. Apparent thread contention issues cause the library to 
+// core or CPU. Apparent thread contention issues cause the library to
 // malfunction if multiple threads of the process run simultaneously.
 //
 // I wish SDL would fix their bullshit already.
 //
-void I_SetAffinityMask(void)
-{
+void I_SetAffinityMask(void) {
 #ifdef HAVE_SCHED_SETAFFINITY
-   int p = M_CheckParm("-affinity");
+    int p = M_CheckParm("-affinity");
 
-   if(p && p < myargc - 1)
-       process_affinity_mask = datoi(myargv[p + 1]);
-   else
-       process_affinity_mask = 0;
+    if(p && p < myargc - 1) {
+        process_affinity_mask = datoi(myargv[p + 1]);
+    }
+    else {
+        process_affinity_mask = 0;
+    }
 
-   // Set the process affinity mask so that all threads
-   // run on the same processor.  This is a workaround for a bug in
-   // SDL_mixer that causes occasional crashes.
-   if(process_affinity_mask)
-   {
-      int i;
-      cpu_set_t set;
+    // Set the process affinity mask so that all threads
+    // run on the same processor.  This is a workaround for a bug in
+    // SDL_mixer that causes occasional crashes.
+    if(process_affinity_mask) {
+        int i;
+        cpu_set_t set;
 
-      CPU_ZERO(&set);
-      
-      for(i = 0; i < 16; ++i)
-         CPU_SET((process_affinity_mask>>i)&1, &set);
+        CPU_ZERO(&set);
 
-      if(sched_setaffinity(getpid(), sizeof(set), &set) == -1)
-         I_Printf("I_SetAffinityMask: failed to set process affinity mask.\n");
-      else
-         I_Printf("I_SetAffinityMask: applied affinity mask.\n");
-   }
+        for(i = 0; i < 16; ++i) {
+            CPU_SET((process_affinity_mask>>i)&1, &set);
+        }
+
+        if(sched_setaffinity(getpid(), sizeof(set), &set) == -1) {
+            I_Printf("I_SetAffinityMask: failed to set process affinity mask.\n");
+        }
+        else {
+            I_Printf("I_SetAffinityMask: applied affinity mask.\n");
+        }
+    }
 #endif
 }
 

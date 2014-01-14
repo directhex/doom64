@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -39,8 +39,7 @@
 // Note: transformed values not buffered locally,
 //  like some DOOM-alikes ("wt", "WebView") did.
 //
-typedef struct
-{
+typedef struct {
     fixed_t     x;
     fixed_t     y;
 
@@ -60,16 +59,14 @@ struct line_s;
 //  moving objects (doppler), because
 //  position is prolly just buffered, not
 //  updated.
-typedef struct
-{
+typedef struct {
     fixed_t        x;
     fixed_t        y;
     fixed_t        z;
 
 } degenmobj_t;
 
-typedef struct
-{
+typedef struct {
     fixed_t a;
     fixed_t b;
     fixed_t c;
@@ -80,8 +77,7 @@ typedef struct
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
-typedef    struct
-{
+typedef    struct {
     fixed_t         floorheight;
     fixed_t         ceilingheight;
     word            floorpic;
@@ -141,8 +137,7 @@ typedef    struct
 // The SideDef.
 //
 
-typedef struct
-{
+typedef struct {
     // add this to the calculated texture column
     fixed_t    textureoffset;
 
@@ -165,8 +160,7 @@ typedef struct
 //
 // Move clipping aid for LineDefs.
 //
-typedef enum
-{
+typedef enum {
     ST_HORIZONTAL,
     ST_VERTICAL,
     ST_POSITIVE,
@@ -175,8 +169,7 @@ typedef enum
 } slopetype_t;
 
 
-typedef struct line_s
-{
+typedef struct line_s {
     // Vertices, from v1 to v2.
     vertex_t*       v1;
     vertex_t*       v2;
@@ -226,8 +219,7 @@ typedef struct line_s
 //  (all or some) sides of a convex BSP leaf.
 //
 // Also includes boundary vertices when gl-friendly nodes used
-typedef struct subsector_s
-{
+typedef struct subsector_s {
     sector_t*   sector;
     word        numlines;
     word        firstline;
@@ -250,8 +242,7 @@ typedef struct subsector_s
 // Some sprites will only have one picture used
 // for all views: NNNNF0
 //
-typedef struct
-{
+typedef struct {
     // If false use 0 for any position.
     // Note: as eight entries are available,
     //  we might as well insert the same name eight times.
@@ -271,8 +262,7 @@ typedef struct
 // A sprite definition:
 //  a number of animation frames.
 //
-typedef struct
-{
+typedef struct {
     int             numframes;
     spriteframe_t*  spriteframes;
 
@@ -282,8 +272,7 @@ typedef struct
 //
 // The LineSeg.
 //
-typedef struct
-{
+typedef struct {
     vertex_t*       v1;
     vertex_t*       v2;
 
@@ -309,8 +298,7 @@ typedef struct
 //
 // BSP node.
 //
-typedef struct
-{
+typedef struct {
     // Partition line.
     fixed_t    x;
     fixed_t    y;
@@ -328,8 +316,7 @@ typedef struct
 //
 // LEAFS structure
 //
-typedef struct
-{
+typedef struct {
     vertex_t    *vertex;
     seg_t        *seg;
 } leaf_t;
@@ -338,8 +325,7 @@ typedef struct
 //
 // Light Data
 //
-typedef struct
-{
+typedef struct {
     byte base_r;
     byte base_g;
     byte base_b;
@@ -355,21 +341,18 @@ typedef struct
 //
 // Macros
 //
-typedef struct
-{
+typedef struct {
     short id;
     short tag;
     short special;
 } macrodata_t;
 
-typedef struct
-{
+typedef struct {
     short count;
     macrodata_t* data;
 } macrodef_t;
 
-typedef struct
-{
+typedef struct {
     short macrocount;
     short specialcount;
     macrodef_t* def;

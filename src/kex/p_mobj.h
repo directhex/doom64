@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -108,8 +108,7 @@
 // Misc. mobj flags
 //
 
-typedef enum
-{
+typedef enum {
     MF_SPECIAL              = 1,            // Call P_SpecialThing when touched.
     MF_SOLID                = 2,            // Blocks.
     MF_SHOOTABLE            = 4,            // Can be hit.
@@ -136,17 +135,16 @@ typedef enum
     MF_COUNTITEM            = 0x800000,     // On picking up, count this item object towards intermission item total.
     MF_SKULLFLY             = 0x1000000,    // Special handling: skull in flight.
     MF_NOTDMATCH            = 0x2000000,    // Don't spawn this object in death match mode (e.g. key cards).
-    MF_SEETARGET            = 0x4000000,    // [d64] Is target visible?  
+    MF_SEETARGET            = 0x4000000,    // [d64] Is target visible?
     MF_COUNTSECRET          = 0x8000000,    // [d64] Count as secret when picked up (for intermissions)
     MF_RENDERLASER          = 0x10000000,   // [d64] Exclusive to MT_LASERMARKER only
-    MF_TRIGDEATH            = 0x20000000,   // [d64] Trigger line special on death 
+    MF_TRIGDEATH            = 0x20000000,   // [d64] Trigger line special on death
     MF_SHADOW               = 0x40000000,   // temporary player invisibility powerup.
     MF_NOINFIGHTING         = 0x80000000    // [d64] Do not switch targets
-        
+
 } mobjflag_t;
 
-typedef enum
-{
+typedef enum {
     BF_MOBJSTAND        = 1,    // Standing on top of thing?
     BF_MOBJPASS         = 2,    // Able to pass under thing?
     BF_MIDPOINTONLY     = 4     // Only check sector where mobj's midpoint is inside
@@ -156,54 +154,53 @@ typedef enum
 // Map Object definition
 
 struct mobj_s;
-typedef void (*mobjfunc_t) (struct mobj_s *mo);
+typedef void (*mobjfunc_t)(struct mobj_s *mo);
 
-typedef struct mobj_s
-{
+typedef struct mobj_s {
     // Info for drawing: position.
     fixed_t             x;
     fixed_t             y;
     fixed_t             z;
-    
+
     // [d64] mobj tag
     int                 tid;
-    
+
     // More list: links in sector (if needed)
     struct mobj_s*      snext;
     struct mobj_s*      sprev;
-    
+
     //More drawing info: to determine current sprite.
     angle_t             angle;    // orientation
     angle_t             pitch;  // [kex] pitch orientation; for looking up/down
     spritenum_t         sprite;    // used to find patch_t and flip value
     int                 frame;    // might be ORed with FF_FULLBRIGHT
-    
+
     // Interaction info, by BLOCKMAP.
     // Links in blocks (if needed).
     struct mobj_s*      bnext;
     struct mobj_s*      bprev;
-    
+
     struct subsector_s* subsector;
-    
+
     // The closest interval over all contacted Sectors.
     fixed_t             floorz;
     fixed_t             ceilingz;
-    
+
     // For movement checking.
     fixed_t             radius;
     fixed_t             height;
-    
+
     // Momentums, used to update position.
     fixed_t             momx;
     fixed_t             momy;
     fixed_t             momz;
-    
+
     // If == validcount, already checked.
     int                 validcount;
-    
+
     mobjtype_t          type;
     mobjinfo_t*         info;    // &mobjinfo[mobj->type]
-    
+
     int                 tics;    // state tic counter
     state_t*            state;
     dword               flags;
@@ -211,46 +208,46 @@ typedef struct mobj_s
 
     // [d64] alpha value for rendering
     int                 alpha;
-    
+
     // [kex] flags for mobj collision
     mobjblockflag_t     blockflag;
-    
+
     // Movement direction, movement generation (zig-zagging).
     int                 movedir;    // 0-7
     int                 movecount;    // when 0, select a new dir
-    
+
     // Thing being chased/attacked (or NULL),
     // also the originator for missiles.
     struct mobj_s*      target;
-    
+
     // Reaction time: if non 0, don't attack yet.
     // Used by player to freeze a bit after teleporting.
     int                 reactiontime;
-    
+
     // If >0, the target will be chased
     // no matter what (even if shot)
     int                 threshold;
-    
+
     // Additional info record for player avatars only.
     // Only valid if type == MT_PLAYER
     struct player_s*    player;
-    
+
     // For nightmare respawn.
     mapthing_t          spawnpoint;
-    
+
     // Thing being chased/attacked for tracers.
     struct mobj_s*      tracer;
-    
+
     // [d64] Mobj linked list: used to seperate from thinkers
     struct mobj_s*      prev;
     struct mobj_s*      next;
-    
+
     // [d64] callback routine called at end of P_Tick
     mobjfunc_t          mobjfunc;
 
     // [d64] misc data for various actions
     void*               extradata;
-    
+
     // [kex] stuff that happens in between tics
     fixed_t             frame_x;
     fixed_t             frame_y;
@@ -258,7 +255,7 @@ typedef struct mobj_s
 
     // [kex] mobj reference id
     unsigned int        refcount;
-    
+
 } mobj_t;
 
 #endif

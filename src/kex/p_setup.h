@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -35,7 +35,7 @@
 void P_SetupLevel(int map, int playermask, skill_t skill);
 
 // Called by startup code.
-void P_Init (void);
+void P_Init(void);
 
 void P_RegisterCvars(void);
 
@@ -48,8 +48,7 @@ clusterdef_t* P_GetCluster(int map);
 //
 // [kex] sky definitions
 //
-typedef enum
-{
+typedef enum {
     SKF_CLOUD       = 0x1,
     SKF_THUNDER     = 0x2,
     SKF_FIRE        = 0x4,
@@ -58,8 +57,7 @@ typedef enum
     SKF_VOID        = 0x20
 } skyflags_e;
 
-typedef struct
-{
+typedef struct {
     char        flat[9];
     int         flags;
     char        pic[9];

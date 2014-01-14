@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -37,16 +37,15 @@
 // Draw_GfxImage
 //
 
-void Draw_GfxImage(int x, int y, const char* name, rcolor color, dboolean alpha)
-{
+void Draw_GfxImage(int x, int y, const char* name, rcolor color, dboolean alpha) {
     int gfxIdx = GL_BindGfxTexture(name, alpha);
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, DGL_CLAMP);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, DGL_CLAMP);
 
     GL_SetState(GLSTATE_BLEND, 1);
-    GL_SetupAndDraw2DQuad((float)x, (float)y, 
-        gfxwidth[gfxIdx], gfxheight[gfxIdx], 0, 1.0f, 0, 1.0f, color, 0);
+    GL_SetupAndDraw2DQuad((float)x, (float)y,
+                          gfxwidth[gfxIdx], gfxheight[gfxIdx], 0, 1.0f, 0, 1.0f, color, 0);
 
     GL_SetState(GLSTATE_BLEND, 0);
 }
@@ -56,8 +55,7 @@ void Draw_GfxImage(int x, int y, const char* name, rcolor color, dboolean alpha)
 //
 
 void Draw_Sprite2D(int type, int rot, int frame, int x, int y,
-                   float scale, int pal, rcolor c)
-{
+                   float scale, int pal, rcolor c) {
     spritedef_t    *sprdef;
     spriteframe_t *sprframe;
     float flip = 0.0f;
@@ -65,9 +63,9 @@ void Draw_Sprite2D(int type, int rot, int frame, int x, int y,
     int h;
     int offsetx = 0;
     int offsety = 0;
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
-    
+
     sprdef=&spriteinfo[type];
     sprframe = &sprdef->spriteframes[frame];
 
@@ -75,14 +73,15 @@ void Draw_Sprite2D(int type, int rot, int frame, int x, int y,
 
     w = spritewidth[sprframe->lump[rot]];
     h = spriteheight[sprframe->lump[rot]];
-        
-    if(scale <= 1.0f)
-    {
-        if(sprframe->flip[rot])
+
+    if(scale <= 1.0f) {
+        if(sprframe->flip[rot]) {
             flip = 1.0f;
-        else
+        }
+        else {
             flip = 0.0f;
-            
+        }
+
         offsetx = (int)spriteoffset[sprframe->lump[rot]];
         offsety = (int)spritetopoffset[sprframe->lump[rot]];
     }
@@ -90,14 +89,14 @@ void Draw_Sprite2D(int type, int rot, int frame, int x, int y,
     GL_SetOrthoScale(scale);
 
     GL_SetupAndDraw2DQuad(flip ? (float)(x + offsetx) - w :
-        (float)x - offsetx, (float)y - offsety, w, h,
-        flip, 1.0f - flip, 0, 1.0f, c, 0);
+                          (float)x - offsetx, (float)y - offsety, w, h,
+                          flip, 1.0f - flip, 0, 1.0f, c, 0);
 
     GL_SetOrthoScale(1.0f);
-    
+
     cursprite = -1;
     curgfx = -1;
-    
+
     GL_SetState(GLSTATE_BLEND, 0);
 }
 
@@ -114,8 +113,7 @@ static vtx_t vtxstring[MAX_MESSAGE_SIZE];
 //
 
 int Draw_Text(int x, int y, rcolor color, float scale,
-              dboolean wrap, const char* string, ...)
-{
+              dboolean wrap, const char* string, ...) {
     int c;
     int i;
     int vi = 0;
@@ -127,62 +125,56 @@ int Draw_Text(int x, int y, rcolor color, float scale,
     char msg[MAX_MESSAGE_SIZE];
     va_list    va;
     const int ix = x;
-    
+
     va_start(va, string);
     vsprintf(msg, string, va);
     va_end(va);
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
-    
-    if(!r_fillmode.value)
-    {
+
+    if(!r_fillmode.value) {
         dglEnable(GL_TEXTURE_2D);
         dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         r_fillmode.value = 1.0f;
         fill = true;
     }
-    
+
     GL_BindGfxTexture("SFONT", true);
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, DGL_CLAMP);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, DGL_CLAMP);
-    
+
     GL_SetOrthoScale(scale);
     GL_SetOrtho(0);
 
     dglSetVertex(vtxstring);
 
-    for(i = 0, vi = 0; i < dstrlen(msg); i++, vi += 4)
-    {
+    for(i = 0, vi = 0; i < dstrlen(msg); i++, vi += 4) {
         c = toupper(msg[i]);
-        if(c == '\t')
-        {
-            while(x % 64) x++;
+        if(c == '\t') {
+            while(x % 64) {
+                x++;
+            }
             continue;
         }
-        if(c == '\n')
-        {
+        if(c == '\n') {
             y += ST_FONTWHSIZE;
             x = ix;
             continue;
         }
-        if(c == 0x20)
-        {
-            if(wrap)
-            {
-                if(x > 192)
-                {
+        if(c == 0x20) {
+            if(wrap) {
+                if(x > 192) {
                     y += ST_FONTWHSIZE;
                     x = ix;
                     continue;
                 }
             }
         }
-        else
-        {
+        else {
             start = (c - ST_FONTSTART);
             col = start & (ST_FONTNUMSET - 1);
-            
+
             fcol = (col * size);
             frow = (start >= ST_FONTNUMSET) ? 0.5f : 0.0f;
 
@@ -208,33 +200,34 @@ int Draw_Text(int x, int y, rcolor color, float scale,
             dglTriangle(vi + 0, vi + 1, vi + 2);
             dglTriangle(vi + 0, vi + 2, vi + 3);
 
-            if(devparm) vertCount += 4;
-            
-            
+            if(devparm) {
+                vertCount += 4;
+            }
+
+
         }
         x += ST_FONTWHSIZE;
     }
-    
-    if(vi)
+
+    if(vi) {
         dglDrawGeometry(vi, vtxstring);
+    }
 
     GL_ResetViewport();
-    
-    if(fill)
-    {
+
+    if(fill) {
         dglDisable(GL_TEXTURE_2D);
         dglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         r_fillmode.value = 0.0f;
     }
-    
+
     GL_SetState(GLSTATE_BLEND, 0);
     GL_SetOrthoScale(1.0f);
-    
+
     return x;
 }
 
-const symboldata_t symboldata[] =    //0x5B9BC
-{
+const symboldata_t symboldata[] = {  //0x5B9BC
     { 120, 14, 13, 13 },
     { 134, 14, 9, 13 },
     { 144, 14, 14, 13 },
@@ -339,50 +332,51 @@ const symboldata_t symboldata[] =    //0x5B9BC
 // Center_Text
 //
 
-int Center_Text(const char* string)
-{
+int Center_Text(const char* string) {
     int width = 0;
     char t = 0;
     int id = 0;
     int len = 0;
     int i = 0;
     float scale;
-    
+
     len = dstrlen(string);
-    
-    for(i = 0; i < len; i++)
-    {
+
+    for(i = 0; i < len; i++) {
         t = string[i];
-        
-        switch(t)
-        {
-        case 0x20: width += 6;
+
+        switch(t) {
+        case 0x20:
+            width += 6;
             break;
-        case '-': width += symboldata[SM_MISCFONT].w;
+        case '-':
+            width += symboldata[SM_MISCFONT].w;
             break;
-        case '%': width += symboldata[SM_MISCFONT + 1].w;
+        case '%':
+            width += symboldata[SM_MISCFONT + 1].w;
             break;
-        case '!': width += symboldata[SM_MISCFONT + 2].w;
+        case '!':
+            width += symboldata[SM_MISCFONT + 2].w;
             break;
-        case '.': width += symboldata[SM_MISCFONT + 3].w;
+        case '.':
+            width += symboldata[SM_MISCFONT + 3].w;
             break;
-        case '?': width += symboldata[SM_MISCFONT + 4].w;
+        case '?':
+            width += symboldata[SM_MISCFONT + 4].w;
             break;
-        case ':': width += symboldata[SM_MISCFONT + 5].w;
+        case ':':
+            width += symboldata[SM_MISCFONT + 5].w;
             break;
         default:
-            if(t >= 'A' && t <= 'Z')
-            {
+            if(t >= 'A' && t <= 'Z') {
                 id = t - 'A';
                 width += symboldata[SM_FONT1 + id].w;
             }
-            if(t >= 'a' && t <= 'z')
-            {
+            if(t >= 'a' && t <= 'z') {
                 id = t - 'a';
                 width += symboldata[SM_FONT2 + id].w;
             }
-            if(t >= '0' && t <= '9')
-            {
+            if(t >= '0' && t <= '9') {
                 id = t - '0';
                 width += symboldata[SM_NUMBERS + id].w;
             }
@@ -392,9 +386,10 @@ int Center_Text(const char* string)
 
     scale = GL_GetOrthoScale();
 
-    if(scale != 1.0f)
+    if(scale != 1.0f) {
         return ((int)(160.0f / scale) - (width / 2));
-    
+    }
+
     return (160 - (width / 2));
 }
 
@@ -402,8 +397,7 @@ int Center_Text(const char* string)
 // Draw_BigText
 //
 
-int Draw_BigText(int x, int y, rcolor color, const char* string)
-{
+int Draw_BigText(int x, int y, rcolor color, const char* string) {
     int c = 0;
     int i = 0;
     int vi = 0;
@@ -419,12 +413,13 @@ int Draw_BigText(int x, int y, rcolor color, const char* string)
     float smbwidth;
     float smbheight;
     int pic;
-    
-    if(x <= -1)
+
+    if(x <= -1) {
         x = Center_Text(string);
-    
+    }
+
     y += 14;
-    
+
     pic = GL_BindGfxTexture("SYMBOLS", true);
 
     smbwidth = (float)gfxwidth[pic];
@@ -434,67 +429,81 @@ int Draw_BigText(int x, int y, rcolor color, const char* string)
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, DGL_CLAMP);
 
     dglSetVertex(vtxstring);
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
     GL_SetOrtho(0);
 
-    for(i = 0, vi = 0; i < dstrlen(string); i++, vi += 4)
-    {
+    for(i = 0, vi = 0; i < dstrlen(string); i++, vi += 4) {
         vx1 = (float)x;
         vy1 = (float)y;
-        
+
         c = string[i];
-        if(c == '\n' || c == '\t')
-            continue;   // villsa: safety check
-        else if(c == 0x20)
-        {
+        if(c == '\n' || c == '\t') {
+            continue;    // villsa: safety check
+        }
+        else if(c == 0x20) {
             x += 6;
             continue;
         }
-        else
-        {
-            if(c >= '0' && c <= '9')    index = (c - '0') + SM_NUMBERS;
-            if(c >= 'A' && c <= 'Z')    index = (c - 'A') + SM_FONT1;
-            if(c >= 'a' && c <= 'z')    index = (c - 'a') + SM_FONT2;
-            if(c == '-')                index = SM_MISCFONT;
-            if(c == '%')                index = SM_MISCFONT + 1;
-            if(c == '!')                index = SM_MISCFONT + 2;
-            if(c == '.')                index = SM_MISCFONT + 3;
-            if(c == '?')                index = SM_MISCFONT + 4;
-            if(c == ':')                index = SM_MISCFONT + 5;
+        else {
+            if(c >= '0' && c <= '9') {
+                index = (c - '0') + SM_NUMBERS;
+            }
+            if(c >= 'A' && c <= 'Z') {
+                index = (c - 'A') + SM_FONT1;
+            }
+            if(c >= 'a' && c <= 'z') {
+                index = (c - 'a') + SM_FONT2;
+            }
+            if(c == '-') {
+                index = SM_MISCFONT;
+            }
+            if(c == '%') {
+                index = SM_MISCFONT + 1;
+            }
+            if(c == '!') {
+                index = SM_MISCFONT + 2;
+            }
+            if(c == '.') {
+                index = SM_MISCFONT + 3;
+            }
+            if(c == '?') {
+                index = SM_MISCFONT + 4;
+            }
+            if(c == ':') {
+                index = SM_MISCFONT + 5;
+            }
 
             // [kex] use 'printf' style formating for special symbols
-            if(c == '/')
-            {
+            if(c == '/') {
                 c = string[++i];
 
-                switch(c)
-                {
-                    // up arrow
+                switch(c) {
+                // up arrow
                 case 'u':
                     index = SM_MICONS + 17;
                     break;
-                    // down arrow
+                // down arrow
                 case 'd':
                     index = SM_MICONS + 16;
                     break;
-                    // right arrow
+                // right arrow
                 case 'r':
                     index = SM_MICONS + 18;
                     break;
-                    // left arrow
+                // left arrow
                 case 'l':
                     index = SM_MICONS;
                     break;
-                    // cursor box
+                // cursor box
                 case 'b':
                     index = SM_MICONS + 1;
                     break;
-                    // thermbar
+                // thermbar
                 case 't':
                     index = SM_THERMO;
                     break;
-                    // thermcursor
+                // thermcursor
                 case 's':
                     index = SM_THERMO + 1;
                     break;
@@ -502,13 +511,13 @@ int Draw_BigText(int x, int y, rcolor color, const char* string)
                     return 0;
                 }
             }
-            
+
             vx2 = vx1 + symboldata[index].w;
             vy2 = vy1 - symboldata[index].h;
-            
+
             tx1 = ((float)symboldata[index].x / smbwidth) + 0.001f;
             tx2 = (tx1 + (float)symboldata[index].w / smbwidth) - 0.002f;
-            
+
             ty1 = ((float)symboldata[index].y / smbheight);
             ty2 = ty1 + (((float)symboldata[index].h / smbheight));
 
@@ -534,18 +543,21 @@ int Draw_BigText(int x, int y, rcolor color, const char* string)
             dglTriangle(vi + 2, vi + 1, vi + 0);
             dglTriangle(vi + 3, vi + 2, vi + 0);
 
-            if(devparm) vertCount += 4;
-            
+            if(devparm) {
+                vertCount += 4;
+            }
+
             x += symboldata[index].w;
         }
     }
 
-    if(vi)
+    if(vi) {
         dglDrawGeometry(vi, vtxstring);
-    
+    }
+
     GL_ResetViewport();
     GL_SetState(GLSTATE_BLEND, 0);
-    
+
     return x;
 }
 
@@ -554,35 +566,34 @@ int Draw_BigText(int x, int y, rcolor color, const char* string)
 //
 //
 
-void Draw_Number(int x, int y, int num, int type, rcolor c)
-{
+void Draw_Number(int x, int y, int num, int type, rcolor c) {
     int digits[16];
     int nx = 0;
     int count;
     int j;
     char str[2];
 
-    for(count = 0, j = 0; count < 16; count++, j++)
-    {
+    for(count = 0, j = 0; count < 16; count++, j++) {
         digits[j] = num % 10;
         nx += symboldata[SM_NUMBERS + digits[j]].w;
 
         num /= 10;
 
-        if(!num)
+        if(!num) {
             break;
+        }
     }
 
-    if(type == 0)
+    if(type == 0) {
         x -= (nx >> 1);
+    }
 
-    if(type == 0 || type == 1)
-    {
-        if(count < 0)
+    if(type == 0 || type == 1) {
+        if(count < 0) {
             return;
+        }
 
-        while(count >= 0)
-        {
+        while(count >= 0) {
             sprintf(str, "%i", digits[j]);
             Draw_BigText(x, y, c, str);
 
@@ -592,15 +603,14 @@ void Draw_Number(int x, int y, int num, int type, rcolor c)
             j--;
         }
     }
-    else
-    {
-        if(count < 0)
+    else {
+        if(count < 0) {
             return;
+        }
 
         j = 0;
 
-        while(count >= 0)
-        {
+        while(count >= 0) {
             x -= symboldata[SM_NUMBERS + digits[j]].w;
 
             sprintf(str, "%i", digits[j]);
@@ -612,8 +622,7 @@ void Draw_Number(int x, int y, int num, int type, rcolor c)
     }
 }
 
-static const symboldata_t confontmap[256] =
-{
+static const symboldata_t confontmap[256] = {
     { 0, 1, 13, 16 },
     { 14, 1, 13, 16 },
     { 28, 1, 13, 16 },
@@ -877,8 +886,7 @@ static const symboldata_t confontmap[256] =
 //
 
 float Draw_ConsoleText(float x, float y, rcolor color,
-                   float scale, const char* string, ...)
-{
+                       float scale, const char* string, ...) {
     int c = 0;
     int i = 0;
     int vi = 0;
@@ -899,7 +907,7 @@ float Draw_ConsoleText(float x, float y, rcolor color,
     va_start(va, string);
     vsprintf(msg, string, va);
     va_end(va);
-    
+
     pic = GL_BindGfxTexture("CONFONT", true);
 
     width = (float)gfxwidth[pic];
@@ -911,26 +919,25 @@ float Draw_ConsoleText(float x, float y, rcolor color,
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     dglSetVertex(vtxstring);
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
     GL_SetOrtho(0);
 
-    for(i = 0, vi = 0; i < dstrlen(msg); i++, vi += 4)
-    {
+    for(i = 0, vi = 0; i < dstrlen(msg); i++, vi += 4) {
         vx1 = x;
         vy1 = y;
-        
+
         c = msg[i];
-        if(c == '\n' || c == '\t')
-            continue;   // villsa: safety check
-        else
-        {
+        if(c == '\n' || c == '\t') {
+            continue;    // villsa: safety check
+        }
+        else {
             vx2 = vx1 + ((float)confontmap[c].w * scale);
             vy2 = vy1 - ((float)confontmap[c].h * scale);
-            
+
             tx1 = ((float)confontmap[c].x / width) + 0.001f;
             tx2 = (tx1 + (float)confontmap[c].w / width) - 0.002f;
-            
+
             ty1 = ((float)confontmap[c].y / height);
             ty2 = ty1 + (((float)confontmap[c].h / height));
 
@@ -956,15 +963,18 @@ float Draw_ConsoleText(float x, float y, rcolor color,
             dglTriangle(vi + 2, vi + 1, vi + 0);
             dglTriangle(vi + 3, vi + 2, vi + 0);
 
-            if(devparm) vertCount += 4;
-            
+            if(devparm) {
+                vertCount += 4;
+            }
+
             x += ((float)confontmap[c].w * scale);
         }
     }
 
-    if(vi)
+    if(vi) {
         dglDrawGeometry(vi, vtxstring);
-    
+    }
+
     GL_ResetViewport();
     GL_SetState(GLSTATE_BLEND, 0);
 

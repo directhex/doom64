@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -73,42 +73,37 @@ CVAR_EXTERNAL(r_skybox);
 // Loosely based on subroutine at 0x80026418
 //
 
-static void R_CloudThunder(void)
-{
-    if(!(gametic & ((thunderCounter & 1) ? 1 : 3)))
+static void R_CloudThunder(void) {
+    if(!(gametic & ((thunderCounter & 1) ? 1 : 3))) {
         return;
-    
-    if((thunderCounter - thundertic) > 0)
-    {
+    }
+
+    if((thunderCounter - thundertic) > 0) {
         thunderCounter = (thunderCounter - thundertic);
         return;
     }
-    
-    if(lightningCounter == 0)
-    {
+
+    if(lightningCounter == 0) {
         S_StartSound(NULL, sfx_thndrlow + (M_Random() & 1));
         thundertic = (1 + (M_Random() & 1));
     }
-    
-    if(!(lightningCounter < 6))    // Reset loop after 6 lightning flickers
-    {
+
+    if(!(lightningCounter < 6)) {  // Reset loop after 6 lightning flickers
         int rand = (M_Random() & 7);
         thunderCounter = (((rand << 4) - rand) << 2) + 60;
         lightningCounter = 0;
         return;
     }
-    
-    if((lightningCounter & 1) == 0)
-    {
+
+    if((lightningCounter & 1) == 0) {
         sky->skycolor[0] += 0x001111;
         sky->skycolor[1] += 0x001111;
     }
-    else
-    {
+    else {
         sky->skycolor[0] -= 0x001111;
         sky->skycolor[1] -= 0x001111;
     }
-    
+
     thunderCounter = (M_Random() & 7) + 1;    // Do short delay loops for lightning flickers
     lightningCounter++;
 }
@@ -117,32 +112,28 @@ static void R_CloudThunder(void)
 // R_CloudTicker
 //
 
-static void R_CloudTicker(void)
-{
+static void R_CloudTicker(void) {
     CloudOffsetX -= (dcos(viewangle) >> 10);
     CloudOffsetY += (dsin(viewangle) >> 9);
 
-    if(r_skybox.value)
-    {
+    if(r_skybox.value) {
         sky_cloudpan1 += 0.00225f;
         sky_cloudpan2 += 0.00075f;
     }
-    
-    if(sky->flags & SKF_THUNDER)
+
+    if(sky->flags & SKF_THUNDER) {
         R_CloudThunder();
+    }
 }
 
 //
 // R_TitleSkyTicker
 //
 
-static void R_TitleSkyTicker(void)
-{
-    if(skyfadeback == true)
-    {
+static void R_TitleSkyTicker(void) {
+    if(skyfadeback == true) {
         logoAlpha += 8;
-        if(logoAlpha > 0xff)
-        {
+        if(logoAlpha > 0xff) {
             logoAlpha = 0xff;
             skyfadeback = false;
         }
@@ -155,8 +146,7 @@ static void R_TitleSkyTicker(void)
 
 static void R_DrawSkyDome(int tiles, float rows, int height,
                           int radius, float offset, float topoffs,
-                          rcolor c1, rcolor c2)
-{
+                          rcolor c1, rcolor c2) {
     fixed_t x, y, z;
     fixed_t lx, ly;
     int i;
@@ -226,7 +216,7 @@ static void R_DrawSkyDome(int tiles, float rows, int height,
     SKYDOME_UV(-(tu2 * (i + 1)), v);            \
     SKYDOME_VERTEX();                           \
     vtx++
-    
+
     tu1 = 0;
     tu2 = (float)tiles / (float)NUM_SKY_DOME_FACES;
     an = (ANGLE_MAX / NUM_SKY_DOME_FACES);
@@ -234,8 +224,7 @@ static void R_DrawSkyDome(int tiles, float rows, int height,
     //
     // setup vertex data
     //
-    for(i = 0; i < NUM_SKY_DOME_FACES; i++)
-    {
+    for(i = 0; i < NUM_SKY_DOME_FACES; i++) {
         angle_t angle = an * i;
 
         dglSetVertexColor(&vtx[0], c2, 1);
@@ -279,8 +268,7 @@ static void R_DrawSkyDome(int tiles, float rows, int height,
 // R_DrawSkyboxCloud
 //
 
-static void R_DrawSkyboxCloud(void)
-{
+static void R_DrawSkyboxCloud(void) {
     rcolor color;
     vtx_t v[4];
 
@@ -317,10 +305,18 @@ static void R_DrawSkyboxCloud(void)
     //
     // draw horizon ceiling
     //
-    v[0].x = -MAX_COORD; v[0].y = -MAX_COORD; v[0].z = 512;
-    v[1].x = MAX_COORD; v[1].y = -MAX_COORD; v[1].z = 512;
-    v[2].x = MAX_COORD; v[2].y = MAX_COORD; v[2].z = 512;
-    v[3].x = -MAX_COORD; v[3].y = MAX_COORD; v[3].z = 512;
+    v[0].x = -MAX_COORD;
+    v[0].y = -MAX_COORD;
+    v[0].z = 512;
+    v[1].x = MAX_COORD;
+    v[1].y = -MAX_COORD;
+    v[1].z = 512;
+    v[2].x = MAX_COORD;
+    v[2].y = MAX_COORD;
+    v[2].z = 512;
+    v[3].x = -MAX_COORD;
+    v[3].y = MAX_COORD;
+    v[3].z = 512;
 
     dglSetVertexColor(&v[0], sky->skycolor[0], 4);
 
@@ -331,10 +327,18 @@ static void R_DrawSkyboxCloud(void)
     //
     // draw horizon wall
     //
-    v[0].x = -MAX_COORD; v[0].y = 512; v[0].z = 12;
-    v[1].x = -MAX_COORD; v[1].y = 512; v[1].z = 512;
-    v[2].x = MAX_COORD; v[2].y = 512; v[2].z = 512;
-    v[3].x = MAX_COORD; v[3].y = 512; v[3].z = 12;
+    v[0].x = -MAX_COORD;
+    v[0].y = 512;
+    v[0].z = 12;
+    v[1].x = -MAX_COORD;
+    v[1].y = 512;
+    v[1].z = 512;
+    v[2].x = MAX_COORD;
+    v[2].y = 512;
+    v[2].z = 512;
+    v[3].x = MAX_COORD;
+    v[3].y = 512;
+    v[3].z = 12;
 
     dglSetVertexColor(&v[0], sky->skycolor[1], 1);
     dglSetVertexColor(&v[1], sky->skycolor[0], 1);
@@ -346,7 +350,7 @@ static void R_DrawSkyboxCloud(void)
     dglDrawGeometry(4, v);
     dglEnable(GL_TEXTURE_2D);
     dglPopMatrix();
-    
+
     //
     // setup model matrix for clouds
     //
@@ -364,14 +368,26 @@ static void R_DrawSkyboxCloud(void)
     //
     // draw first cloud layer
     //
-    v[0].tu = sky_cloudpan1; v[0].tv = sky_cloudpan1;
-    v[1].tu = 16 + sky_cloudpan1; v[1].tv = sky_cloudpan1;
-    v[2].tu = 16 + sky_cloudpan1; v[2].tv = 16 + sky_cloudpan1;
-    v[3].tu = sky_cloudpan1; v[3].tv = 16 + sky_cloudpan1;
-    v[0].x = -MAX_COORD; v[0].y = -MAX_COORD; v[0].z = 768;
-    v[1].x = MAX_COORD; v[1].y = -MAX_COORD; v[1].z = 768;
-    v[2].x = MAX_COORD; v[2].y = MAX_COORD; v[2].z = 768;
-    v[3].x = -MAX_COORD; v[3].y = MAX_COORD; v[3].z = 768;
+    v[0].tu = sky_cloudpan1;
+    v[0].tv = sky_cloudpan1;
+    v[1].tu = 16 + sky_cloudpan1;
+    v[1].tv = sky_cloudpan1;
+    v[2].tu = 16 + sky_cloudpan1;
+    v[2].tv = 16 + sky_cloudpan1;
+    v[3].tu = sky_cloudpan1;
+    v[3].tv = 16 + sky_cloudpan1;
+    v[0].x = -MAX_COORD;
+    v[0].y = -MAX_COORD;
+    v[0].z = 768;
+    v[1].x = MAX_COORD;
+    v[1].y = -MAX_COORD;
+    v[1].z = 768;
+    v[2].x = MAX_COORD;
+    v[2].y = MAX_COORD;
+    v[2].z = 768;
+    v[3].x = -MAX_COORD;
+    v[3].y = MAX_COORD;
+    v[3].z = 768;
 
     color = sky->skycolor[2];
     SKYBOX_SETALPHA(color, 0x3f);
@@ -387,10 +403,14 @@ static void R_DrawSkyboxCloud(void)
     // preserve color and xy and just update
     // uv coords and z height
     //
-    v[0].tu = sky_cloudpan2; v[0].tv = sky_cloudpan2;
-    v[1].tu = 32 + sky_cloudpan2; v[1].tv = sky_cloudpan2;
-    v[2].tu = 32 + sky_cloudpan2; v[2].tv = 32 + sky_cloudpan2;
-    v[3].tu = sky_cloudpan2; v[3].tv = 32 + sky_cloudpan2;
+    v[0].tu = sky_cloudpan2;
+    v[0].tv = sky_cloudpan2;
+    v[1].tu = 32 + sky_cloudpan2;
+    v[1].tv = sky_cloudpan2;
+    v[2].tu = 32 + sky_cloudpan2;
+    v[2].tv = 32 + sky_cloudpan2;
+    v[3].tu = sky_cloudpan2;
+    v[3].tv = 32 + sky_cloudpan2;
     v[0].z = v[1].z = v[2].z = v[3].z = 1024;
 
     dglTriangle(0, 1, 3);
@@ -419,30 +439,29 @@ static void R_DrawSkyboxCloud(void)
 // R_DrawSimpleSky
 //
 
-static void R_DrawSimpleSky(int lump, int offset)
-{
+static void R_DrawSimpleSky(int lump, int offset) {
     float pos1;
     float width;
     int height;
     int lumpheight;
     int gfxLmp;
     float row;
-    
+
     gfxLmp = GL_BindGfxTexture(lumpinfo[lump].name, true);
     height = gfxheight[gfxLmp];
     lumpheight = gfxorigheight[gfxLmp];
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
+
     SKYVIEWPOS(viewangle, 1, pos1);
 
     width = (float)SCREENWIDTH / (float)gfxwidth[gfxLmp];
     row = (float)lumpheight / (float)height;
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
     GL_SetupAndDraw2DQuad(0, (float)offset - lumpheight, SCREENWIDTH, lumpheight,
-        pos1, width + pos1, 0.006f, row, WHITE, 1);
+                          pos1, width + pos1, 0.006f, row, WHITE, 1);
     GL_SetState(GLSTATE_BLEND, 0);
 }
 
@@ -450,15 +469,14 @@ static void R_DrawSimpleSky(int lump, int offset)
 // R_DrawVoidSky
 //
 
-static void R_DrawVoidSky(void)
-{
+static void R_DrawVoidSky(void) {
     GL_SetOrtho(1);
-    
+
     dglDisable(GL_TEXTURE_2D);
     dglColor4ubv((byte*)&sky->skycolor[2]);
     dglRecti(SCREENWIDTH, SCREENHEIGHT, 0, 0);
     dglEnable(GL_TEXTURE_2D);
-    
+
     GL_ResetViewport();
 }
 
@@ -466,8 +484,7 @@ static void R_DrawVoidSky(void)
 // R_DrawTitleSky
 //
 
-static void R_DrawTitleSky(void)
-{
+static void R_DrawTitleSky(void) {
     R_DrawSimpleSky(skypicnum, 240);
     Draw_GfxImage(63, 25, sky->backdrop, D_RGBA(255, 255, 255, logoAlpha), false);
 }
@@ -476,8 +493,7 @@ static void R_DrawTitleSky(void)
 // R_DrawClouds
 //
 
-static void R_DrawClouds(void)
-{
+static void R_DrawClouds(void) {
     rfloat pos = 0.0f;
     vtx_t v[4];
 
@@ -491,8 +507,7 @@ static void R_DrawClouds(void)
 
     dglSetVertex(v);
 
-    if(r_texturecombiner.value > 0 && gl_max_texture_units > 2)
-    {
+    if(r_texturecombiner.value > 0 && gl_max_texture_units > 2) {
         dglSetVertexColor(&v[0], sky->skycolor[0], 2);
         dglSetVertexColor(&v[2], sky->skycolor[1], 2);
 
@@ -509,8 +524,7 @@ static void R_DrawClouds(void)
         GL_SetTextureUnit(2, true);
         dglTexCombAdd(GL_PREVIOUS, GL_PRIMARY_COLOR);
     }
-    else
-    {
+    else {
         GL_Set2DQuad(v, 0, 0, SCREENWIDTH, 120, 0, 0, 0, 0, 0);
         dglSetVertexColor(&v[0], sky->skycolor[0], 2);
         dglSetVertexColor(&v[2], sky->skycolor[1], 2);
@@ -555,7 +569,7 @@ static void R_DrawClouds(void)
     dglDrawGeometry(4, v);
     dglPopMatrix();
     dglDisable(GL_BLEND);
-    
+
     GL_SetDefaultCombiner();
 }
 
@@ -563,29 +577,27 @@ static void R_DrawClouds(void)
 // R_SpreadFire
 //
 
-static void R_SpreadFire(byte* src1, byte* src2, int pixel, int counter, int* rand, int width)
-{
+static void R_SpreadFire(byte* src1, byte* src2, int pixel, int counter, int* rand, int width) {
     int randIdx = 0;
     byte *tmpSrc;
-    
-    if(pixel != 0)
-    {
+
+    if(pixel != 0) {
         randIdx = rndtable[*rand];
         *rand = ((*rand+2) & 0xff);
-        
+
         tmpSrc = (src1 + (((counter - (randIdx & 3)) + 1) & (width-1)));
         *(byte*)(tmpSrc - width) = (pixel - ((randIdx & 1) << 4));
     }
-    else
+    else {
         *(byte*)(src2 - width) = 0;
+    }
 }
 
 //
 // R_Fire
 //
 
-static void R_Fire(byte *buffer)
-{
+static void R_Fire(byte *buffer) {
     int counter = 0;
     int rand = 0;
     int step = 0;
@@ -594,52 +606,54 @@ static void R_Fire(byte *buffer)
     const int width = FIRESKYSIZE;
     byte *src;
     byte *srcoffset;
-    
-    for(i = 0; i < (width*width); i++)
+
+    for(i = 0; i < (width*width); i++) {
         buffer[i] <<= 4;
-    
+    }
+
     rand = (M_Random() & 0xff);
     src = buffer;
     counter = 0;
     src += width;
-    
-    do    // height
-    {
+
+    do {  // height
         srcoffset = (src + counter);
         pixel = *(byte*)srcoffset;
-        
+
         step = 2;
-        
+
         R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
-        
+
         src += width;
         srcoffset += width;
-        
-        do    // width
-        {
+
+        do {  // width
             pixel = *(byte*)srcoffset;
             step += 2;
-            
+
             R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
-            
+
             pixel = *(byte*)(srcoffset + width);
             src += width;
             srcoffset += width;
-            
+
             R_SpreadFire(src, srcoffset, pixel, counter, &rand, width);
-            
+
             src += width;
             srcoffset += width;
-            
-        } while(step != width);
-        
+
+        }
+        while(step != width);
+
         counter++;
         src -= ((width*width)-width);
-        
-    } while(counter != width);
-    
-    for(i = 0; i < (width*width); i++)
+
+    }
+    while(counter != width);
+
+    for(i = 0; i < (width*width); i++) {
         buffer[i] >>= 4;
+    }
 }
 
 //
@@ -648,43 +662,41 @@ static void R_Fire(byte *buffer)
 
 static rcolor firetexture[FIRESKYSIZE * FIRESKYSIZE];
 
-void R_InitFire(void)
-{
+void R_InitFire(void) {
     int i;
 
     fireLump = W_GetNumForName("FIRE") - g_start;
     dmemset(&firePal16, 0, sizeof(dPalette_t)*256);
-    for(i = 0; i < 16; i++)
-    {
+    for(i = 0; i < 16; i++) {
         firePal16[i].r = 16 * i;
         firePal16[i].g = 16 * i;
         firePal16[i].b = 16 * i;
         firePal16[i].a = 0xff;
     }
-    
+
     fireBuffer = I_PNGReadData(g_start + fireLump,
-        true, true, false, 0, 0, 0, 0);
-    
-    for(i = 0; i < 4096; i++)
+                               true, true, false, 0, 0, 0, 0);
+
+    for(i = 0; i < 4096; i++) {
         fireBuffer[i] >>= 4;
+    }
 }
 
 //
 // R_FireTicker
 //
 
-static void R_FireTicker(void)
-{
-    if(leveltime & 1)
+static void R_FireTicker(void) {
+    if(leveltime & 1) {
         R_Fire(fireBuffer);
+    }
 }
 
 //
 // R_DrawFire
 //
 
-static void R_DrawFire(void)
-{
+static void R_DrawFire(void) {
     float pos1;
     vtx_t v[4];
     dtexture t = gfxptr[fireLump];
@@ -694,30 +706,30 @@ static void R_DrawFire(void)
     // copy fire pixel data to texture data array
     //
     dmemset(firetexture, 0, sizeof(int) * FIRESKYSIZE * FIRESKYSIZE);
-    for(i = 0; i < FIRESKYSIZE * FIRESKYSIZE; i++)
-    {
+    for(i = 0; i < FIRESKYSIZE * FIRESKYSIZE; i++) {
         byte rgb[3];
-            
+
         rgb[0] = firePal16[fireBuffer[i]].r;
         rgb[1] = firePal16[fireBuffer[i]].g;
         rgb[2] = firePal16[fireBuffer[i]].b;
-                
+
         firetexture[i] = D_RGBA(rgb[2], rgb[1], rgb[0], 0xff);
     }
-    
-    if(!t)
+
+    if(!t) {
         dglGenTextures(1, &gfxptr[fireLump]);
+    }
 
     dglBindTexture(GL_TEXTURE_2D, gfxptr[fireLump]);
     GL_CheckFillMode();
     GL_SetTextureFilter();
 
-    if(devparm)
+    if(devparm) {
         glBindCalls++;
+    }
 
-    
-    if(!t)
-    {
+
+    if(!t) {
         //
         // copy data if it didn't exist before
         //
@@ -731,10 +743,9 @@ static void R_DrawFire(void)
             GL_RGBA,
             GL_UNSIGNED_BYTE,
             firetexture
-            );
+        );
     }
-    else
-    {
+    else {
         //
         // update texture data
         //
@@ -748,29 +759,27 @@ static void R_DrawFire(void)
             GL_RGBA,
             GL_UNSIGNED_BYTE,
             firetexture
-            );
+        );
     }
-    
-    if(r_skybox.value <= 0)
-    {
+
+    if(r_skybox.value <= 0) {
         SKYVIEWPOS(viewangle, 4, pos1);
-        
+
         //
-        // adjust UV by 0.0035f units due to the fire sky showing a 
+        // adjust UV by 0.0035f units due to the fire sky showing a
         // strip of color going along the top portion of the texture
         //
         GL_Set2DQuad(v, 0, 0, SCREENWIDTH, 120,
-            pos1, 5.0f + pos1, 0.0035f, 1.0f, 0);
+                     pos1, 5.0f + pos1, 0.0035f, 1.0f, 0);
 
         dglSetVertexColor(&v[0], sky->skycolor[0], 2);
         dglSetVertexColor(&v[2], sky->skycolor[1], 2);
-        
+
         GL_Draw2DQuad(v, 1);
     }
-    else
-    {
+    else {
         R_DrawSkyDome(16, 1, 1024, 4096, -896, 0.0075f,
-            sky->skycolor[0], sky->skycolor[1]);
+                      sky->skycolor[0], sky->skycolor[1]);
     }
 }
 
@@ -778,36 +787,28 @@ static void R_DrawFire(void)
 // R_DrawSky
 //
 
-void R_DrawSky(void)
-{
-    if(!sky)
+void R_DrawSky(void) {
+    if(!sky) {
         return;
+    }
 
-    if(sky->flags & SKF_VOID)
-    {
+    if(sky->flags & SKF_VOID) {
         R_DrawVoidSky();
     }
-    else if(skypicnum >= 0)
-    {
-        if(sky->flags & SKF_CLOUD)
-        {
-            if(r_skybox.value <= 0)
-            {
+    else if(skypicnum >= 0) {
+        if(sky->flags & SKF_CLOUD) {
+            if(r_skybox.value <= 0) {
                 R_DrawClouds();
             }
-            else
-            {
+            else {
                 R_DrawSkyboxCloud();
             }
         }
-        else
-        {
-            if(r_skybox.value <= 0)
-            {
+        else {
+            if(r_skybox.value <= 0) {
                 R_DrawSimpleSky(skypicnum, 128);
             }
-            else
-            {
+            else {
                 GL_SetTextureUnit(0, true);
                 GL_BindGfxTexture(lumpinfo[skypicnum].name, true);
 
@@ -816,30 +817,24 @@ void R_DrawSky(void)
                 // dimensions is already in powers of 2
                 //
                 R_DrawSkyDome(4, 2, 512, 1024,
-                    0, 0, WHITE, WHITE);
+                              0, 0, WHITE, WHITE);
             }
         }
     }
 
-    if(sky->flags & SKF_FIRE)
-    {
+    if(sky->flags & SKF_FIRE) {
         R_DrawFire();
     }
 
-    if(skybackdropnum >= 0)
-    {
-        if(sky->flags & SKF_FADEBACK)
-        {
+    if(skybackdropnum >= 0) {
+        if(sky->flags & SKF_FADEBACK) {
             R_DrawTitleSky();
         }
-        else if(sky->flags & SKF_BACKGROUND)
-        {
-            if(r_skybox.value <= 0)
-            {
+        else if(sky->flags & SKF_BACKGROUND) {
+            if(r_skybox.value <= 0) {
                 R_DrawSimpleSky(skybackdropnum, 170);
             }
-            else
-            {
+            else {
                 float h;
                 float origh;
                 int l;
@@ -862,7 +857,7 @@ void R_DrawSky(void)
                 offset = (float)domeheight - base - 16.0f;
 
                 R_DrawSkyDome(5, 1, domeheight, 768,
-                    offset, 0.005f, WHITE, WHITE);
+                              offset, 0.005f, WHITE, WHITE);
             }
         }
     }
@@ -872,26 +867,24 @@ void R_DrawSky(void)
 // R_SkyTicker
 //
 
-void R_SkyTicker(void)
-{
-    if(menuactive)
+void R_SkyTicker(void) {
+    if(menuactive) {
         return;
+    }
 
-    if(!sky)
+    if(!sky) {
         return;
+    }
 
-    if(sky->flags & SKF_CLOUD)
-    {
+    if(sky->flags & SKF_CLOUD) {
         R_CloudTicker();
     }
 
-    if(sky->flags & SKF_FIRE)
-    {
+    if(sky->flags & SKF_FIRE) {
         R_FireTicker();
     }
 
-    if(sky->flags & SKF_FADEBACK)
-    {
+    if(sky->flags & SKF_FADEBACK) {
         R_TitleSkyTicker();
     }
 }

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1999-2000 Paul Brook
@@ -48,8 +48,7 @@
 
 typedef struct action_s action_t;
 
-struct action_s
-{
+struct action_s {
     char            *name;
     actionproc_t    proc;
     action_t        *children[2];
@@ -61,8 +60,7 @@ static action_t    *Actions=NULL;
 
 typedef struct alist_s alist_t;
 
-struct alist_s
-{
+struct alist_s {
     char        *buff;
     char        *cmd;
     alist_t     *next;
@@ -103,13 +101,12 @@ static CMD(UnbindAll);
 // G_InitActions
 //
 
-void G_InitActions(void)
-{
+void G_InitActions(void) {
     dmemset(AllActions, 0, NUM_ACTIONS);
     KeyActions = AllActions + KEY_ACTIONPOS;
     MouseActions = AllActions + MOUSE_ACTIONPOS;
     Mouse2Actions = AllActions + MOUSE2_ACTIONPOS;
-    
+
     dmemset(CurrentActions, 0, MAX_CURRENTACTIONS*sizeof(alist_t *));
 
     G_AddCommand("alias", CMD_Alias, 0);
@@ -121,25 +118,27 @@ void G_InitActions(void)
 // FindAction
 //
 
-static action_t *FindAction(char *name)
-{
+static action_t *FindAction(char *name) {
     action_t    *tree;
     int         cmp;
-    
-    if(!name)
+
+    if(!name) {
         return NULL;
+    }
 
     tree = Actions;
-    while(tree)
-    {
+    while(tree) {
         cmp = dstrcmp(name, tree->name);
-        if(cmp == 0)
+        if(cmp == 0) {
             break;
+        }
 
-        if(cmp > 0)
+        if(cmp > 0) {
             tree = tree->children[1];
-        else
+        }
+        else {
             tree = tree->children[0];
+        }
     }
 
     return tree;
@@ -149,10 +148,10 @@ static action_t *FindAction(char *name)
 // SkipWhitespace
 //
 
-char *SkipWhitespace(char *p)
-{
-    while(*p && isspace(*p))
+char *SkipWhitespace(char *p) {
+    while(*p && isspace(*p)) {
         p++;
+    }
     return p;
 }
 
@@ -160,10 +159,10 @@ char *SkipWhitespace(char *p)
 // FindWhitespace
 //
 
-char *FindWhitespace(char *p)
-{
-    while(*p && !isspace(*p))
+char *FindWhitespace(char *p) {
+    while(*p && !isspace(*p)) {
         p++;
+    }
 
     return p;
 }
@@ -172,13 +171,11 @@ char *FindWhitespace(char *p)
 // DuplicateActionList
 //
 
-alist_t *DuplicateActionList(alist_t *al)
-{
+alist_t *DuplicateActionList(alist_t *al) {
     alist_t *p;
-    
+
     p = al;
-    while(p)
-    {
+    while(p) {
         p->refcount++;
         p = p->next;
     }
@@ -190,40 +187,38 @@ alist_t *DuplicateActionList(alist_t *al)
 // AddActions
 //
 
-void AddActions(alist_t *actions)
-{
+void AddActions(alist_t *actions) {
     int slot;
-    
-    if(!actions)
+
+    if(!actions) {
         return;
-    
-    for(slot = 0; slot < MAX_CURRENTACTIONS; slot++)
-    {
-        if(!CurrentActions[slot])
-        {
+    }
+
+    for(slot = 0; slot < MAX_CURRENTACTIONS; slot++) {
+        if(!CurrentActions[slot]) {
             CurrentActions[slot] = DuplicateActionList(actions);
             break;
         }
     }
-    if(slot == MAX_CURRENTACTIONS)
+    if(slot == MAX_CURRENTACTIONS) {
         CON_Warnf("command overflow\n");
+    }
 }
 
 //
 // DerefSingleAction
 //
 
-void DerefSingleAction(alist_t *al)
-{
+void DerefSingleAction(alist_t *al) {
     al->refcount--;
-    if(al->refcount <= 0)
-    {
-        if(al->buff)
-        {
-            if(al->next)
+    if(al->refcount <= 0) {
+        if(al->buff) {
+            if(al->next) {
                 al->next->buff = al->buff;
-            else
+            }
+            else {
                 Z_Free(al->buff);
+            }
         }
 
         Z_Free(al);
@@ -236,72 +231,67 @@ void DerefSingleAction(alist_t *al)
 // Matches user input to see if its valid
 //
 
-alist_t *DoRunActions(alist_t *al, dboolean free)
-{
+alist_t *DoRunActions(alist_t *al, dboolean free) {
     alist_t     *next = NULL;
     action_t    *action;
     cvar_t      *cvar;
-    
-    while(al)
-    {
+
+    while(al) {
         next = al->next;
-        if(dstrcmp(al->cmd, "wait") == 0)
+        if(dstrcmp(al->cmd, "wait") == 0) {
             break;
-        
+        }
+
         action = FindAction(al->cmd);
-        if(action)
-        {
+        if(action) {
             action->proc(action->data, al->param);
         }
-        else if(cvar = CON_CvarGet(al->cmd))
-        {
-            if(netgame)
-            {
-                if(cvar->nonclient)
-                {
+        else if(cvar = CON_CvarGet(al->cmd)) {
+            if(netgame) {
+                if(cvar->nonclient) {
                     // I'll just have to assume for now that
                     // player# 0 is the server..
-                    if(consoleplayer != 0)
-                    {
+                    if(consoleplayer != 0) {
                         CON_Warnf("Cannot change cvar that's locked by server\n");
                         goto next;
                     }
                 }
             }
 
-            if(!al->param[0])
-            {
+            if(!al->param[0]) {
                 char str[256];
                 sprintf(str, "%s: %s (%s)", cvar->name, cvar->string, cvar->defvalue);
                 CON_AddLine(str, dstrlen(str));
             }
-            else
-            {
+            else {
                 CON_CvarSet(cvar->name, al->param[0]);
-                if(netgame)
-                {
-                    if(playeringame[0] && consoleplayer == 0)
+                if(netgame) {
+                    if(playeringame[0] && consoleplayer == 0) {
                         NET_SV_UpdateCvars(cvar);
+                    }
                 }
             }
         }
-        else
+        else {
             CON_Warnf("Unknown command \"%s\"\n", al->cmd);
-        
+        }
+
 next:
-        if(free)
+        if(free) {
             DerefSingleAction(al);
-        
+        }
+
         al = next;
     }
-    
-    if(al) // reached wait command
-    {
-        if(free)
+
+    if(al) { // reached wait command
+        if(free) {
             DerefSingleAction(al);
-        
-        if(next != NULL)
+        }
+
+        if(next != NULL) {
             return next;
+        }
     }
 
     return al;
@@ -311,24 +301,25 @@ next:
 // TryActions
 //
 
-void TryActions(alist_t *al, dboolean up)
-{
-    if(!al)
+void TryActions(alist_t *al, dboolean up) {
+    if(!al) {
         return;
-    
-    if(up)
-    {
+    }
+
+    if(up) {
         action_t    *action;
         char        buff[256];
-        
-        if(al->next || (al->cmd[0] != '+'))
+
+        if(al->next || (al->cmd[0] != '+')) {
             return;
-        
+        }
+
         dstrcpy(buff, al->cmd);
         buff[0] = '-';
         action = FindAction(buff);
-        if(action)
+        if(action) {
             action->proc(action->data, al->param);
+        }
         return;
     }
 
@@ -339,18 +330,16 @@ void TryActions(alist_t *al, dboolean up)
 // DerefActionList
 //
 
-void DerefActionList(alist_t *al)
-{
+void DerefActionList(alist_t *al) {
     alist_t *next;
-    
-    while(al)
-    {
+
+    while(al) {
         next = al->next;
         al->refcount--;
-        if(al->refcount <= 0)
-        {
-            if(al->buff)
+        if(al->refcount <= 0) {
+            if(al->buff) {
                 Z_Free(al->buff);
+            }
 
             Z_Free(al);
         }
@@ -363,18 +352,16 @@ void DerefActionList(alist_t *al)
 // G_ActionTicker
 //
 
-void G_ActionTicker(void)
-{
+void G_ActionTicker(void) {
     int slot;
-    
-    for(slot = 0; slot < MAX_CURRENTACTIONS; slot++)
-    {
-        if(CurrentActions[slot])
+
+    for(slot = 0; slot < MAX_CURRENTACTIONS; slot++) {
+        if(CurrentActions[slot]) {
             CurrentActions[slot] = DoRunActions(CurrentActions[slot], true);
+        }
     }
 
-    if(OptimizeTree)
-    {
+    if(OptimizeTree) {
         G_DoOptimizeActionTree();
 
         // 20120310 villsa - do we really need to optimize this every tick?
@@ -387,16 +374,13 @@ void G_ActionTicker(void)
 // ProcessButtonActions
 //
 
-static void ProcessButtonActions(alist_t **actions, int b, int ob)
-{
+static void ProcessButtonActions(alist_t **actions, int b, int ob) {
     int mask;
-    
+
     ButtonAction = true;
     ob ^= b;
-    for(mask = 1; mask; mask <<= 1, actions++)
-    {
-        if(ob & mask)
-        {
+    for(mask = 1; mask; mask <<= 1, actions++) {
+        if(ob & mask) {
             TryActions(*actions, (b & mask) == 0);
         }
     }
@@ -408,14 +392,13 @@ static void ProcessButtonActions(alist_t **actions, int b, int ob)
 // G_ActionResponder
 //
 
-dboolean G_ActionResponder(event_t *ev)
-{
-    switch(ev->type)
-    {
+dboolean G_ActionResponder(event_t *ev) {
+    switch(ev->type) {
     case ev_keyup:
     case ev_keydown:
-        if((ev->data1 < 0) || (ev->data1 >= NUMKEYS))
+        if((ev->data1 < 0) || (ev->data1 >= NUMKEYS)) {
             break;
+        }
 
         TryActions(KeyActions[ev->data1], ev->type == ev_keyup);
         break;
@@ -449,34 +432,34 @@ dboolean G_ActionResponder(event_t *ev)
 // NextToken
 //
 
-char* NextToken(char *s, dboolean *pquoted)//null terminates current token
-{
+char* NextToken(char *s, dboolean *pquoted) { //null terminates current token
     char *p;
-    
+
     p = s;
-    if(*pquoted)
-    {
-        while(*p && (*p != '"'))
+    if(*pquoted) {
+        while(*p && (*p != '"')) {
             p++;
+        }
 
-        if(*p == '"')
+        if(*p == '"') {
             *(p++) = 0;
+        }
     }
-    while(*p && (*p != ';') && !isspace(*p))
+    while(*p && (*p != ';') && !isspace(*p)) {
         p++;
+    }
 
-    if(isspace(*p))
-    {
+    if(isspace(*p)) {
         *(p++) = 0;
         p = SkipWhitespace(p);
     }
-    if(*p == '"')
-    {
+    if(*p == '"') {
         *pquoted = true;
         p++;
     }
-    else
+    else {
         *pquoted = false;
+    }
 
     return p;
 }
@@ -485,21 +468,22 @@ char* NextToken(char *s, dboolean *pquoted)//null terminates current token
 // ParseActions
 //
 
-alist_t* ParseActions(char *actions)
-{
+alist_t* ParseActions(char *actions) {
     char        *p;
     int         param;
     alist_t     *al;
     alist_t     *alist;
     dboolean    quoted;
-    
-    if(!actions)
+
+    if(!actions) {
         return NULL;
+    }
 
     p = SkipWhitespace(actions);
 
-    if(!*p)
+    if(!*p) {
         return NULL;
+    }
 
     alist = (alist_t *)Z_Malloc(sizeof(alist_t), PU_STATIC, NULL);
     al = alist;
@@ -507,30 +491,30 @@ alist_t* ParseActions(char *actions)
     p = al->buff;
     quoted = false;
 
-    while(true)
-    {
+    while(true) {
         al->cmd = p;
         al->refcount = 1;
         param = 0;
         p = NextToken(p, &quoted);
 
-        while(*p && (*p != ';'))
-        {
-            if(param < MAX_ACTIONPARAM)
+        while(*p && (*p != ';')) {
+            if(param < MAX_ACTIONPARAM) {
                 al->param[param++] = p;
+            }
 
             p = NextToken(p, &quoted);
         }
-        while(param <= MAX_ACTIONPARAM)
+        while(param <= MAX_ACTIONPARAM) {
             al->param[param++]=NULL;
+        }
 
-        while(*p == ';')
+        while(*p == ';') {
             p = SkipWhitespace(&p[1]);
+        }
 
         dstrlwr(al->cmd);
 
-        if(!*p)
-        {
+        if(!*p) {
             al->next = NULL;
             return alist;
         }
@@ -544,14 +528,12 @@ alist_t* ParseActions(char *actions)
 // G_ExecuteCommand
 //
 
-void G_ExecuteCommand(char *action)
-{
+void G_ExecuteCommand(char *action) {
     alist_t *al;
-    
+
     al = ParseActions(action);
     al = DoRunActions(al, true);
-    if(al)
-    {
+    if(al) {
         AddActions(al);
         DerefActionList(al);
     }
@@ -561,18 +543,18 @@ void G_ExecuteCommand(char *action)
 // FindActionControler
 //
 
-alist_t **FindActionControler(char *name, alist_t **actions, int numbuttons)
-{
+alist_t **FindActionControler(char *name, alist_t **actions, int numbuttons) {
     int i;
-    
-    if((name[0] >= '1') && (name[0] <= '9'))
-    {
+
+    if((name[0] >= '1') && (name[0] <= '9')) {
         i = datoi(name)-1;
-        if(i > numbuttons)
+        if(i > numbuttons) {
             return NULL;
+        }
     }
-    else
+    else {
         return NULL;
+    }
 
     return(&actions[i]);
 }
@@ -581,24 +563,21 @@ alist_t **FindActionControler(char *name, alist_t **actions, int numbuttons)
 // G_FindKeyByName
 //
 
-alist_t **G_FindKeyByName(char *key)
-{
+alist_t **G_FindKeyByName(char *key) {
     int     i;
     char    buff[MAX_KEY_NAME_LENGTH];
-    
-    if(dstrncmp(key, "mouse", 5) == 0)
-    {
+
+    if(dstrncmp(key, "mouse", 5) == 0) {
         //gets confused if have >20 mouse buttons:)
-        if((key[5] == '2') && key[6])
+        if((key[5] == '2') && key[6]) {
             return(FindActionControler(&key[6], Mouse2Actions, MOUSE_BUTTONS));
+        }
         return(FindActionControler(&key[5], MouseActions, MOUSE_BUTTONS));
     }
 
-    for(i = 0; i < NUMKEYS; i++)
-    {
+    for(i = 0; i < NUMKEYS; i++) {
         M_GetKeyName(buff, i);
-        if (dstricmp(key, buff) == 0)
-        {
+        if(dstricmp(key, buff) == 0) {
             return(&KeyActions[i]);
         }
     }
@@ -610,20 +589,18 @@ alist_t **G_FindKeyByName(char *key)
 // G_BindAction
 //
 
-void G_BindAction(alist_t **plist, char *action)
-{
+void G_BindAction(alist_t **plist, char *action) {
     alist_t    *al;
-    
+
     al = ParseActions(action);
-    
-    if(plist)
-    {
-        if(*plist)
+
+    if(plist) {
+        if(*plist) {
             DerefActionList(*plist);
+        }
         *plist = al;
     }
-    else
-    {
+    else {
         CON_Warnf("Unknown Key\n");
         DerefActionList(al);
     }
@@ -633,33 +610,31 @@ void G_BindAction(alist_t **plist, char *action)
 // G_BindActionByEvent
 //
 
-static int GetBitNum(int bits)
-{
+static int GetBitNum(int bits) {
     int mask;
     int i;
-    
-    for(mask = 1, i = 0; mask; mask <<= 1, i++)
-    {
-        if(mask & bits)
+
+    for(mask = 1, i = 0; mask; mask <<= 1, i++) {
+        if(mask & bits) {
             return i;
+        }
     }
     return -1;
 }
 
-dboolean G_BindActionByEvent(event_t *ev, char *action)
-{
+dboolean G_BindActionByEvent(event_t *ev, char *action) {
     int     button;
     alist_t **plist;
-    
+
     plist = NULL;
-    switch(ev->type)
-    {
+    switch(ev->type) {
     case ev_keydown:
         //
         // HACK: ignore capslock
         //
-        if(ev->data1 == KEY_CAPS)
+        if(ev->data1 == KEY_CAPS) {
             return false;
+        }
 
         plist = &KeyActions[ev->data1];
         break;
@@ -667,12 +642,12 @@ dboolean G_BindActionByEvent(event_t *ev, char *action)
     case ev_mouse:
     case ev_mousedown:
         button = GetBitNum(ev->data1);
-        if((button >= 0) && (button < MOUSE_BUTTONS))
+        if((button >= 0) && (button < MOUSE_BUTTONS)) {
             plist = &MouseActions[button];
+        }
         break;
     }
-    if(plist)
-    {
+    if(plist) {
         G_BindAction(plist, action);
         return true;
     }
@@ -683,8 +658,7 @@ dboolean G_BindActionByEvent(event_t *ev, char *action)
 // G_BindActionByName
 //
 
-void G_BindActionByName(char *key, char *action)
-{
+void G_BindActionByName(char *key, char *action) {
     G_BindAction(G_FindKeyByName(key), action);
 }
 
@@ -692,37 +666,34 @@ void G_BindActionByName(char *key, char *action)
 // G_OutputBindings
 //
 
-static void OutputActions(FILE * fh, alist_t *al, char *name)
-{
+static void OutputActions(FILE * fh, alist_t *al, char *name) {
     int i;
-    
+
     fprintf(fh, "bind %s \"", name);
-    while(al)
-    {
+    while(al) {
         fprintf(fh, "%s", al->cmd);
-        for (i=0; al->param[i]; i++)
-        {
+        for(i=0; al->param[i]; i++) {
             fprintf(fh, " %s", al->param[i]);
         }
         al = al->next;
-        if(al)
+        if(al) {
             fprintf(fh, " ; ");
+        }
     }
     fprintf(fh, "\"\n");
 }
 
-void G_OutputBindings(FILE *fh)
-{
+void G_OutputBindings(FILE *fh) {
     int         i;
     alist_t     *al;
     char        name[MAX_KEY_NAME_LENGTH];
     cvar_t      *var;
-    
-    for(i = 0; i < NUMKEYS; i++)
-    {
+
+    for(i = 0; i < NUMKEYS; i++) {
         al = KeyActions[i];
-        if(!al)
+        if(!al) {
             continue;
+        }
 
         M_GetKeyName(name, i);
         OutputActions(fh, al, name);
@@ -730,51 +701,46 @@ void G_OutputBindings(FILE *fh)
 
     dstrcpy(name, "mouse");
 
-    for(i = 0; i < MOUSE_BUTTONS; i++)
-    {
+    for(i = 0; i < MOUSE_BUTTONS; i++) {
         al = MouseActions[i];
-        if(al)
-        {
+        if(al) {
             name[5] = i+'1';
             name[6] = 0;
             OutputActions(fh, al, name);
         }
     }
-    for(i = 0; i< MOUSE_BUTTONS; i++)
-    {
+    for(i = 0; i< MOUSE_BUTTONS; i++) {
         al = Mouse2Actions[i];
-        if(al)
-        {
+        if(al) {
             name[5] = '2';
             name[6] = i+'1';
             name[7] = 0;
             OutputActions(fh, al, name);
         }
     }
-    
+
     // cvars
-    for(var = cvarcap; var; var = var->next)
+    for(var = cvarcap; var; var = var->next) {
         fprintf(fh, "seta \"%s\" \"%s\"\n", var->name, var->string);
+    }
 }
 
 //
 // G_PrintActions
 //
 
-void G_PrintActions(alist_t *al)
-{
+void G_PrintActions(alist_t *al) {
     int i;
-    
-    while(al)
-    {
+
+    while(al) {
         I_Printf("%s", al->cmd);
-        for(i = 0; al->param[i]; i++)
-        {
+        for(i = 0; al->param[i]; i++) {
             I_Printf(" %s", al->param[i]);
         }
         al = al->next;
-        if(al)
+        if(al) {
             I_Printf(" ; ");
+        }
     }
 }
 
@@ -782,18 +748,15 @@ void G_PrintActions(alist_t *al)
 // G_ShowBinding
 //
 
-void G_ShowBinding(char *key)
-{
+void G_ShowBinding(char *key) {
     alist_t **alist;
-    
+
     alist = G_FindKeyByName(key);
-    if(!alist)
-    {
+    if(!alist) {
         CON_Warnf("Unknown key:%s\n", key);
         return;
     }
-    if(!*alist)
-    {
+    if(!*alist) {
         CON_Warnf("%s is not bound\n", key);
         return;
     }
@@ -806,59 +769,62 @@ void G_ShowBinding(char *key)
 static int      NumActions;
 static action_t **ActionBuffer;
 
-int CountActions(action_t *action)
-{
+int CountActions(action_t *action) {
     int num;
-    
-    if(!action)
+
+    if(!action) {
         return 0;
+    }
 
     num = 1;
-    if(action->children[0])
+    if(action->children[0]) {
         num += CountActions(action->children[0]);
-    if(action->children[1])
+    }
+    if(action->children[1]) {
         num += CountActions(action->children[1]);
+    }
 
     return num;
 }
 
-void DumpActions(action_t *action)
-{
-    if(!action)
+void DumpActions(action_t *action) {
+    if(!action) {
         return;
+    }
 
-    if(action->children[0])
+    if(action->children[0]) {
         DumpActions(action->children[0]);
+    }
 
     ActionBuffer[NumActions++] = action;
 
-    if(action->children[1])
+    if(action->children[1]) {
         DumpActions(action->children[1]);
+    }
 }
 
-action_t *RebuildActions(int left, int right)
-{
+action_t *RebuildActions(int left, int right) {
     int         mid;
     action_t    *action;
-    
+
     mid = (left + right) / 2;
     action = ActionBuffer[mid];
 
-    if(left<mid)
-    {
+    if(left<mid) {
         action->children[0] = RebuildActions(left, mid-1);
         action->children[0]->parent = action;
     }
-    else
+    else {
         action->children[0] = NULL;
+    }
 
-    if(mid<right)
-    {
+    if(mid<right) {
         action->children[1] = RebuildActions(mid+1, right);
         action->children[1]->parent = action;
     }
-    else
+    else {
         action->children[1] = NULL;
+    }
     return action;
 }
 
@@ -866,8 +832,7 @@ action_t *RebuildActions(int left, int right)
 // G_OptimizeActionTree
 //
 
-void G_OptimizeActionTree(void)
-{
+void G_OptimizeActionTree(void) {
     OptimizeTree = true;
 }
 
@@ -876,15 +841,15 @@ void G_OptimizeActionTree(void)
 // dumps into array, then rebuilds tree to minimize tree depth
 //
 
-void G_DoOptimizeActionTree(void)
-{
+void G_DoOptimizeActionTree(void) {
     int count;
 
     // lots of nice recursive procedures :)
 
     count = CountActions(Actions);
-    if(count == 0)
+    if(count == 0) {
         return;
+    }
 
     ActionBuffer = (action_t **)Z_Malloc(count*sizeof(action_t *), PU_STATIC, NULL);
     NumActions = 0;
@@ -900,83 +865,86 @@ void G_DoOptimizeActionTree(void)
 // does not free children, or remove from tree
 //
 
-void G_FreeAction(action_t *action)
-{
-    if(!action)
+void G_FreeAction(action_t *action) {
+    if(!action) {
         return;
+    }
 
-    if(action->name)
+    if(action->name) {
         Z_Free(action->name);
+    }
 
-    if(action->proc == G_RunAlias)
+    if(action->proc == G_RunAlias) {
         DerefActionList((alist_t *)action->data);
+    }
 
     Z_Free(action);
 }
 
 //does not alter with->children
-static void ReplaceActionWith(action_t *action, action_t *with)
-{
-    if(action == with)
+static void ReplaceActionWith(action_t *action, action_t *with) {
+    if(action == with) {
         return;
-
-    if(!action)
-        I_Error("Replaced NULL action");
-    
-    if(action->parent)
-    {
-        if(action->parent->children[0] == action)
-            action->parent->children[0] = with;
-        else
-            action->parent->children[1] = with;
     }
-    else
-        Actions = with;
 
-    if(with)
+    if(!action) {
+        I_Error("Replaced NULL action");
+    }
+
+    if(action->parent) {
+        if(action->parent->children[0] == action) {
+            action->parent->children[0] = with;
+        }
+        else {
+            action->parent->children[1] = with;
+        }
+    }
+    else {
+        Actions = with;
+    }
+
+    if(with) {
         with->parent = action->parent;
+    }
 }
 
-static void AddAction(action_t *action)
-{
+static void AddAction(action_t *action) {
     action_t    *tree;
     int         cmp;
     int         child;
-    
+
     action->parent = NULL;
     action->children[0] = action->children[1] = NULL;
 
-    if(Actions)
-    {
+    if(Actions) {
         tree = Actions;
-        while(tree)
-        {
+        while(tree) {
             cmp = dstrcmp(action->name, tree->name);
-            if(cmp == 0)
-            {
+            if(cmp == 0) {
                 ReplaceActionWith(tree, action);
-                
-                for(child = 0;child < 2;child++)
-                {
+
+                for(child = 0; child < 2; child++) {
                     action->children[child] = tree->children[child];
-                    if(tree->children[child])
+                    if(tree->children[child]) {
                         tree->children[child]->parent = action;
+                    }
                     tree->children[child] = NULL;
                 }
 
                 G_FreeAction(tree);
                 tree = NULL;
             }
-            else
-            {
-                if(cmp>0)
+            else {
+                if(cmp>0) {
                     child = 1;
-                else
+                }
+                else {
                     child = 0;
-                if (tree->children[child])
+                }
+                if(tree->children[child]) {
                     tree = tree->children[child];
-                else
-                {
+                }
+                else {
                     action->parent = tree;
                     tree->children[child] = action;
                     tree = NULL;
@@ -985,8 +953,7 @@ static void AddAction(action_t *action)
             }
         }
     }
-    else
-    {
+    else {
         Actions = action;
     }
 }
@@ -996,10 +963,9 @@ static void AddAction(action_t *action)
 // Adds a new action to the list
 //
 
-void G_AddCommand(char *name, actionproc_t proc, int64 data)
-{
+void G_AddCommand(char *name, actionproc_t proc, int64 data) {
     action_t *action;
-    
+
     action = (action_t *)Z_Malloc(sizeof(action_t), PU_STATIC, NULL);
     action->name = strdup(name);
     dstrlwr(action->name);
@@ -1012,8 +978,7 @@ void G_AddCommand(char *name, actionproc_t proc, int64 data)
 // G_RunAlias
 //
 
-void G_RunAlias(int64 data, char **param)
-{
+void G_RunAlias(int64 data, char **param) {
     AddActions(DoRunActions((alist_t *)data, false));
 }
 
@@ -1021,56 +986,55 @@ void G_RunAlias(int64 data, char **param)
 // G_ShowAliases
 //
 
-void G_ShowAliases(action_t *action)
-{
-    if(!action)
+void G_ShowAliases(action_t *action) {
+    if(!action) {
         return;
-    
-    if(action->children[0])
-        G_ShowAliases(action->children[0]);
+    }
 
-    if((action->proc == G_RunAlias) && action->data)
-    {
+    if(action->children[0]) {
+        G_ShowAliases(action->children[0]);
+    }
+
+    if((action->proc == G_RunAlias) && action->data) {
         I_Printf(" %s = ", action->name);
         G_PrintActions((alist_t *)action->data);
         I_Printf("\n");
     }
 
-    if(action->children[1])
+    if(action->children[1]) {
         G_ShowAliases(action->children[1]);
+    }
 }
 
 //
 // G_UnregisterAction
 //
 
-void G_UnregisterAction(char *name)
-{
+void G_UnregisterAction(char *name) {
     action_t    *action;
     action_t    *tree;
     char        buff[256];
-    
+
     dstrcpy(buff, name);
     dstrlwr(buff);
 
     action = FindAction(buff);
 
-    if(!action)
+    if(!action) {
         return;
+    }
 
-    if(!action->children[0])
-    {
+    if(!action->children[0]) {
         ReplaceActionWith(action, action->children[1]);
     }
-    else if(!action->children[1])
-    {
+    else if(!action->children[1]) {
         ReplaceActionWith(action, action->children[0]);
     }
-    else
-    {
+    else {
         tree = action->children[1];
-        while(tree->children[0])
+        while(tree->children[0]) {
             tree = tree->children[0];
+        }
 
         tree->children[0] = action->children[0];
 
@@ -1084,46 +1048,50 @@ void G_UnregisterAction(char *name)
 // CMD_Alias
 //
 
-static CMD(Alias)
-{
+static CMD(Alias) {
     alist_t *al;
-    
-    if(!param[0])
-    {
+
+    if(!param[0]) {
         I_Printf("Current Aliases:\n");
         G_ShowAliases(Actions);
         return;
     }
     al = ParseActions(param[1]);
-    if(!al)
+    if(!al) {
         G_UnregisterAction(param[0]);
-    else
+    }
+    else {
         G_AddCommand(param[0], G_RunAlias, (int64)al);
+    }
 }
 
 //
 // G_ListCommands
 //
 
-static int ListCommandRecurse(action_t *action)
-{
+static int ListCommandRecurse(action_t *action) {
     int count;
-    
-    if(!action)
+
+    if(!action) {
         return 0;
-    
+    }
+
     count = 1;
-    if(action->children[0])
+    if(action->children[0]) {
         count += ListCommandRecurse(action->children[0]);
-    
-    if(action->name[0] == '-')
+    }
+
+    if(action->name[0] == '-') {
         count--;
-    else
+    }
+    else {
         CON_Printf(AQUA, " %s\n", action->name);
-    
-    if(action->children[1])
+    }
+
+    if(action->children[1]) {
         count += ListCommandRecurse(action->children[1]);
-    
+    }
+
     return(count);
 }
 
@@ -1131,8 +1099,7 @@ static int ListCommandRecurse(action_t *action)
 // G_ListCommands
 //
 
-int G_ListCommands(void)
-{
+int G_ListCommands(void) {
     return(ListCommandRecurse(Actions));
 }
 
@@ -1140,18 +1107,15 @@ int G_ListCommands(void)
 // Unbind
 //
 
-static void Unbind(char *action)
-{
+static void Unbind(char *action) {
     alist_t **alist;
 
     alist = G_FindKeyByName(action);
-    if(!alist)
-    {
+    if(!alist) {
         I_Printf("Unknown Key:%s\n", action);
         return;
     }
-    if(*alist)
-    {
+    if(*alist) {
         DerefActionList(*alist);
         *alist=NULL;
     }
@@ -1161,14 +1125,12 @@ static void Unbind(char *action)
 // CMD_Unbind
 //
 
-static CMD(Unbind)
-{   
-    if(!param[0])
-    {
+static CMD(Unbind) {
+    if(!param[0]) {
         I_Printf(" unbind <key>\n");
         return;
     }
-    
+
     Unbind(param[0]);
 }
 
@@ -1176,14 +1138,13 @@ static CMD(Unbind)
 // UnbindActions
 //
 
-static void UnbindActions(alist_t **alist, int num)
-{
+static void UnbindActions(alist_t **alist, int num) {
     int i;
-    
-    for(i = 0; i < num; i++)
-    {
-        if(!alist[i])
+
+    for(i = 0; i < num; i++) {
+        if(!alist[i]) {
             continue;
+        }
 
         DerefActionList(*alist);
         return;
@@ -1195,8 +1156,7 @@ static void UnbindActions(alist_t **alist, int num)
 // CMD_UnbindAll
 //
 
-static CMD(UnbindAll)
-{
+static CMD(UnbindAll) {
     UnbindActions(AllActions, NUM_ACTIONS);
 }
 
@@ -1204,26 +1164,27 @@ static CMD(UnbindAll)
 // IsSameAction
 //
 
-static dboolean IsSameAction(char *cmd, alist_t *al)
-{
-    if(!al)
+static dboolean IsSameAction(char *cmd, alist_t *al) {
+    if(!al) {
         return false;
-    
-    if(!dstrcmp(al->cmd, "weapon"))
-    {
+    }
+
+    if(!dstrcmp(al->cmd, "weapon")) {
         {
             char buff[256];
             sprintf(buff, "%s %s", al->cmd, al->param[0]);
-            if(!dstrcmp(cmd, buff))
+            if(!dstrcmp(cmd, buff)) {
                 return true;
-            else
+            }
+            else {
                 return false;
+            }
         }
     }
-    else
-    {
-        if(dstricmp(cmd, al->cmd)!=0)
+    else {
+        if(dstricmp(cmd, al->cmd)!=0) {
             return false;
+        }
     }
     return true;
 }
@@ -1232,24 +1193,21 @@ static dboolean IsSameAction(char *cmd, alist_t *al)
 // G_GetActionName
 //
 
-void G_GetActionName(char *buff, int n)
-{
+void G_GetActionName(char *buff, int n) {
     *buff = 0;
-    if(n >= NUM_ACTIONS)
+    if(n >= NUM_ACTIONS) {
         return;
+    }
 
-    if(n >= MOUSE2_ACTIONPOS)
-    {
+    if(n >= MOUSE2_ACTIONPOS) {
         sprintf(buff, "mouse2%d", n-MOUSE2_ACTIONPOS);
         return;
     }
-    if(n >= MOUSE_ACTIONPOS)
-    {
+    if(n >= MOUSE_ACTIONPOS) {
         sprintf(buff, "mouse2%d", n-MOUSE_ACTIONPOS);
         return;
     }
-    if(n >= KEY_ACTIONPOS)
-    {
+    if(n >= KEY_ACTIONPOS) {
         M_GetKeyName(buff, n-KEY_ACTIONPOS);
         return;
     }
@@ -1259,54 +1217,53 @@ void G_GetActionName(char *buff, int n)
 // G_GetActionBindings
 //
 
-void G_GetActionBindings(char *buff, char *action)
-{
+void G_GetActionBindings(char *buff, char *action) {
     int     i;
     char    *p;
-    
+
     p = buff;
     *p = 0;
-    for(i = 0; i < NUMKEYS; i++)
-    {
-        if(IsSameAction(action, KeyActions[i]))
-        {
-            if(p != buff)
+    for(i = 0; i < NUMKEYS; i++) {
+        if(IsSameAction(action, KeyActions[i])) {
+            if(p != buff) {
                 *(p++) = ',';
+            }
 
             M_GetKeyName(p, i);
 
             p += dstrlen(p);
 
-            if(p - buff >= MAX_MENUACTION_LENGTH)
+            if(p - buff >= MAX_MENUACTION_LENGTH) {
                 return;
+            }
         }
     }
-    for(i = 0; i < MOUSE_BUTTONS; i++)
-    {
-        if(IsSameAction(action, MouseActions[i]))
-        {
-            if(p != buff)
+    for(i = 0; i < MOUSE_BUTTONS; i++) {
+        if(IsSameAction(action, MouseActions[i])) {
+            if(p != buff) {
                 *(p++) = ',';
+            }
 
-            if(i < MOUSE_BUTTONS-2)
-            {
+            if(i < MOUSE_BUTTONS-2) {
                 dstrcpy(p, "mouse?");
                 p[5] = i + '1';
                 p += 6;
             }
 
-            if(p - buff >= MAX_MENUACTION_LENGTH)
+            if(p - buff >= MAX_MENUACTION_LENGTH) {
                 return;
+            }
         }
-        if(IsSameAction(action, Mouse2Actions[i]))
-        {
-            if(p != buff)
+        if(IsSameAction(action, Mouse2Actions[i])) {
+            if(p != buff) {
                 *(p++) = ',';
+            }
             dstrcpy(p, "mouse2?");
             p[6] = i + '1';
             p += 7;
-            if(p - buff >= MAX_MENUACTION_LENGTH)
+            if(p - buff >= MAX_MENUACTION_LENGTH) {
                 return;
+            }
         }
     }
 }
@@ -1315,14 +1272,11 @@ void G_GetActionBindings(char *buff, char *action)
 // G_UnbindAction
 //
 
-void G_UnbindAction(char *action)
-{
+void G_UnbindAction(char *action) {
     int i;
 
-    for(i = 0; i < NUMKEYS; i++)
-    {
-        if(IsSameAction(action, KeyActions[i]))
-        {
+    for(i = 0; i < NUMKEYS; i++) {
+        if(IsSameAction(action, KeyActions[i])) {
             char p[16];
 
             M_GetKeyName(p, i);
@@ -1330,14 +1284,11 @@ void G_UnbindAction(char *action)
             return;
         }
     }
-    for(i = 0; i < MOUSE_BUTTONS; i++)
-    {
-        if(IsSameAction(action, MouseActions[i]))
-        {
+    for(i = 0; i < MOUSE_BUTTONS; i++) {
+        if(IsSameAction(action, MouseActions[i])) {
             char p[16];
 
-            if(i < MOUSE_BUTTONS-2)
-            {
+            if(i < MOUSE_BUTTONS-2) {
                 dstrcpy(p, "mouse?");
                 p[5] = i + '1';
             }
@@ -1345,13 +1296,12 @@ void G_UnbindAction(char *action)
             Unbind(p);
             return;
         }
-        if(IsSameAction(action, Mouse2Actions[i]))
-        {
+        if(IsSameAction(action, Mouse2Actions[i])) {
             char p[16];
 
             dstrcpy(p, "mouse2?");
             p[6] = i + '1';
-            
+
             Unbind(p);
             return;
         }

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -28,8 +28,7 @@
 #include "gl_main.h"
 #include "r_things.h"
 
-typedef enum
-{
+typedef enum {
     DLF_GLOW        = 0x1,
     DLF_WATER1      = 0x2,
     DLF_CEILING     = 0x4,
@@ -38,8 +37,7 @@ typedef enum
     DLF_WATER2      = 0x20
 } drawlistflag_e;
 
-typedef enum
-{
+typedef enum {
     DLT_WALL,
     DLT_FLAT,
     DLT_SPRITE,
@@ -47,17 +45,15 @@ typedef enum
     NUMDRAWLISTS
 } drawlisttag_e;
 
-typedef struct
-{
+typedef struct {
     void        *data;
-    dboolean    (*callback)(void*, vtx_t*);
+    dboolean(*callback)(void*, vtx_t*);
     dtexture    texid;
     int         flags;
     int         params;
 } vtxlist_t;
 
-typedef struct
-{
+typedef struct {
     vtxlist_t   *list;
     int         index;
     int         max;
@@ -75,7 +71,7 @@ dboolean DL_ProcessSprites(vtxlist_t* vl, int* drawcount);
 vtxlist_t *DL_AddVertexList(drawlist_t *dl);
 int DL_GetDrawListSize(int tag);
 void DL_BeginDrawList(dboolean t, dboolean a);
-void DL_ProcessDrawList(int tag, dboolean (*procfunc)(vtxlist_t*, int*));
+void DL_ProcessDrawList(int tag, dboolean(*procfunc)(vtxlist_t*, int*));
 void DL_RenderDrawList(void);
 void DL_Init(void);
 

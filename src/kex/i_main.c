@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -47,15 +47,14 @@ const char version_date[] = __DATE__;
 // dprintf
 //
 
-void dprintf(const char *s, ...)
-{
+void dprintf(const char *s, ...) {
     static char msg[MAX_MESSAGE_SIZE];
     va_list    va;
-    
+
     va_start(va, s);
     vsprintf(msg, s, va);
     va_end(va);
-    
+
     players[consoleplayer].message = msg;
 }
 
@@ -63,17 +62,15 @@ void dprintf(const char *s, ...)
 // dmemcpy
 //
 
-void *dmemcpy(void *s1, const void *s2, size_t n)
-{
+void *dmemcpy(void *s1, const void *s2, size_t n) {
     register char *r1 = s1;
     register const char *r2 = s2;
 
-    while(n)
-    {
+    while(n) {
         *r1++ = *r2++;
         --n;
     }
-    
+
     return s1;
 }
 
@@ -81,16 +78,14 @@ void *dmemcpy(void *s1, const void *s2, size_t n)
 // dmemset
 //
 
-void *dmemset(void *s, dword c, size_t n)
-{
+void *dmemset(void *s, dword c, size_t n) {
     register char *p = (char *)s;
 
-    while(n)
-    {
+    while(n) {
         *p++ = (char)c;
         --n;
     }
-    
+
     return s;
 }
 
@@ -98,8 +93,7 @@ void *dmemset(void *s, dword c, size_t n)
 // dstrcpy
 //
 
-char *dstrcpy(char *dest, const char *src)
-{
+char *dstrcpy(char *dest, const char *src) {
     dstrncpy(dest, src, dstrlen(src));
     return dest;
 }
@@ -108,29 +102,29 @@ char *dstrcpy(char *dest, const char *src)
 // dstrncpy
 //
 
-void dstrncpy(char *dest, const char *src, int maxcount)
-{
+void dstrncpy(char *dest, const char *src, int maxcount) {
     register char *p1 = dest;
     const char *p2 = src;
-    while ((maxcount--) >= 0)
+    while((maxcount--) >= 0) {
         *p1++ = *p2++;
+    }
 }
 
 //
 // dstrcmp
 //
 
-int dstrcmp(const char *s1, const char *s2)
-{
-    while (*s1 && *s2)
-    {
-        if(*s1 != *s2)
+int dstrcmp(const char *s1, const char *s2) {
+    while(*s1 && *s2) {
+        if(*s1 != *s2) {
             return *s2 - *s1;
+        }
         s1++;
         s2++;
     }
-    if(*s1 != *s2)
+    if(*s1 != *s2) {
         return *s2 - *s1;
+    }
     return 0;
 }
 
@@ -138,19 +132,20 @@ int dstrcmp(const char *s1, const char *s2)
 // dstrncmp
 //
 
-int dstrncmp(const char *s1, const char *s2, int len)
-{
-    while (*s1 && *s2)
-    {
-        if(*s1 != *s2)
+int dstrncmp(const char *s1, const char *s2, int len) {
+    while(*s1 && *s2) {
+        if(*s1 != *s2) {
             return *s2 - *s1;
+        }
         s1++;
         s2++;
-        if(!--len)
+        if(!--len) {
             return 0;
+        }
     }
-    if(*s1 != *s2)
+    if(*s1 != *s2) {
         return *s2 - *s1;
+    }
     return 0;
 }
 
@@ -158,17 +153,15 @@ int dstrncmp(const char *s1, const char *s2, int len)
 // dstricmp
 //
 
-int dstricmp(const char *s1, const char *s2)
-{
-    return strcasecmp(s1, s2);    
+int dstricmp(const char *s1, const char *s2) {
+    return strcasecmp(s1, s2);
 }
 
 //
 // dstrnicmp
 //
 
-int dstrnicmp(const char *s1, const char *s2, int len)
-{
+int dstrnicmp(const char *s1, const char *s2, int len) {
     return strncasecmp(s1, s2, len);
 }
 
@@ -176,14 +169,13 @@ int dstrnicmp(const char *s1, const char *s2, int len)
 // dstrupr
 //
 
-void dstrupr(char *s)
-{
+void dstrupr(char *s) {
     register char c;
-    
-    while ((c = *s) != 0)
-    {
-        if (c >= 'a' && c <= 'z')
+
+    while((c = *s) != 0) {
+        if(c >= 'a' && c <= 'z') {
             c -= 'a'-'A';
+        }
         *s++ = c;
     }
 }
@@ -192,14 +184,13 @@ void dstrupr(char *s)
 // dstrlwr
 //
 
-void dstrlwr(char *s)
-{
+void dstrlwr(char *s) {
     register char c;
-    
-    while ((c = *s) != 0)
-    {
-        if (c >= 'A' && c <= 'Z')
+
+    while((c = *s) != 0) {
+        if(c >= 'A' && c <= 'Z') {
             c += 32;
+        }
         *s++ = c;
     }
 }
@@ -208,35 +199,38 @@ void dstrlwr(char *s)
 // dstrnlen
 //
 
-int dstrlen(const char *string)
-{
+int dstrlen(const char *string) {
     register int rc = 0;
     if(string)
-        while (*(string++)) rc++;
-        else rc = -1;
-        
-        return rc;
+        while(*(string++)) {
+            rc++;
+        }
+    else {
+        rc = -1;
+    }
+
+    return rc;
 }
 
 //
 // dstrrchr
 //
 
-char *dstrrchr(char *s, char c)
-{
+char *dstrrchr(char *s, char c) {
     register int len = dstrlen(s);
     s += len;
     while(len--)
-        if(*--s == c) return s;
-        return 0;
+        if(*--s == c) {
+            return s;
+        }
+    return 0;
 }
 
 //
 // dstrcat
 //
 
-void dstrcat(char *dest, const char *src)
-{
+void dstrcat(char *dest, const char *src) {
     dest += dstrlen(dest);
     dstrcpy(dest, src);
 }
@@ -245,19 +239,16 @@ void dstrcat(char *dest, const char *src)
 // dstrstr
 //
 
-char *dstrstr(char *s1, char *s2)
-{
+char *dstrstr(char *s1, char *s2) {
     register char *p = s1;
     register int len = dstrlen(s2);
-    
-    for(;(p = dstrrchr(p, *s2)) != 0; p++)
-    {
-        if(dstrncmp(p, s2, len) == 0)
-        {
+
+    for(; (p = dstrrchr(p, *s2)) != 0; p++) {
+        if(dstrncmp(p, s2, len) == 0) {
             return p;
         }
     }
-    
+
     return 0;
 }
 
@@ -265,57 +256,59 @@ char *dstrstr(char *s1, char *s2)
 // datoi
 //
 
-int datoi(const char *str)
-{
+int datoi(const char *str) {
     int val;
     int sign;
     int c;
-    
-    if (*str == '-')
-    {
+
+    if(*str == '-') {
         sign = -1;
         str++;
     }
-    else
+    else {
         sign = 1;
-    
+    }
+
     val = 0;
-    
+
     // check for hex
-    
-    if(str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
-    {
+
+    if(str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
         str += 2;
-        while (1)
-        {
+        while(1) {
             c = *str++;
-            if(c >= '0' && c <= '9')
+            if(c >= '0' && c <= '9') {
                 val = (val<<4) + c - '0';
-            else if(c >= 'a' && c <= 'f')
+            }
+            else if(c >= 'a' && c <= 'f') {
                 val = (val<<4) + c - 'a' + 10;
-            else if(c >= 'A' && c <= 'F')
+            }
+            else if(c >= 'A' && c <= 'F') {
                 val = (val<<4) + c - 'A' + 10;
-            else
+            }
+            else {
                 return val*sign;
+            }
         }
     }
-    
+
     // check for character
-    
-    if(str[0] == '\'')
+
+    if(str[0] == '\'') {
         return sign * str[1];
-    
+    }
+
     // assume decimal
-    
-    while(1)
-    {
+
+    while(1) {
         c = *str++;
-        if(c <'0' || c > '9')
+        if(c <'0' || c > '9') {
             return val*sign;
-        
+        }
+
         val = val*10 + c - '0';
     }
-    
+
     return 0;
 }
 
@@ -323,71 +316,72 @@ int datoi(const char *str)
 // datof
 //
 
-float datof(char *str)
-{
+float datof(char *str) {
     double    val;
     int        sign;
     int        c;
     int        decimal, total;
-    
-    if(*str == '-')
-    {
+
+    if(*str == '-') {
         sign = -1;
         str++;
     }
-    else
+    else {
         sign = 1;
-    
+    }
+
     val = 0;
-    
+
     // check for hex
-    if(str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
-    {
+    if(str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
         str += 2;
-        while(1)
-        {
+        while(1) {
             c = *str++;
-            if(c >= '0' && c <= '9')
+            if(c >= '0' && c <= '9') {
                 val = (val*16) + c - '0';
-            else if(c >= 'a' && c <= 'f')
+            }
+            else if(c >= 'a' && c <= 'f') {
                 val = (val*16) + c - 'a' + 10;
-            else if(c >= 'A' && c <= 'F')
+            }
+            else if(c >= 'A' && c <= 'F') {
                 val = (val*16) + c - 'A' + 10;
-            else
+            }
+            else {
                 return (float)val*sign;
+            }
         }
     }
-    
+
     // check for character
-    if(str[0] == '\'')
+    if(str[0] == '\'') {
         return (float)sign * str[1];
-    
+    }
+
     // assume decimal
     decimal = -1;
     total = 0;
-    while(1)
-    {
+    while(1) {
         c = *str++;
-        if(c == '.')
-        {
+        if(c == '.') {
             decimal = total;
             continue;
         }
-        if(c <'0' || c > '9')
+        if(c <'0' || c > '9') {
             break;
+        }
         val = val*10 + c - '0';
         total++;
     }
-    
-    if(decimal == -1)
+
+    if(decimal == -1) {
         return (float)val*sign;
-    
-    while (total > decimal)
-    {
+    }
+
+    while(total > decimal) {
         val /= 10;
         total--;
     }
-    
+
     return (float)val*sign;
 }
 
@@ -395,25 +389,27 @@ float datof(char *str)
 // dhtoi
 //
 
-int dhtoi(char* str)
-{
+int dhtoi(char* str) {
     char *s;
     int num;
 
     num = 0;
     s = str;
 
-    while(*s)
-    {
+    while(*s) {
         num <<= 4;
-        if(*s >= '0' && *s <= '9')
+        if(*s >= '0' && *s <= '9') {
             num += *s-'0';
-        else if(*s >= 'a' && *s <= 'f')
+        }
+        else if(*s >= 'a' && *s <= 'f') {
             num += 10 + *s-'a';
-        else if(*s >= 'A' && *s <= 'F')
+        }
+        else if(*s >= 'A' && *s <= 'F') {
             num += 10 + *s-'A';
-        else
+        }
+        else {
             return 0;
+        }
         s++;
     }
 
@@ -424,16 +420,13 @@ int dhtoi(char* str)
 // dfcmp
 //
 
-dboolean dfcmp(float f1, float f2)
-{
+dboolean dfcmp(float f1, float f2) {
     float precision = 0.00001f;
-    if(((f1 - precision) < f2) && 
-        ((f1 + precision) > f2))
-    {
+    if(((f1 - precision) < f2) &&
+            ((f1 + precision) > f2)) {
         return true;
     }
-    else
-    {
+    else {
         return false;
     }
 }
@@ -444,19 +437,16 @@ dboolean dfcmp(float f1, float f2)
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4035 )
-d_inline int D_abs(int x)
-{
-    __asm
-    {
+d_inline int D_abs(int x) {
+    __asm {
         mov eax,x
-            cdq
-            xor eax,edx
-            sub eax,edx
+        cdq
+        xor eax,edx
+        sub eax,edx
     }
 }
 #else
-d_inline int D_abs(x)
-{
+d_inline int D_abs(x) {
     fixed_t _t = (x),_s;
     _s = _t >> (8*sizeof _t-1);
     return (_t^_s)-_s;
@@ -467,8 +457,7 @@ d_inline int D_abs(x)
 // dfabs
 //
 
-d_inline float D_fabs(float x)
-{
+d_inline float D_fabs(float x) {
     return x < 0 ? -x : x;
 }
 
@@ -476,8 +465,7 @@ d_inline float D_fabs(float x)
 // dsprintf
 //
 
-int dsprintf(char *buf, const char *format, ...)
-{
+int dsprintf(char *buf, const char *format, ...) {
     va_list arg;
     int x;
 
@@ -496,20 +484,19 @@ int dsprintf(char *buf, const char *format, ...)
 // dsnprintf
 //
 
-int dsnprintf(char *src, size_t n, const char *str, ...)
-{
+int dsnprintf(char *src, size_t n, const char *str, ...) {
     int x;
     va_list argptr;
     va_start(argptr, str);
-    
+
 #ifdef HAVE_VSNPRINTF
     x = vsnprintf(src, n, str, argptr);
 #else
     x = vsprintf(src, str, argptr);
 #endif
-    
+
     va_end(argptr);
-    
+
     return x;
 }
 
@@ -518,7 +505,7 @@ int dsnprintf(char *src, size_t n, const char *str, ...)
 //
 
 #ifndef _MSC_VER
-    #define I_Main main
+#define I_Main main
 #else
 #ifndef _DEBUG
 #include <windows.h>
@@ -527,30 +514,26 @@ int dsnprintf(char *src, size_t n, const char *str, ...)
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 int I_Main(int argc, char *argv[]);
 
-int main(int argc, char **argv)
-{
-    __try
-    {
+int main(int argc, char **argv) {
+    __try {
         I_Main(argc, argv);
     }
-    __except(I_W32ExceptionHandler(GetExceptionInformation()))
-    {
+    __except(I_W32ExceptionHandler(GetExceptionInformation())) {
         I_Error("Exception caught in main: see CRASHLOG.TXT for info\n");
     }
-    
+
     return 0;
 }
 #else
-    #define I_Main main
+#define I_Main main
 #endif  /*_DEBUG*/
 
 #endif  /*_WIN32*/
 
-int I_Main(int argc, char *argv[])
-{
+int I_Main(int argc, char *argv[]) {
     myargc = argc;
     myargv = argv;
-    
+
 #ifdef USESYSCONSOLE
     I_SpawnSysConsole();
 #endif
@@ -564,7 +547,7 @@ int I_Main(int argc, char *argv[])
 #endif
 
     D_DoomMain();
-    
+
     return 0;
 }
 

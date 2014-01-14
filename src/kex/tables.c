@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -39,12 +39,12 @@
 
 #include "tables.h"
 
-int SlopeDiv(unsigned num, unsigned den)
-{
+int SlopeDiv(unsigned num, unsigned den) {
     unsigned ans;
 
-    if(den < 512)
+    if(den < 512) {
         return SLOPERANGE;
+    }
 
     ans = (num << 3) / (den >> 8);
 
@@ -57,8 +57,7 @@ fixed_t*    finecosine = &finesine[FINEANGLES / 4];
 
 
 
-angle_t tantoangle[2049] =
-{
+angle_t tantoangle[2049] = {
     0,333772,667544,1001315,1335086,1668857,2002626,2336395,
     2670163,3003929,3337694,3671457,4005219,4338979,4672736,5006492,
     5340245,5673995,6007743,6341488,6675230,7008968,7342704,7676435,

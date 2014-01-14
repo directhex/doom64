@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -26,12 +26,11 @@
 
 #include "doomtype.h"
 
-typedef struct cvar_s
-{
+typedef struct cvar_s {
     char*           name;
     char*           string;
     dboolean        nonclient;
-    void            (*callback)(void*);
+    void (*callback)(void*);
     float           value;
     char*           defvalue;
     struct cvar_s*  next;

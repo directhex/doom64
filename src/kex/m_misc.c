@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -60,16 +60,15 @@ char**    myargv;
 // Returns the argument number (1 to argc-1)
 // or 0 if not present
 
-int M_CheckParm (char *check)
-{
+int M_CheckParm(char *check) {
     int        i;
-    
-    for (i = 1;i<myargc;i++)
-    {
-        if(!dstricmp(check, myargv[i]) )//strcasecmp
+
+    for(i = 1; i<myargc; i++) {
+        if(!dstricmp(check, myargv[i])) { //strcasecmp
             return i;
+        }
     }
-    
+
     return 0;
 }
 
@@ -77,8 +76,7 @@ int M_CheckParm (char *check)
 // M_ClearBox
 //
 
-void M_ClearBox (fixed_t *box)
-{
+void M_ClearBox(fixed_t *box) {
     box[BOXTOP] = box[BOXRIGHT] = D_MININT;
     box[BOXBOTTOM] = box[BOXLEFT] = D_MAXINT;
 }
@@ -87,16 +85,19 @@ void M_ClearBox (fixed_t *box)
 // M_AddToBox
 //
 
-void M_AddToBox(fixed_t* box, fixed_t x, fixed_t y)
-{
-    if(x<box[BOXLEFT])
+void M_AddToBox(fixed_t* box, fixed_t x, fixed_t y) {
+    if(x<box[BOXLEFT]) {
         box[BOXLEFT] = x;
-    else if(x>box[BOXRIGHT])
+    }
+    else if(x>box[BOXRIGHT]) {
         box[BOXRIGHT] = x;
-    if(y<box[BOXBOTTOM])
+    }
+    if(y<box[BOXBOTTOM]) {
         box[BOXBOTTOM] = y;
-    else if(y>box[BOXTOP])
+    }
+    else if(y>box[BOXTOP]) {
         box[BOXTOP] = y;
+    }
 }
 
 
@@ -104,23 +105,24 @@ void M_AddToBox(fixed_t* box, fixed_t x, fixed_t y)
 // M_WriteFile
 //
 
-dboolean M_WriteFile(char const* name, void* source, int length)
-{
+dboolean M_WriteFile(char const* name, void* source, int length) {
     FILE *fp;
     dboolean result;
-    
+
     errno = 0;
-   
-    if(!(fp = fopen(name, "wb")))
+
+    if(!(fp = fopen(name, "wb"))) {
         return 0;
-   
+    }
+
     I_BeginRead();
     result = (fwrite(source, 1, length, fp) == (dword)length);
     fclose(fp);
-   
-    if(!result)
+
+    if(!result) {
         remove(name);
-   
+    }
+
     return result;
 }
 
@@ -128,22 +130,23 @@ dboolean M_WriteFile(char const* name, void* source, int length)
 // M_WriteTextFile
 //
 
-dboolean M_WriteTextFile(char const* name, char* source, int length)
-{
+dboolean M_WriteTextFile(char const* name, char* source, int length) {
     int handle;
     int count;
-    
+
     handle = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    
-    if(handle == -1)
+
+    if(handle == -1) {
         return false;
-    
+    }
+
     count = write(handle, source, length);
     close(handle);
-    
-    if(count < length)
+
+    if(count < length) {
         return false;
-    
+    }
+
     return true;
 }
 
@@ -152,16 +155,14 @@ dboolean M_WriteTextFile(char const* name, char* source, int length)
 // M_ReadFile
 //
 
-int M_ReadFile(char const* name, byte** buffer)
-{
+int M_ReadFile(char const* name, byte** buffer) {
     FILE *fp;
 
     errno = 0;
-    
-    if((fp = fopen(name, "rb")))
-    {
+
+    if((fp = fopen(name, "rb"))) {
         size_t length;
-        
+
         I_BeginRead();
 
         fseek(fp, 0, SEEK_END);
@@ -169,34 +170,32 @@ int M_ReadFile(char const* name, byte** buffer)
         fseek(fp, 0, SEEK_SET);
 
         *buffer = Z_Malloc(length, PU_STATIC, 0);
-      
-        if(fread(*buffer, 1, length, fp) == length)
-        {
+
+        if(fread(*buffer, 1, length, fp) == length) {
             fclose(fp);
             return length;
         }
-        
+
         fclose(fp);
-   }
+    }
 
     //I_Error("M_ReadFile: Couldn't read file %s: %s", name,
-        //errno ? strerror(errno) : "(Unknown Error)");
-   
-   return -1;
+    //errno ? strerror(errno) : "(Unknown Error)");
+
+    return -1;
 }
 
 //
 // M_FileLength
 //
 
-long M_FileLength(FILE *handle)
-{ 
+long M_FileLength(FILE *handle) {
     long savedpos;
     long length;
 
     // save the current position in the file
     savedpos = ftell(handle);
-    
+
     // jump to the end and find the length
     fseek(handle, 0, SEEK_END);
     length = ftell(handle);
@@ -216,22 +215,22 @@ long M_FileLength(FILE *handle)
 // killough 11/98: rewritten
 //
 
-void M_NormalizeSlashes(char *str)
-{
+void M_NormalizeSlashes(char *str) {
     char *p;
-   
+
     // Convert all slashes/backslashes to DIR_SEPARATOR
-    for(p = str; *p; p++)
-    {
-        if((*p == '/' || *p == '\\') && *p != DIR_SEPARATOR)
+    for(p = str; *p; p++) {
+        if((*p == '/' || *p == '\\') && *p != DIR_SEPARATOR) {
             *p = DIR_SEPARATOR;
+        }
     }
 
     // Collapse multiple slashes
-    for(p = str; (*str++ = *p); )
+    for(p = str; (*str++ = *p);)
         if(*p++ == DIR_SEPARATOR)
-            while(*p == DIR_SEPARATOR)
+            while(*p == DIR_SEPARATOR) {
                 p++;
+            }
 }
 
 //
@@ -239,24 +238,22 @@ void M_NormalizeSlashes(char *str)
 // Check if a wad file exists
 //
 
-int M_FileExists(char *filename)
-{
+int M_FileExists(char *filename) {
     FILE *fstream;
 
     fstream = fopen(filename, "r");
 
-    if (fstream != NULL)
-    {
+    if(fstream != NULL) {
         fclose(fstream);
         return 1;
     }
-    else
-    {
-        // If we can't open because the file is a directory, the 
+    else {
+        // If we can't open because the file is a directory, the
         // "file" exists at least!
 
-        if(errno == 21)
+        if(errno == 21) {
             return 2;
+        }
     }
 
     return 0;
@@ -266,13 +263,11 @@ int M_FileExists(char *filename)
 // M_SaveDefaults
 //
 
-void M_SaveDefaults(void)
-{
+void M_SaveDefaults(void) {
     FILE        *fh;
-    
+
     fh=fopen(G_GetConfigFileName(), "wt");
-    if (fh)
-    {
+    if(fh) {
         G_OutputBindings(fh);
         fclose(fh);
     }
@@ -282,8 +277,7 @@ void M_SaveDefaults(void)
 // M_LoadDefaults
 //
 
-void M_LoadDefaults(void)
-{
+void M_LoadDefaults(void) {
     G_LoadSettings();
 }
 
@@ -291,41 +285,43 @@ void M_LoadDefaults(void)
 // M_ScreenShot
 //
 
-void M_ScreenShot(void)
-{
+void M_ScreenShot(void) {
     char    name[13];
     int     shotnum=0;
     FILE    *fh;
     byte    *buff;
     byte    *png;
     int     size;
-    
-    while(shotnum < 1000)
-    {
+
+    while(shotnum < 1000) {
         sprintf(name, "sshot%03d.png", shotnum);
-        if(access(name, 0) != 0)
+        if(access(name, 0) != 0) {
             break;
+        }
         shotnum++;
     }
-    
-    if(shotnum >= 1000)
+
+    if(shotnum >= 1000) {
         return;
-    
+    }
+
     fh = fopen(name, "wb");
-    if(!fh)
+    if(!fh) {
         return;
-    
-    if((video_height % 2))    // height must be power of 2
+    }
+
+    if((video_height % 2)) {  // height must be power of 2
         return;
-    
+    }
+
     buff = GL_GetScreenBuffer(0, 0, video_width, video_height);
     size = 0;
-    
+
     // Get PNG image
-    
+
     png = I_PNGCreate(video_width, video_height, buff, &size);
     fwrite(png, size, 1, fh);
-    
+
     Z_Free(png);
     fclose(fh);
 
@@ -338,8 +334,7 @@ void M_ScreenShot(void)
 // uncompressed 128x128 RGB textures
 //
 
-int M_CacheThumbNail(byte** data)
-{
+int M_CacheThumbNail(byte** data) {
     byte* buff;
     byte* tbn;
     int x;
@@ -347,8 +342,7 @@ int M_CacheThumbNail(byte** data)
     const float ratio = (4.0f / 3.0f);
 
     // 20120313 villsa - fix for widescreen resolutions
-    if(!dfcmp(((float)ViewWidth / (float)ViewHeight), ratio))
-    {
+    if(!dfcmp(((float)ViewWidth / (float)ViewHeight), ratio)) {
         float fitwidth = ViewHeight * ratio;
         float fitx = (ViewWidth - fitwidth) / 2.0f;
 
@@ -356,8 +350,7 @@ int M_CacheThumbNail(byte** data)
         x = (int)fitx;
         width = (int)fitwidth;
     }
-    else
-    {
+    else {
         x = 0;
         width = video_width;
     }
@@ -366,8 +359,8 @@ int M_CacheThumbNail(byte** data)
     tbn = Z_Calloc(SAVEGAMETBSIZE, PU_STATIC, 0);
 
     gluScaleImage(GL_RGB, width, video_height,
-        GL_UNSIGNED_BYTE, buff, 128, 128, GL_UNSIGNED_BYTE, tbn);
-    
+                  GL_UNSIGNED_BYTE, buff, 128, 128, GL_UNSIGNED_BYTE, tbn);
+
     Z_Free(buff);
 
     *data = tbn;

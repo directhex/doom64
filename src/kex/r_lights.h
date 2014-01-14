@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1997 Midway Home Entertainment, Inc
@@ -26,8 +26,7 @@
 
 #include "r_local.h"
 
-enum
-{
+enum {
     LIGHT_FLOOR,
     LIGHT_CEILING,
     LIGHT_THING,

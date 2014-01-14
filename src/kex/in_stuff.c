@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -51,8 +51,7 @@ static dboolean         fstopmusic = false;
 // IN_Start
 //
 
-void IN_Start(void)
-{
+void IN_Start(void) {
     int i = 0;
     int j = 0;
     int k = 0;
@@ -72,12 +71,12 @@ void IN_Start(void)
 
     fcluster = P_GetCluster(nextmap);
 
-    if(!fcluster)
+    if(!fcluster) {
         fcluster = P_GetCluster(gamemap);
+    }
 
     // try to bail out if no cluster is found at all
-    if(!fcluster)
-    {
+    if(!fcluster) {
         gameaction = ga_loadlevel;
         return;
     }
@@ -85,25 +84,25 @@ void IN_Start(void)
     i = 0;
 
     // setup intermission text
-    while(k < dstrlen(fcluster->text))
-    {
+    while(k < dstrlen(fcluster->text)) {
         char c = fcluster->text[k++];
 
-        if(c == '\n')
-        {
+        if(c == '\n') {
             j = 0;
-            if(fInterString[i][0] == '\0')
+            if(fInterString[i][0] == '\0') {
                 fInterString[i][0] = ' ';
+            }
 
             i++;
             continue;
         }
-        else
+        else {
             fInterString[i][j++] = c;
+        }
     }
 
     gameaction  = ga_nothing;
-    
+
     S_StartMusic(fcluster->music);
 }
 
@@ -111,10 +110,10 @@ void IN_Start(void)
 // IN_Stop
 //
 
-void IN_Stop(void)
-{
-    if(fstopmusic)
+void IN_Stop(void) {
+    if(fstopmusic) {
         S_StopMusic();
+    }
 
     WIPE_FadeScreen(6);
 }
@@ -123,8 +122,7 @@ void IN_Stop(void)
 // IN_Drawer
 //
 
-void IN_Drawer(void)
-{
+void IN_Drawer(void) {
     int i = 0;
     byte alpha = 0;
     int y = 0;
@@ -132,40 +130,45 @@ void IN_Drawer(void)
 
     GL_ClearView(0xFF000000);
 
-    if(fcluster->scrolltextend)
+    if(fcluster->scrolltextend) {
         color = D_RGBA(255, 255, 255, f_alpha);
-    else
+    }
+    else {
         color = 0xFFFFFFFF;
-    
+    }
+
     // Draw background
     Draw_GfxImage(fcluster->pic_x, fcluster->pic_y, fcluster->pic, color, false);
 
-    if(!fInterFadeOut)
-    {
+    if(!fInterFadeOut) {
         // don't draw anything else until background is fully opaque
-        if(f_alpha < 0xff)
+        if(f_alpha < 0xff) {
             return;
+        }
     }
 
     i = 0;
-    while(fInterString[i][0] != '\0')
+    while(fInterString[i][0] != '\0') {
         i++;
+    }
 
     y = (SCREENHEIGHT / 2) - ((i * 14) / 2);
 
     // draw strings
-    for(i = 0;; i++)
-    {
-        if(i == fInterSlot)
+    for(i = 0;; i++) {
+        if(i == fInterSlot) {
             alpha = (byte)fInterAlpha;
-        else
+        }
+        else {
             alpha = 0xff;
-        
+        }
+
         Draw_BigText(-1, y - fTextOffset, D_RGBA(255, 255, 255, alpha), fInterString[i]);
         y += 14;
-        
-        if(i == fInterSlot || !fInterString[i][0])
+
+        if(i == fInterSlot || !fInterString[i][0]) {
             return;
+        }
     }
 }
 
@@ -173,15 +176,17 @@ void IN_Drawer(void)
 // IN_Finish
 //
 
-static void IN_Finish(void)
-{
-    if(fInterFadeOut)
+static void IN_Finish(void) {
+    if(fInterFadeOut) {
         return;
-    
-    if(fcluster->scrolltextend)
+    }
+
+    if(fcluster->scrolltextend) {
         fInterFadeOut = true;
-    else
+    }
+    else {
         gameaction = ga_loadlevel;
+    }
 
     fInterDone = true;
 }
@@ -190,75 +195,71 @@ static void IN_Finish(void)
 // IN_Ticker
 //
 
-int IN_Ticker(void)
-{
+int IN_Ticker(void) {
     int   i;
     player_t  *player;
 
     // Fade out for finale after all of text has scrolled up towards the screen
-    if(fInterFadeOut)
-    {
+    if(fInterFadeOut) {
         // text hasn't scrolled off screen yet
-        if(fTextOffset++ < SCREENHEIGHT)
+        if(fTextOffset++ < SCREENHEIGHT) {
             return 0;
+        }
 
-        if(!fcluster->enteronly)
-        {
+        if(!fcluster->enteronly) {
             fstopmusic = false;
             return ga_finale;
         }
 
         return 1;
     }
-    else
-    {
+    else {
         // fade in for finale
         f_alpha = MIN(f_alpha + 8, 0xff);
 
         // wait until fully opaque
-        if(f_alpha < 0xff)
+        if(f_alpha < 0xff) {
             return 0;
+        }
     }
-    
-    if(fInterDone || devparm)
-    {
+
+    if(fInterDone || devparm) {
         // check for button presses to skip delays
-        for(i = 0, player = players; i < MAXPLAYERS; i++, player++)
-        {
-            if(playeringame[i])
-            {
-                if(player->cmd.buttons & BT_ATTACK)
-                {
-                    if(!player->attackdown)
+        for(i = 0, player = players; i < MAXPLAYERS; i++, player++) {
+            if(playeringame[i]) {
+                if(player->cmd.buttons & BT_ATTACK) {
+                    if(!player->attackdown) {
                         IN_Finish();
+                    }
                     player->attackdown = true;
                 }
-                else
+                else {
                     player->attackdown = false;
-            
-                if(player->cmd.buttons & BT_USE)
-                {
-                    if(!player->usedown)
+                }
+
+                if(player->cmd.buttons & BT_USE) {
+                    if(!player->usedown) {
                         IN_Finish();
+                    }
                     player->usedown = true;
                 }
-                else
+                else {
                     player->usedown = false;
+                }
             }
         }
     }
-    
-    if(fInterDone)
+
+    if(fInterDone) {
         return 0;
-    
+    }
+
     // fade in each line of text
     fInterAlpha += 6;
-    
-    if(fInterAlpha >= 0xff)
-    {
+
+    if(fInterAlpha >= 0xff) {
         fInterAlpha = 0xff;
-        if(!fInterString[++fInterSlot][0])
-        {
+        if(!fInterString[++fInterSlot][0]) {
             fInterSlot = fInterSlot - 1;
             fInterDone = true;
             return 0;

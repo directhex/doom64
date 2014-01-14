@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -73,21 +73,20 @@ CVAR_EXTERNAL(v_buffersize);
 // CMD_DumpGLExtensions
 //
 
-static CMD(DumpGLExtensions)
-{
+static CMD(DumpGLExtensions) {
     char *string;
     int i = 0;
     int len = 0;
-    
+
     string = (char*)dglGetString(GL_EXTENSIONS);
     len = dstrlen(string);
-    
-    for(i = 0; i < len; i++)
-    {
-        if(string[i] == 0x20)
+
+    for(i = 0; i < len; i++) {
+        if(string[i] == 0x20) {
             string[i] = '\n';
+        }
     }
-    
+
     M_WriteTextFile("GL_EXTENSIONS.TXT", string, len);
     CON_Printf(WHITE, "Written GL_EXTENSIONS.TXT\n");
 }
@@ -108,30 +107,30 @@ GL_EXT_texture_filter_anisotropic_Define();
 // FindExtension
 //
 
-static dboolean FindExtension(const char *ext)
-{
+static dboolean FindExtension(const char *ext) {
     const byte *extensions = NULL;
     const byte *start;
     byte *where, *terminator;
-    
+
     // Extension names should not have spaces.
     where = (byte *) dstrrchr((char*)ext, ' ');
-    if (where || *ext == '\0')
+    if(where || *ext == '\0') {
         return 0;
-    
+    }
+
     extensions = dglGetString(GL_EXTENSIONS);
-    
+
     start = extensions;
-    for(;;)
-    {
+    for(;;) {
         where = (byte *)strstr(start, ext);
-        if(!where)
+        if(!where) {
             break;
+        }
         terminator = where + dstrlen(ext);
-        if(where == start || *(where - 1) == ' ')
-        {
-            if(*terminator == ' ' || *terminator == '\0')
+        if(where == start || *(where - 1) == ' ') {
+            if(*terminator == ' ' || *terminator == '\0') {
                 return true;
+            }
             start = terminator;
         }
     }
@@ -142,16 +141,15 @@ static dboolean FindExtension(const char *ext)
 // GL_CheckExtension
 //
 
-dboolean GL_CheckExtension(const char *ext)
-{
-    if(FindExtension(ext))
-    {
+dboolean GL_CheckExtension(const char *ext) {
+    if(FindExtension(ext)) {
         CON_Printf(WHITE, "GL Extension: %s = true\n", ext);
         return true;
     }
-    else
+    else {
         CON_Printf(YELLOW, "GL Extension: %s = false\n", ext);
-    
+    }
+
     return false;
 }
 
@@ -159,16 +157,14 @@ dboolean GL_CheckExtension(const char *ext)
 // GL_RegisterProc
 //
 
-void* GL_RegisterProc(const char *address)
-{
+void* GL_RegisterProc(const char *address) {
     void *proc = SDL_GL_GetProcAddress(address);
-    
-    if(!proc)
-    {
+
+    if(!proc) {
         CON_Warnf("GL_RegisterProc: Failed to get proc address: %s", address);
         return NULL;
     }
-    
+
     return proc;
 }
 
@@ -178,20 +174,19 @@ void* GL_RegisterProc(const char *address)
 
 static byte checkortho = 0;
 
-void GL_SetOrtho(dboolean stretch)
-{
+void GL_SetOrtho(dboolean stretch) {
     float width;
     float height;
 
-    if(checkortho)
-    {
-        if(widescreen)
-        {
-            if(stretch && checkortho == 2)
+    if(checkortho) {
+        if(widescreen) {
+            if(stretch && checkortho == 2) {
                 return;
+            }
         }
-        else
+        else {
             return;
+        }
     }
 
     dglMatrixMode(GL_MODELVIEW);
@@ -199,8 +194,7 @@ void GL_SetOrtho(dboolean stretch)
     dglMatrixMode(GL_PROJECTION);
     dglLoadIdentity();
 
-    if(widescreen && !stretch)
-    {
+    if(widescreen && !stretch) {
         const float ratio = (4.0f / 3.0f);
         float fitwidth = ViewHeight * ratio;
         float fitx = (ViewWidth - fitwidth) / 2.0f;
@@ -211,12 +205,11 @@ void GL_SetOrtho(dboolean stretch)
     width = SCREENWIDTH;
     height = SCREENHEIGHT;
 
-    if(glScaleFactor != 1.0f)
-    {
+    if(glScaleFactor != 1.0f) {
         width /= glScaleFactor;
         height /= glScaleFactor;
     }
-    
+
     dglOrtho(0, width, height, 0, -1, 1);
 
     checkortho = (stretch && widescreen) ? 2 : 1;
@@ -226,18 +219,17 @@ void GL_SetOrtho(dboolean stretch)
 // GL_ResetViewport
 //
 
-void GL_ResetViewport(void)
-{
-    if(widescreen)
+void GL_ResetViewport(void) {
+    if(widescreen) {
         dglViewport(ViewWindowX, ViewWindowY, ViewWidth, ViewHeight);
+    }
 }
 
 //
 // GL_SetOrthoScale
 //
 
-void GL_SetOrthoScale(float scale)
-{
+void GL_SetOrthoScale(float scale) {
     glScaleFactor = scale;
     checkortho = 0;
 }
@@ -246,8 +238,7 @@ void GL_SetOrthoScale(float scale)
 // GL_GetOrthoScale
 //
 
-float GL_GetOrthoScale(void)
-{
+float GL_GetOrthoScale(void) {
     return glScaleFactor;
 }
 
@@ -255,8 +246,7 @@ float GL_GetOrthoScale(void)
 // GL_SwapBuffers
 //
 
-void GL_SwapBuffers(void)
-{
+void GL_SwapBuffers(void) {
     dglFinish();
     SDL_GL_SwapBuffers();
 }
@@ -265,8 +255,7 @@ void GL_SwapBuffers(void)
 // GL_GetScreenBuffer
 //
 
-byte* GL_GetScreenBuffer(int x, int y, int width, int height)
-{
+byte* GL_GetScreenBuffer(int x, int y, int width, int height) {
     byte* buffer;
     byte* data;
     int i;
@@ -290,13 +279,12 @@ byte* GL_GetScreenBuffer(int x, int y, int width, int height)
     // Need to vertically flip the image
     // 20120313 villsa - better method to flip image. uses one buffer instead of two
     //
-    for(i = 0; i < height / 2; i++)
-    {
+    for(i = 0; i < height / 2; i++) {
         dmemcpy(buffer, &data[i * col], col);
         dmemcpy(&data[i * col], &data[(height - (i + 1)) * col], col);
         dmemcpy(&data[(height - (i + 1)) * col], buffer, col);
     }
-    
+
     Z_Free(buffer);
 
     return data;
@@ -306,20 +294,21 @@ byte* GL_GetScreenBuffer(int x, int y, int width, int height)
 // GL_SetTextureFilter
 //
 
-void GL_SetTextureFilter(void)
-{
-    if(!usingGL)
+void GL_SetTextureFilter(void) {
+    if(!usingGL) {
         return;
+    }
 
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)r_filter.value == 0 ? GL_LINEAR : GL_NEAREST);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)r_filter.value == 0 ? GL_LINEAR : GL_NEAREST);
 
-    if(has_GL_EXT_texture_filter_anisotropic)
-    {
-        if(r_anisotropic.value)
+    if(has_GL_EXT_texture_filter_anisotropic) {
+        if(r_anisotropic.value) {
             dglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_anisotropic);
-        else
+        }
+        else {
             dglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 0);
+        }
     }
 }
 
@@ -327,10 +316,8 @@ void GL_SetTextureFilter(void)
 // GL_SetDefaultCombiner
 //
 
-void GL_SetDefaultCombiner(void)
-{
-    if(has_GL_ARB_multitexture)
-    {
+void GL_SetDefaultCombiner(void) {
+    if(has_GL_ARB_multitexture) {
         GL_SetTextureUnit(1, false);
         GL_SetTextureUnit(2, false);
         GL_SetTextureUnit(3, false);
@@ -339,10 +326,12 @@ void GL_SetDefaultCombiner(void)
 
     GL_CheckFillMode();
 
-    if(r_texturecombiner.value > 0)
+    if(r_texturecombiner.value > 0) {
         dglTexCombModulate(GL_TEXTURE0_ARB, GL_PRIMARY_COLOR);
-    else
+    }
+    else {
         GL_SetTextureMode(GL_MODULATE);
+    }
 }
 
 //
@@ -350,22 +339,21 @@ void GL_SetDefaultCombiner(void)
 //
 
 void GL_Set2DQuad(vtx_t *v, float x, float y, int width, int height,
-                     float u1, float u2, float v1, float v2, rcolor c)
-{
+                  float u1, float u2, float v1, float v2, rcolor c) {
     float left, right, top, bottom;
-    
+
     left = ViewWindowX + x * ViewWidth / video_width;
     right = left + (width * ViewWidth / video_width);
     top = ViewWindowY + y * ViewHeight / video_height;
     bottom = top + (height * ViewHeight / video_height);
-    
+
     v[0].x = v[2].x = left;
     v[1].x = v[3].x = right;
     v[0].y = v[1].y = top;
     v[2].y = v[3].y = bottom;
 
     v[0].z = v[1].z = v[2].z = v[3].z = 0.0f;
-    
+
     v[0].tu = u1;
     v[2].tu = u1;
     v[1].tu = u2;
@@ -374,7 +362,7 @@ void GL_Set2DQuad(vtx_t *v, float x, float y, int width, int height,
     v[1].tv = v1;
     v[2].tv = v2;
     v[3].tv = v2;
-    
+
     dglSetVertexColor(v, c, 4);
 }
 
@@ -382,18 +370,19 @@ void GL_Set2DQuad(vtx_t *v, float x, float y, int width, int height,
 // GL_Draw2DQuad
 //
 
-void GL_Draw2DQuad(vtx_t *v, dboolean stretch)
-{
+void GL_Draw2DQuad(vtx_t *v, dboolean stretch) {
     GL_SetOrtho(stretch);
 
     dglSetVertex(v);
     dglTriangle(0, 1, 2);
     dglTriangle(3, 2, 1);
     dglDrawGeometry(4, v);
-    
+
     GL_ResetViewport();
-    
-    if(devparm) vertCount += 4;
+
+    if(devparm) {
+        vertCount += 4;
+    }
 }
 
 //
@@ -401,10 +390,9 @@ void GL_Draw2DQuad(vtx_t *v, dboolean stretch)
 //
 
 void GL_SetupAndDraw2DQuad(float x, float y, int width, int height,
-                     float u1, float u2, float v1, float v2, rcolor c, dboolean stretch)
-{
+                           float u1, float u2, float v1, float v2, rcolor c, dboolean stretch) {
     vtx_t v[4];
-    
+
     GL_Set2DQuad(v, x, y, width, height, u1, u2, v1, v2, c);
     GL_Draw2DQuad(v, stretch);
 };
@@ -415,8 +403,7 @@ void GL_SetupAndDraw2DQuad(float x, float y, int width, int height,
 
 static int glstate_flag = 0;
 
-void GL_SetState(int bit, dboolean enable)
-{
+void GL_SetState(int bit, dboolean enable) {
 #define TOGGLEGLBIT(flag, bit)                          \
     if(enable && !(glstate_flag & (1 << flag)))         \
     {                                                   \
@@ -429,8 +416,7 @@ void GL_SetState(int bit, dboolean enable)
         glstate_flag &= ~(1 << flag);                   \
     }
 
-    switch(bit)
-    {
+    switch(bit) {
     case GLSTATE_BLEND:
         TOGGLEGLBIT(GLSTATE_BLEND, GL_BLEND);
         break;
@@ -461,14 +447,11 @@ void GL_SetState(int bit, dboolean enable)
 // GL_CheckFillMode
 //
 
-void GL_CheckFillMode(void)
-{
-    if(r_fillmode.value <= 0)
-    {
+void GL_CheckFillMode(void) {
+    if(r_fillmode.value <= 0) {
         GL_SetState(GLSTATE_TEXTURE0, 0);
     }
-    else if(r_fillmode.value > 0)
-    {
+    else if(r_fillmode.value > 0) {
         GL_SetState(GLSTATE_TEXTURE0, 1);
     }
 }
@@ -477,8 +460,7 @@ void GL_CheckFillMode(void)
 // GL_ClearView
 //
 
-void GL_ClearView(rcolor clearcolor)
-{
+void GL_ClearView(rcolor clearcolor) {
     float f[4];
 
     dglGetColorf(clearcolor, f);
@@ -492,11 +474,10 @@ void GL_ClearView(rcolor clearcolor)
 // GL_GetBool
 //
 
-dboolean GL_GetBool(int x)
-{
+dboolean GL_GetBool(int x) {
     byte b;
     dglGetBooleanv(x, &b);
-    
+
     return (dboolean)b;
 }
 
@@ -504,8 +485,7 @@ dboolean GL_GetBool(int x)
 // CalcViewSize
 //
 
-static void CalcViewSize(void)
-{
+static void CalcViewSize(void) {
     ViewWidth = video_width;
     ViewHeight = video_height;
 
@@ -513,10 +493,12 @@ static void CalcViewSize(void)
 
     ViewWindowX = (video_width - ViewWidth) / 2;
 
-    if(ViewWidth == video_width)
+    if(ViewWidth == video_width) {
         ViewWindowY = 0;
-    else
+    }
+    else {
         ViewWindowY = (ViewHeight) / 2;
+    }
 }
 
 //
@@ -524,8 +506,7 @@ static void CalcViewSize(void)
 // Borrowed from prboom+
 //
 
-typedef enum
-{
+typedef enum {
     OPENGL_VERSION_1_0,
     OPENGL_VERSION_1_1,
     OPENGL_VERSION_1_2,
@@ -536,32 +517,39 @@ typedef enum
     OPENGL_VERSION_2_1,
 } glversion_t;
 
-static int GetVersionInt(const char* version)
-{
+static int GetVersionInt(const char* version) {
     int MajorVersion;
     int MinorVersion;
     int versionvar;
 
     versionvar = OPENGL_VERSION_1_0;
 
-    if(sscanf(version, "%d.%d", &MajorVersion, &MinorVersion) == 2)
-    {
-        if(MajorVersion > 1)
-        {
+    if(sscanf(version, "%d.%d", &MajorVersion, &MinorVersion) == 2) {
+        if(MajorVersion > 1) {
             versionvar = OPENGL_VERSION_2_0;
 
-            if(MinorVersion > 0)
+            if(MinorVersion > 0) {
                 versionvar = OPENGL_VERSION_2_1;
+            }
         }
-        else
-        {
+        else {
             versionvar = OPENGL_VERSION_1_0;
 
-            if(MinorVersion > 0) versionvar = OPENGL_VERSION_1_1;
-            if(MinorVersion > 1) versionvar = OPENGL_VERSION_1_2;
-            if(MinorVersion > 2) versionvar = OPENGL_VERSION_1_3;
-            if(MinorVersion > 3) versionvar = OPENGL_VERSION_1_4;
-            if(MinorVersion > 4) versionvar = OPENGL_VERSION_1_5;
+            if(MinorVersion > 0) {
+                versionvar = OPENGL_VERSION_1_1;
+            }
+            if(MinorVersion > 1) {
+                versionvar = OPENGL_VERSION_1_2;
+            }
+            if(MinorVersion > 2) {
+                versionvar = OPENGL_VERSION_1_3;
+            }
+            if(MinorVersion > 3) {
+                versionvar = OPENGL_VERSION_1_4;
+            }
+            if(MinorVersion > 4) {
+                versionvar = OPENGL_VERSION_1_5;
+            }
         }
     }
 
@@ -572,8 +560,7 @@ static int GetVersionInt(const char* version)
 // GL_Init
 //
 
-void GL_Init(void)
-{
+void GL_Init(void) {
     uint32 flags = 0;
 
     I_InitScreen();
@@ -591,14 +578,16 @@ void GL_Init(void)
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, (int)v_buffersize.value);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, (int)v_depthsize.value);
     SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, (int)v_vsync.value);
-    
+
     flags |= SDL_OPENGL;
-    
-    if(!InWindow)
+
+    if(!InWindow) {
         flags |= SDL_FULLSCREEN;
-    
-    if (SDL_SetVideoMode(video_width, video_height, SDL_BPP, flags) == NULL)
+    }
+
+    if(SDL_SetVideoMode(video_width, video_height, SDL_BPP, flags) == NULL) {
         I_Error("GL_Init: Failed to set opengl");
+    }
 
     gl_vendor = dglGetString(GL_VENDOR);
     I_Printf("GL_VENDOR: %s\n", gl_vendor);
@@ -611,11 +600,12 @@ void GL_Init(void)
     dglGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &gl_max_texture_units);
     I_Printf("GL_MAX_TEXTURE_UNITS_ARB: %i\n", gl_max_texture_units);
 
-    if(gl_max_texture_units <= 2)
+    if(gl_max_texture_units <= 2) {
         CON_Warnf("Not enough texture units supported...\n");
+    }
 
     CalcViewSize();
-    
+
     dglViewport(0, 0, video_width, video_height);
     dglClearDepth(1.0f);
     dglDisable(GL_TEXTURE_2D);
@@ -630,7 +620,7 @@ void GL_Init(void)
     dglHint(GL_FOG_HINT, GL_NICEST);
     dglEnable(GL_SCISSOR_TEST);
     dglEnable(GL_DITHER);
-    
+
     GL_SetTextureFilter();
     GL_SetDefaultCombiner();
 
@@ -643,13 +633,13 @@ void GL_Init(void)
     GL_EXT_texture_env_combine_Init();
     GL_EXT_texture_filter_anisotropic_Init();
 
-    if(!has_GL_ARB_multitexture)
+    if(!has_GL_ARB_multitexture) {
         CON_Warnf("GL_ARB_multitexture not supported...\n");
+    }
 
     gl_has_combiner = (has_GL_ARB_texture_env_combine | has_GL_EXT_texture_env_combine);
 
-    if(!gl_has_combiner)
-    {
+    if(!gl_has_combiner) {
         CON_Warnf("Texture combiners not supported...\n");
         CON_Warnf("Setting r_texturecombiner to 0\n");
         CON_CvarSetValue(r_texturecombiner.name, 0.0f);
@@ -660,11 +650,12 @@ void GL_Init(void)
     dglEnableClientState(GL_COLOR_ARRAY);
 
     DGL_CLAMP = (GetVersionInt(gl_version) >= OPENGL_VERSION_1_2 ? GL_CLAMP_TO_EDGE : GL_CLAMP);
-    
+
     glScaleFactor = 1.0f;
 
-    if(has_GL_EXT_texture_filter_anisotropic)
+    if(has_GL_EXT_texture_filter_anisotropic) {
         dglGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropic);
+    }
 
     usingGL = true;
 

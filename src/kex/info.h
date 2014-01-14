@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -28,8 +28,7 @@
 // Needed for action function pointer handling.
 #include "d_think.h"
 
-typedef enum
-{
+typedef enum {
     SPR_SPOT,
     SPR_PLAY,
     SPR_SARG,
@@ -161,8 +160,7 @@ typedef enum
 
 } spritenum_t;
 
-typedef enum
-{
+typedef enum {
     S_000,
     S_001,
     S_002,
@@ -963,13 +961,12 @@ typedef enum
     NUMSTATES
 } statenum_t;
 
-typedef struct
-{
-  spritenum_t    sprite;
-  long            frame;
-  long            tics;
-  actionf_t        action;
-  statenum_t    nextstate;
+typedef struct {
+    spritenum_t    sprite;
+    long            frame;
+    long            tics;
+    actionf_t        action;
+    statenum_t    nextstate;
 } state_t;
 
 typedef enum {
@@ -1107,8 +1104,7 @@ typedef enum {
     NUMMOBJTYPES
 } mobjtype_t;
 
-typedef struct
-{
+typedef struct {
     int    doomednum;
     int    spawnstate;
     int    spawnhealth;

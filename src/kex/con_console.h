@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1999-2000 Paul Brook
@@ -44,6 +44,6 @@ void CON_Draw(void);
 void CON_AddLine(char *line, int len);
 void CON_Ticker(void);
 
-dboolean CON_Responder (event_t* ev);
+dboolean CON_Responder(event_t* ev);
 
 #endif

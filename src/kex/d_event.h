@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -34,8 +34,7 @@
 //
 
 // Input event types.
-typedef enum
-{
+typedef enum {
     ev_keydown,
     ev_keyup,
     ev_mouse,
@@ -45,8 +44,7 @@ typedef enum
 } evtype_t;
 
 // Event structure.
-typedef struct
-{
+typedef struct {
     evtype_t    type;
     int         data1;        // keys / mouse/joystick buttons
     int         data2;        // mouse/joystick x move
@@ -55,8 +53,7 @@ typedef struct
 } event_t;
 
 
-typedef enum
-{
+typedef enum {
     ga_nothing,
     ga_loadlevel,
     ga_newgame,
@@ -75,37 +72,35 @@ typedef enum
 //
 // Button/action code definitions.
 //
-typedef enum
-{
+typedef enum {
     // Press "Fire".
     BT_ATTACK        = 1,
     // Use button, to open doors, activate switches.
     BT_USE           = 2,
-        
+
     // Flag: game events, not really buttons.
     BT_SPECIAL       = 0x80,
     BT_SPECIALMASK   = 3,
-        
+
     // Flag, weapon change pending.
     // If true, the next 3 bits hold weapon num.
     BT_CHANGE        = 4,
     // The 3bit weapon mask and shift, convenience.
     BT_WEAPONMASK    = 0x78,
     BT_WEAPONSHIFT   = 3,
-        
+
     // Pause the game.
     BTS_PAUSE        = 1,
     // Save the game at each console.
     BTS_SAVEGAME     = 2,
-        
+
     // Savegame slot numbers
     //  occupy the second byte of buttons.
     BTS_SAVEMASK     = (4+8+16),
     BTS_SAVESHIFT    = 2,
 } buttoncode_t;
 
-typedef enum
-{
+typedef enum {
     BT2_JUMP         = 1,
     BT2_NEXTWEAP     = 2,
     BT2_PREVWEAP     = 4,

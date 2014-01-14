@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -71,8 +71,7 @@ thinker_t   *currentthinker;
 // P_InitThinkers
 //
 
-void P_InitThinkers(void)
-{
+void P_InitThinkers(void) {
     thinkercap.prev = thinkercap.next  = &thinkercap;
     mobjhead.next = mobjhead.prev = &mobjhead;
 }
@@ -82,8 +81,7 @@ void P_InitThinkers(void)
 // Adds a new thinker at the end of the list.
 //
 
-void P_AddThinker(thinker_t* thinker)
-{
+void P_AddThinker(thinker_t* thinker) {
     thinkercap.prev->next = thinker;
     thinker->next = &thinkercap;
     thinker->prev = thinkercap.prev;
@@ -94,8 +92,7 @@ void P_AddThinker(thinker_t* thinker)
 // P_UnlinkThinker
 //
 
-static void P_UnlinkThinker(thinker_t* thinker)
-{
+static void P_UnlinkThinker(thinker_t* thinker) {
     thinker_t* next = currentthinker->next;
     (next->prev = currentthinker = thinker->prev)->next = next;
 
@@ -108,8 +105,7 @@ static void P_UnlinkThinker(thinker_t* thinker)
 // until its thinking turn comes up.
 //
 
-void P_RemoveThinker(thinker_t* thinker)
-{
+void P_RemoveThinker(thinker_t* thinker) {
     thinker->function.acp1 = P_UnlinkThinker;
     P_MacroDetachThinker(thinker);
 }
@@ -118,8 +114,7 @@ void P_RemoveThinker(thinker_t* thinker)
 // P_LinkMobj
 //
 
-void P_LinkMobj(mobj_t* mobj)
-{
+void P_LinkMobj(mobj_t* mobj) {
     mobjhead.prev->next = mobj;
     mobj->next = &mobjhead;
     mobj->prev = mobjhead.prev;
@@ -130,8 +125,7 @@ void P_LinkMobj(mobj_t* mobj)
 // P_UnlinkMobj
 //
 
-void P_UnlinkMobj(mobj_t* mobj)
-{
+void P_UnlinkMobj(mobj_t* mobj) {
     /* Remove from main mobj list */
     mobj_t* next = currentmobj->next;
 
@@ -146,37 +140,36 @@ void P_UnlinkMobj(mobj_t* mobj)
 // P_RunMobjs
 //
 
-void P_RunMobjs(void)
-{
-    for(currentmobj = mobjhead.next; currentmobj != &mobjhead; currentmobj = currentmobj->next)
-    {
-        if(!currentmobj)
-        {
+void P_RunMobjs(void) {
+    for(currentmobj = mobjhead.next; currentmobj != &mobjhead; currentmobj = currentmobj->next) {
+        if(!currentmobj) {
             CON_Warnf("P_RunMobjs: Null mobj in linked list!\n");
             break;
         }
-        
-        // Special case only
-        if(currentmobj->flags & MF_NOSECTOR)
-            continue;
-        
-        if(gameflags & GF_LOCKMONSTERS && !currentmobj->player && currentmobj->flags & MF_COUNTKILL)
-            continue;
 
-        if(!currentmobj->player)
-        {
+        // Special case only
+        if(currentmobj->flags & MF_NOSECTOR) {
+            continue;
+        }
+
+        if(gameflags & GF_LOCKMONSTERS && !currentmobj->player && currentmobj->flags & MF_COUNTKILL) {
+            continue;
+        }
+
+        if(!currentmobj->player) {
             // [kex] don't bother if about to be removed
-            if(currentmobj->mobjfunc != P_SafeRemoveMobj)
-            {
+            if(currentmobj->mobjfunc != P_SafeRemoveMobj) {
                 // [kex] don't clear callback if mobj is going to be respawning
-                if(currentmobj->mobjfunc != P_RespawnSpecials)
+                if(currentmobj->mobjfunc != P_RespawnSpecials) {
                     currentmobj->mobjfunc = NULL;
+                }
 
                 P_MobjThinker(currentmobj);
             }
 
-            if(currentmobj->mobjfunc)
+            if(currentmobj->mobjfunc) {
                 currentmobj->mobjfunc(currentmobj);
+            }
         }
     }
 }
@@ -185,14 +178,13 @@ void P_RunMobjs(void)
 // P_RunThinkers
 //
 
-void P_RunThinkers(void)
-{
+void P_RunThinkers(void) {
     for(currentthinker = thinkercap.next;
-        currentthinker != &thinkercap;
-        currentthinker = currentthinker->next)
-    {
-        if(currentthinker->function.acp1)
+            currentthinker != &thinkercap;
+            currentthinker = currentthinker->next) {
+        if(currentthinker->function.acp1) {
             currentthinker->function.acp1(currentthinker);
+        }
     }
 }
 
@@ -206,8 +198,7 @@ fixed_t frame_viewx = 0;
 fixed_t frame_viewy = 0;
 fixed_t frame_viewz = 0;
 
-static void P_UpdateFrameStates(void)
-{
+static void P_UpdateFrameStates(void) {
     player_t    *player = &players[displayplayer];
     pspdef_t    *psp;
     mobj_t      *viewcamera;
@@ -218,8 +209,9 @@ static void P_UpdateFrameStates(void)
     viewcamera = player->cameratarget;
     pitch = viewcamera->pitch + ANG90;
 
-    if(viewcamera == player->mo)
+    if(viewcamera == player->mo) {
         pitch += player->recoilpitch;
+    }
 
     //
     // update player position/view for interpolation
@@ -243,8 +235,7 @@ static void P_UpdateFrameStates(void)
     //
     // update sector frames for interpolation
     //
-    for(i = 0; i < numsectors; i++)
-    {
+    for(i = 0; i < numsectors; i++) {
         sector_t* sector = &sectors[i];
 
         sector->frame_z1[0] = sector->floorheight;
@@ -256,17 +247,16 @@ static void P_UpdateFrameStates(void)
     //
     // update mobj frames for interpolation
     //
-    for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
-    {
-        if(!mobj)
-        {
+    for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next) {
+        if(!mobj) {
             CON_Warnf("P_UpdateFrameStates: Null mobj in linked list!\n");
             continue;
         }
-        
+
         // Special case only
-        if(mobj->flags & MF_NOSECTOR)
+        if(mobj->flags & MF_NOSECTOR) {
             continue;
+        }
 
         mobj->frame_x = mobj->x;
         mobj->frame_y = mobj->y;
@@ -278,23 +268,24 @@ static void P_UpdateFrameStates(void)
 // P_Start
 //
 
-void P_Start(void)
-{
+void P_Start(void) {
     int i;
     mapdef_t* map;
 
     map = P_GetMapInfo(gamemap);
 
-    for(i = 0; i < MAXPLAYERS; i++)
-    {
+    for(i = 0; i < MAXPLAYERS; i++) {
         // players can't be hurt on title map
-        if(map->forcegodmode)
+        if(map->forcegodmode) {
             players[i].cheats |= CF_GODMODE;
+        }
         // turn off godmode on hectic map
-        else if(map->clearchts)
+        else if(map->clearchts) {
             players[i].cheats &= ~CF_GODMODE;
-        else
+        }
+        else {
             break;
+        }
     }
 
     // turn off/clear some things
@@ -319,8 +310,7 @@ void P_Start(void)
 // P_Stop
 //
 
-void P_Stop(void)
-{
+void P_Stop(void) {
     int i = 0;
     int action = gameaction;
 
@@ -329,47 +319,49 @@ void P_Stop(void)
     //
     S_StopSound(NULL, sfx_electric);
 
-    for(i = 0; i < MAXPLAYERS; i++)
-    {
+    for(i = 0; i < MAXPLAYERS; i++) {
         // take away cards and stuff
-        if(playeringame[i])
+        if(playeringame[i]) {
             G_PlayerFinishLevel(i);
+        }
     }
 
     // [kex] reset damage indicators
-    if(p_damageindicator.value)
+    if(p_damageindicator.value) {
         ST_ClearDamageMarkers();
+    }
 
     // free level tags
     Z_FreeTags(PU_LEVEL, PU_PURGELEVEL-1);
 
-    if(automapactive)
+    if(automapactive) {
         AM_Stop();
+    }
 
     // music continues on exit if defined
-    if(!P_GetMapInfo(gamemap)->contmusexit)
+    if(!P_GetMapInfo(gamemap)->contmusexit) {
         S_StopMusic();
+    }
 
-    if(demoplayback)
+    if(demoplayback) {
         demoplayback = false;
+    }
 
     // do wipe/melt effect
-    if(gameaction != ga_loadgame)
-    {
-        if(r_wipe.value)
-        {
-            if(gameaction != ga_warpquick)
+    if(gameaction != ga_loadgame) {
+        if(r_wipe.value) {
+            if(gameaction != ga_warpquick) {
                 WIPE_MeltScreen();
-            else
-            {
+            }
+            else {
                 S_StopMusic();
                 WIPE_FadeScreen(8);
             }
         }
-        else
-        {
-            if(gameaction == ga_warpquick)
+        else {
+            if(gameaction == ga_warpquick) {
                 S_StopMusic();
+            }
         }
     }
 
@@ -382,16 +374,17 @@ void P_Stop(void)
 // P_Drawer
 //
 
-void P_Drawer(void)
-{
+void P_Drawer(void) {
     // [kex] don't draw on first tic
-    if(!leveltime)
+    if(!leveltime) {
         return;
+    }
 
     GL_ClearView(0xFF000000);
 
-    if(!automapactive || am_overlay.value)
+    if(!automapactive || am_overlay.value) {
         R_RenderPlayerView(&players[displayplayer]);
+    }
 
     AM_Drawer();
     ST_Drawer();
@@ -401,42 +394,43 @@ void P_Drawer(void)
 // P_Ticker
 //
 
-int P_Ticker(void)
-{
+int P_Ticker(void) {
     int i;
 
-    if(i_interpolateframes.value)
+    if(i_interpolateframes.value) {
         P_UpdateFrameStates();
-    
-    if(paused)
+    }
+
+    if(paused) {
         return 0;
-    
+    }
+
     // pause if in menu and at least one tic has been run
     if(!netgame && menuactive &&
-        !demoplayback && players[consoleplayer].viewz != 1)
+            !demoplayback && players[consoleplayer].viewz != 1) {
         return 0;
-    
-    for(i = 0; i < MAXPLAYERS; i++)
-    {
-        if(playeringame[i])
-        {
+    }
+
+    for(i = 0; i < MAXPLAYERS; i++) {
+        if(playeringame[i]) {
             // do player reborns if needed
-            if(players[i].playerstate == PST_REBORN)
+            if(players[i].playerstate == PST_REBORN) {
                 G_DoReborn(i);
+            }
 
             P_PlayerThink(&players[i]);
         }
     }
-    
+
     P_RunThinkers();
     P_ScanSights();
     P_RunMobjs();
     P_UpdateSpecials();
     P_RunMacros();
-    
+
     ST_Ticker();
     AM_Ticker();
-    
+
     // for par times
     leveltime++;
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -46,11 +46,11 @@ typedef int32_t         int32;
 typedef uint32_t        uint32;
 
 #ifndef _MSC_VER
-    typedef signed long long int64;
-    typedef unsigned long long uint64;
+typedef signed long long int64;
+typedef unsigned long long uint64;
 #else
-    typedef __int64 int64;
-    typedef unsigned __int64 uint64;
+typedef __int64 int64;
+typedef unsigned __int64 uint64;
 #endif
 
 #include <limits.h>

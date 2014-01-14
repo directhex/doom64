@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -79,8 +79,7 @@
 // contains input information for buttons, left/right triggers
 // and analog stick movement
 //
-typedef struct
-{
+typedef struct {
     word    data;
     byte    ltrigger;
     byte    rtrigger;
@@ -95,8 +94,7 @@ typedef struct
 // like this in order to properly fetch
 // state data
 //
-typedef struct
-{
+typedef struct {
     dword           id;
     xinputbuttons_t buttons;
 } xinputstate_t;
@@ -104,8 +102,7 @@ typedef struct
 //
 // rumble structure
 //
-typedef struct
-{
+typedef struct {
     word lMotorSpeed;
     word rMotorSpeed;
 } xinputrumble_t;
@@ -113,8 +110,7 @@ typedef struct
 //
 // kex gamepad structure for xinput
 //
-typedef struct
-{
+typedef struct {
     xinputstate_t   state;                      // gamepad state
     xinputrumble_t  vibration;                  // rumble data
     dboolean        connected;                  // is controller connected?

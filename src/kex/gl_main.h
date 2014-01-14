@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -35,8 +35,7 @@ extern int gl_max_texture_units;
 extern int gl_max_texture_size;
 extern dboolean gl_has_combiner;
 
-typedef struct
-{
+typedef struct {
     rfloat    x;
     rfloat    y;
     rfloat    z;
@@ -50,8 +49,7 @@ typedef struct
 
 #define MAXSPRPALSETS       4
 
-typedef struct
-{
+typedef struct {
     byte r;
     byte g;
     byte b;
@@ -97,9 +95,9 @@ float GL_GetOrthoScale(void);
 void GL_SetState(int bit, dboolean enable);
 void GL_SetDefaultCombiner(void);
 void GL_Set2DQuad(vtx_t *v, float x, float y, int width, int height,
-                     float u1, float u2, float v1, float v2, rcolor c);
+                  float u1, float u2, float v1, float v2, rcolor c);
 void GL_Draw2DQuad(vtx_t *v, dboolean stretch);
 void GL_SetupAndDraw2DQuad(float x, float y, int width, int height,
-                     float u1, float u2, float v1, float v2, rcolor c, dboolean stretch);
+                           float u1, float u2, float v1, float v2, rcolor c, dboolean stretch);
 
 #endif

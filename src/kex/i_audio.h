@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -33,8 +33,7 @@
 
 #endif
 
-typedef struct
-{
+typedef struct {
     fixed_t x;
     fixed_t y;
     fixed_t z;

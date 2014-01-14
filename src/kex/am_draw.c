@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -53,12 +53,10 @@ CVAR_EXTERNAL(r_texturecombiner);
 // AM_BeginDraw
 //
 
-void AM_BeginDraw(angle_t view, fixed_t x, fixed_t y)
-{
+void AM_BeginDraw(angle_t view, fixed_t x, fixed_t y) {
     am_viewangle = view;
 
-    if(r_texturecombiner.value > 0 && am_overlay.value)
-    {
+    if(r_texturecombiner.value > 0 && am_overlay.value) {
         GL_SetState(GLSTATE_BLEND, 1);
 
         //
@@ -89,13 +87,11 @@ void AM_BeginDraw(angle_t view, fixed_t x, fixed_t y)
 // AM_EndDraw
 //
 
-void AM_EndDraw(void)
-{
+void AM_EndDraw(void) {
     dglPopMatrix();
     dglDepthRange(0.0f, 1.0f);
 
-    if(r_texturecombiner.value > 0 && am_overlay.value)
-    {
+    if(r_texturecombiner.value > 0 && am_overlay.value) {
         GL_SetState(GLSTATE_BLEND, 0);
         GL_SetTextureMode(GL_COMBINE);
         dglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 1);
@@ -109,8 +105,7 @@ void AM_EndDraw(void)
 //
 
 static float am_drawscale = 0.0f;
-static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
-{
+static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount) {
     leaf_t* leaf;
     rcolor color;
     fixed_t tx;
@@ -124,8 +119,9 @@ static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
     leaf    = &leafs[sub->leaf];
     count   = *drawcount;
 
-    for(j = 0; j < sub->numleafs - 2; j++)
+    for(j = 0; j < sub->numleafs - 2; j++) {
         dglTriangle(count, count + 1 + j, count + 2 + j);
+    }
 
     tx = (leaf->vertex->x >> 6) & ~(FRACUNIT - 1);
     ty = (leaf->vertex->y >> 6) & ~(FRACUNIT - 1);
@@ -133,39 +129,39 @@ static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
     //
     // setup RGB data
     //
-    if(am_ssect.value)
-    {
+    if(am_ssect.value) {
         int num = sub - subsectors;
         color = D_RGBA(
-            (num * 0x3f) & 0xff,
-            (num * 0xf) & 0xff,
-            (num * 0x7) & 0xff,
-            0xff
-            );
+                    (num * 0x3f) & 0xff,
+                    (num * 0xf) & 0xff,
+                    (num * 0x7) & 0xff,
+                    0xff
+                );
 
-        if(color == 0xff000000)
+        if(color == 0xff000000) {
             color = D_RGBA(0x80, 0x80, 0x80, 0xff);
+        }
     }
-    else
-    {
-        if(nolights)
+    else {
+        if(nolights) {
             color = WHITE;
-        else
-        {
+        }
+        else {
             light_t* light;
 
             light = &lights[sub->sector->colors[LIGHT_FLOOR]];
             color = D_RGBA(
-                light->active_r,
-                light->active_g,
-                light->active_b,
-                0xff
-                );
+                        light->active_r,
+                        light->active_g,
+                        light->active_b,
+                        0xff
+                    );
         }
     }
 
-    if(am_overlay.value)
+    if(am_overlay.value) {
         color -= D_RGBA(0, 0, 0, 0xBF);
+    }
 
     v = &drawVertex[count];
 
@@ -174,8 +170,7 @@ static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
     //
     // setup vertex data
     //
-    for(j = 0; j < sub->numleafs; j++)
-    {
+    for(j = 0; j < sub->numleafs; j++) {
         vertex_t *vertex;
 
         vertex = leafs[sub->leaf + j].vertex;
@@ -199,8 +194,7 @@ static dboolean DL_ProcessAutomap(vtxlist_t* vl, int* drawcount)
 // AM_DrawLeafs
 //
 
-void AM_DrawLeafs(float scale)
-{
+void AM_DrawLeafs(float scale) {
     subsector_t* sub;
     drawlist_t* am_drawlist;
     int i;
@@ -208,31 +202,28 @@ void AM_DrawLeafs(float scale)
 
     am_drawlist = &drawlist[DLT_AMAP];
 
-    for(i = 0; i < numsubsectors; i++)
-    {
+    for(i = 0; i < numsubsectors; i++) {
         sub = &subsectors[i];
 
         //
         // don't add sky flats
         //
-        if(sub->sector->floorpic == skyflatnum)
+        if(sub->sector->floorpic == skyflatnum) {
             continue;
+        }
 
         //
         // must be mapped
         //
-        if(segs[sub->firstline].linedef->flags & ML_MAPPED || amCheating)
-        {
+        if(segs[sub->firstline].linedef->flags & ML_MAPPED || amCheating) {
             //
             // add to draw list if visible
             //
-            if(!(sub->sector->flags & MS_HIDESSECTOR) || am_fulldraw.value)
-            {
+            if(!(sub->sector->flags & MS_HIDESSECTOR) || am_fulldraw.value) {
                 vtxlist_t *list;
                 vtx_t *v = &drawVertex[0];
 
-                for(j = 0; j < sub->numleafs; j++)
-                {
+                for(j = 0; j < sub->numleafs; j++) {
                     vertex_t *vertex;
 
                     vertex = leafs[sub->leaf + j].vertex;
@@ -242,8 +233,9 @@ void AM_DrawLeafs(float scale)
                     v[j].z = -(scale*2);
                 }
 
-                if(!R_FrustrumTestVertex(v, sub->numleafs))
+                if(!R_FrustrumTestVertex(v, sub->numleafs)) {
                     continue;
+                }
 
                 list            = DL_AddVertexList(am_drawlist);
                 list->data      = (subsector_t*)sub;
@@ -260,19 +252,21 @@ void AM_DrawLeafs(float scale)
     //
     DL_BeginDrawList(!am_ssect.value && r_fillmode.value, 0);
 
-    if(r_texturecombiner.value > 0)
-    {
-        if(!nolights)
+    if(r_texturecombiner.value > 0) {
+        if(!nolights) {
             dglTexCombModulate(GL_TEXTURE0_ARB, GL_PRIMARY_COLOR);
-        else
+        }
+        else {
             dglTexCombReplace();
+        }
     }
-    else
-    {
-        if(!nolights)
+    else {
+        if(!nolights) {
             GL_SetTextureMode(GL_MODULATE);
-        else
+        }
+        else {
             GL_SetTextureMode(GL_REPLACE);
+        }
     }
 
     DL_ProcessDrawList(DLT_AMAP, DL_ProcessAutomap);
@@ -282,10 +276,9 @@ void AM_DrawLeafs(float scale)
 // AM_DrawLine
 //
 
-void AM_DrawLine(int x1, int x2, int y1, int y2, float scale, rcolor c)
-{
+void AM_DrawLine(int x1, int x2, int y1, int y2, float scale, rcolor c) {
     vtx_t v[2];
-    
+
     v[0].x = F2D3D(x1);
     v[0].z = F2D3D(y1);
     v[1].x = F2D3D(x2);
@@ -309,17 +302,18 @@ void AM_DrawLine(int x1, int x2, int y1, int y2, float scale, rcolor c)
 // AM_DrawTriangle
 //
 
-void AM_DrawTriangle(mobj_t* mobj, float scale, dboolean solid, byte r, byte g, byte b)
-{
+void AM_DrawTriangle(mobj_t* mobj, float scale, dboolean solid, byte r, byte g, byte b) {
     vtx_t tri[3];
     fixed_t x;
     fixed_t y;
     angle_t angle;
-    
-    if(mobj->flags & (MF_NOSECTOR|MF_RENDERLASER))
+
+    if(mobj->flags & (MF_NOSECTOR|MF_RENDERLASER)) {
         return;
-    else if(mobj->state == (state_t *)S_000)
+    }
+    else if(mobj->state == (state_t *)S_000) {
         return;
+    }
 
     x = mobj->x;
     y = mobj->y;
@@ -343,31 +337,34 @@ void AM_DrawTriangle(mobj_t* mobj, float scale, dboolean solid, byte r, byte g, 
     tri[0].b = tri[1].b = tri[2].b = b;
     tri[0].a = tri[1].a = tri[2].a = 0xff;
 
-    if(!R_FrustrumTestVertex(tri, 3))
+    if(!R_FrustrumTestVertex(tri, 3)) {
         return;
-    
-    if(r_fillmode.value)
+    }
+
+    if(r_fillmode.value) {
         dglPolygonMode(GL_FRONT_AND_BACK, (solid == 1) ? GL_LINE : GL_FILL);
+    }
 
     dglSetVertex(tri);
     dglTriangle(0, 1, 2);
     dglDisable(GL_TEXTURE_2D);
     dglDrawGeometry(3, tri);
     dglEnable(GL_TEXTURE_2D);
-    
-    if(r_fillmode.value)
-        dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    if(devparm)
+    if(r_fillmode.value) {
+        dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    if(devparm) {
         vertCount += 3;
+    }
 }
 
 //
 // AM_DrawSprite
 //
 
-void AM_DrawSprite(mobj_t* thing, float scale)
-{
+void AM_DrawSprite(mobj_t* thing, float scale) {
     spritedef_t *sprdef;
     spriteframe_t *sprframe;
     fixed_t x;
@@ -390,44 +387,50 @@ void AM_DrawSprite(mobj_t* thing, float scale)
     float sin;
     vtx_t vtx[4];
 
-    if(thing->flags & (MF_NOSECTOR|MF_RENDERLASER))
+    if(thing->flags & (MF_NOSECTOR|MF_RENDERLASER)) {
         return;
-    else if(thing->state == (state_t *)S_000)
+    }
+    else if(thing->state == (state_t *)S_000) {
         return;
-    
-    if(!thing->sprite)
+    }
+
+    if(!thing->sprite) {
         return;
-    else
-    {
+    }
+    else {
         //
         // setup sprite data
         //
         sprdef = &spriteinfo[thing->sprite];
         sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
 
-        if(sprframe->rotate)
+        if(sprframe->rotate) {
             rot = ((am_viewangle - thing->angle) + ANG90 + (unsigned)(ANG45 / 2) * 9) >> 29;
+        }
 
         //
         // keys and artifacts are scaled when zooming out
         //
-        if(thing->type >= MT_ITEM_BLUECARDKEY && thing->type <= MT_ITEM_ARTIFACT3)
-        {
+        if(thing->type >= MT_ITEM_BLUECARDKEY && thing->type <= MT_ITEM_ARTIFACT3) {
             scalefactor = scale / 200.0f;
 
-            if(scalefactor >= 5.0f)
+            if(scalefactor >= 5.0f) {
                 scalefactor = 5.0f;
+            }
         }
-        else
+        else {
             scalefactor = 1.0f;
-        
+        }
+
         width = ((float)spritewidth[sprframe->lump[rot]] * scalefactor);
         height = ((float)spriteheight[sprframe->lump[rot]] * scalefactor);
-        
-        if(sprframe->flip[rot])
+
+        if(sprframe->flip[rot]) {
             flip = 1.0f;
-        else
+        }
+        else {
             flip = 0.0f;
+        }
     }
 
     x = thing->x;
@@ -468,7 +471,7 @@ void AM_DrawSprite(mobj_t* thing, float scale)
     vtx[3].z    = fz;
     vtx[3].tu   = 1 - flip;
     vtx[3].tv   = 0.0f;
-    
+
     GL_BindSpriteTexture(sprframe->lump[rot], thing->info->palette);
     GL_SetState(GLSTATE_BLEND, 1);
 
@@ -477,10 +480,12 @@ void AM_DrawSprite(mobj_t* thing, float scale)
     //
     // show as full white in non-textured mode or if the mobj is an item
     //
-    if((thing->frame & FF_FULLBRIGHT) || nolights || thing->flags & MF_SPECIAL || amModeCycle)
+    if((thing->frame & FF_FULLBRIGHT) || nolights || thing->flags & MF_SPECIAL || amModeCycle) {
         c = D_RGBA(255, 255, 255, alpha);
-    else
+    }
+    else {
         c = R_GetSectorLight(alpha, thing->subsector->sector->colors[LIGHT_THING]);
+    }
 
     dglSetVertexColor(vtx, c, 4);
 

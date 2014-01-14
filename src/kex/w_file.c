@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -37,23 +37,22 @@
 #include "m_misc.h"
 #include "w_file.h"
 
-typedef struct
-{
+typedef struct {
     wad_file_t wad;
     FILE *fstream;
 } stdc_wad_file_t;
 
 wad_file_class_t stdc_wad_file;
 
-static wad_file_t *W_StdC_OpenFile(char *path)
-{
+static wad_file_t *W_StdC_OpenFile(char *path) {
     stdc_wad_file_t *result;
     FILE *fstream;
 
     fstream = fopen(path, "rb");
 
-    if(fstream == NULL)
+    if(fstream == NULL) {
         return NULL;
+    }
 
     // Create a new stdc_wad_file_t to hold the file handle.
 
@@ -66,8 +65,7 @@ static wad_file_t *W_StdC_OpenFile(char *path)
     return &result->wad;
 }
 
-static void W_StdC_CloseFile(wad_file_t *wad)
-{
+static void W_StdC_CloseFile(wad_file_t *wad) {
     stdc_wad_file_t *stdc_wad;
 
     stdc_wad = (stdc_wad_file_t *) wad;
@@ -76,12 +74,11 @@ static void W_StdC_CloseFile(wad_file_t *wad)
     Z_Free(stdc_wad);
 }
 
-// Read data from the specified position in the file into the 
+// Read data from the specified position in the file into the
 // provided buffer.  Returns the number of bytes read.
 
 size_t W_StdC_Read(wad_file_t *wad, unsigned int offset,
-                   void *buffer, size_t buffer_len)
-{
+                   void *buffer, size_t buffer_len) {
     stdc_wad_file_t *stdc_wad;
     size_t result;
 
@@ -99,8 +96,7 @@ size_t W_StdC_Read(wad_file_t *wad, unsigned int offset,
 }
 
 
-wad_file_class_t stdc_wad_file = 
-{
+wad_file_class_t stdc_wad_file = {
     W_StdC_OpenFile,
     W_StdC_CloseFile,
     W_StdC_Read,
@@ -108,19 +104,16 @@ wad_file_class_t stdc_wad_file =
 
 static wad_file_class_t *wad_file_classes = &stdc_wad_file;
 
-wad_file_t *W_OpenFile(char *path)
-{
+wad_file_t *W_OpenFile(char *path) {
     return stdc_wad_file.OpenFile(path);
 }
 
-void W_CloseFile(wad_file_t *wad)
-{
+void W_CloseFile(wad_file_t *wad) {
     wad->file_class->CloseFile(wad);
 }
 
 size_t W_Read(wad_file_t *wad, unsigned int offset,
-              void *buffer, size_t buffer_len)
-{
+              void *buffer, size_t buffer_len) {
     return wad->file_class->Read(wad, offset, buffer, buffer_len);
 }
 
@@ -134,10 +127,8 @@ static dboolean iwad_dirs_built = false;
 static char *iwad_dirs[MAX_IWAD_DIRS];
 static int num_iwad_dirs = 0;
 
-static void AddIWADDir(char *dir)
-{
-    if(num_iwad_dirs < MAX_IWAD_DIRS)
-    {
+static void AddIWADDir(char *dir) {
+    if(num_iwad_dirs < MAX_IWAD_DIRS) {
         iwad_dirs[num_iwad_dirs] = dir;
         ++num_iwad_dirs;
     }
@@ -148,10 +139,10 @@ static void AddIWADDir(char *dir)
 // Build a list of IWAD files
 //
 
-static void BuildIWADDirList(void)
-{
-    if(iwad_dirs_built)
+static void BuildIWADDirList(void) {
+    if(iwad_dirs_built) {
         return;
+    }
 
     // Look in the current directory.  Doom always does this.
 
@@ -177,21 +168,23 @@ static void BuildIWADDirList(void)
 // Search a directory to try to find an IWAD
 // Returns the location of the IWAD if found, otherwise NULL.
 
-static char *SearchDirectoryForIWAD(char *dir)
-{
-    char *filename; 
+static char *SearchDirectoryForIWAD(char *dir) {
+    char *filename;
     char *iwadname;
-    
+
     iwadname = "DOOM64.WAD";
     filename = malloc(strlen(dir) + strlen(iwadname) + 3);
 
-    if(!strcmp(dir, "."))
+    if(!strcmp(dir, ".")) {
         strcpy(filename, iwadname);
-    else
+    }
+    else {
         sprintf(filename, "%s%c%s", dir, '/', iwadname);
+    }
 
-    if(M_FileExists(filename))
+    if(M_FileExists(filename)) {
         return filename;
+    }
 
     free(filename);
 
@@ -201,24 +194,23 @@ static char *SearchDirectoryForIWAD(char *dir)
 //
 // W_FindWADByName
 // Searches WAD search paths for an WAD with a specific filename.
-// 
+//
 
-char *W_FindWADByName(char *name)
-{
+char *W_FindWADByName(char *name) {
     char *buf;
     int i;
     dboolean exists;
-    
+
     // Absolute path?
-    if(M_FileExists(name))
+    if(M_FileExists(name)) {
         return name;
+    }
 
     BuildIWADDirList();
-    
+
     // Search through all IWAD paths for a file with the given name.
 
-    for(i = 0; i < num_iwad_dirs; ++i)
-    {
+    for(i = 0; i < num_iwad_dirs; ++i) {
         // Construct a string for the full path
 
         buf = malloc(strlen(iwad_dirs[i]) + strlen(name) + 5);
@@ -226,8 +218,9 @@ char *W_FindWADByName(char *name)
 
         exists = M_FileExists(buf);
 
-        if(exists)
+        if(exists) {
             return buf;
+        }
 
         free(buf);
     }
@@ -244,16 +237,17 @@ char *W_FindWADByName(char *name)
 // if not found.
 //
 
-char *W_TryFindWADByName(char *filename)
-{
+char *W_TryFindWADByName(char *filename) {
     char *result;
 
     result = W_FindWADByName(filename);
 
-    if(result != NULL)
+    if(result != NULL) {
         return result;
-    else
-     return filename;
+    }
+    else {
+        return filename;
+    }
 }
 
 //
@@ -261,8 +255,7 @@ char *W_TryFindWADByName(char *filename)
 // Checks availability of IWAD files by name,
 //
 
-char *W_FindIWAD(void)
-{
+char *W_FindIWAD(void) {
     char *result;
     char *iwadfile;
     int iwadparm;
@@ -271,26 +264,26 @@ char *W_FindIWAD(void)
     // Check for the -iwad parameter
     iwadparm = M_CheckParm("-iwad");
 
-    if(iwadparm)
-    {
+    if(iwadparm) {
         // Search through IWAD dirs for an IWAD with the given name.
         iwadfile = myargv[iwadparm + 1];
 
         result = W_FindWADByName(iwadfile);
 
-        if(result == NULL)
+        if(result == NULL) {
             I_Error("W_FindIWAD: IWAD file '%s' not found!", iwadfile);
+        }
     }
-    else
-    {
+    else {
         // Search through the list and look for an IWAD
 
         result = NULL;
 
         BuildIWADDirList();
-    
-        for(i = 0; result == NULL && i < num_iwad_dirs; ++i)
+
+        for(i = 0; result == NULL && i < num_iwad_dirs; ++i) {
             result = SearchDirectoryForIWAD(iwad_dirs[i]);
+        }
     }
 
     return result;

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -43,11 +43,10 @@ extern  char**    myargv;
 
 // Returns the position of the given parameter
 // in the arg list (0 if not found).
-int M_CheckParm (char* check);
+int M_CheckParm(char* check);
 
 // Bounding box coordinate storage.
-enum
-{
+enum {
     BOXTOP,
     BOXBOTTOM,
     BOXLEFT,
@@ -55,13 +54,13 @@ enum
 };    // bbox coordinates
 
 // Bounding box functions.
-void M_ClearBox (fixed_t*    box);
+void M_ClearBox(fixed_t*    box);
 
 void
 M_AddToBox
-( fixed_t*    box,
+(fixed_t*    box,
  fixed_t    x,
- fixed_t    y );
+ fixed_t    y);
 
 dboolean M_WriteFile(char const* name, void* source, int length);
 int M_ReadFile(char const* name, byte** buffer);

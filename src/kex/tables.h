@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -70,8 +70,8 @@ extern angle_t        tantoangle[SLOPERANGE+1];
 //  called by R_PointToAngle.
 int
 SlopeDiv
-( unsigned    num,
-  unsigned    den);
+(unsigned    num,
+ unsigned    den);
 
 
 #endif

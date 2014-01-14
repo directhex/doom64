@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -76,8 +76,7 @@ CVAR_EXTERNAL(r_texturecombiner);
 // STATUS BAR DATA
 //
 
-typedef struct
-{
+typedef struct {
     dboolean    active;
     dboolean    doDraw;
     int         delay;
@@ -122,8 +121,7 @@ static dboolean         st_wpndisplay_show;
 static byte             st_wpndisplay_alpha;
 static int              st_wpndisplay_ticks;
 
-char* chat_macros[] =
-{
+char* chat_macros[] = {
     HUSTR_CHATMACRO0,
     HUSTR_CHATMACRO1,
     HUSTR_CHATMACRO2,
@@ -136,16 +134,14 @@ char* chat_macros[] =
     HUSTR_CHATMACRO9
 };
 
-char player_names[MAXPLAYERS][MAXPLAYERNAME] =
-{
+char player_names[MAXPLAYERS][MAXPLAYERNAME] = {
     HUSTR_PLR1,
     HUSTR_PLR2,
     HUSTR_PLR3,
     HUSTR_PLR4
 };
 
-static const rcolor st_chatcolors[MAXPLAYERS] =
-{
+static const rcolor st_chatcolors[MAXPLAYERS] = {
     D_RGBA(192, 255, 192, 255),
     D_RGBA(255, 192, 192, 255),
     D_RGBA(128, 255, 192, 255),
@@ -158,8 +154,7 @@ static const rcolor st_chatcolors[MAXPLAYERS] =
 #define STCHATX         32
 #define STCHATY         384
 
-typedef struct
-{
+typedef struct {
     char msg[MAXCHATSIZE];
     int tics;
     rcolor color;
@@ -190,8 +185,7 @@ static void ST_DisplayName(int playernum);
 // DAMAGE MARKER SYSTEM
 //
 
-typedef struct damagemarker_s
-{
+typedef struct damagemarker_s {
     struct damagemarker_s*  prev;
     struct damagemarker_s*  next;
     int     tics;
@@ -204,14 +198,11 @@ static damagemarker_t dmgmarkers;
 // ST_RunDamageMarkers
 //
 
-static void ST_RunDamageMarkers(void)
-{
+static void ST_RunDamageMarkers(void) {
     damagemarker_t* dmgmarker;
 
-    for(dmgmarker = dmgmarkers.next; dmgmarker != &dmgmarkers; dmgmarker = dmgmarker->next)
-    {
-        if(!dmgmarker->tics--)
-        {
+    for(dmgmarker = dmgmarkers.next; dmgmarker != &dmgmarkers; dmgmarker = dmgmarker->next) {
+        if(!dmgmarker->tics--) {
             damagemarker_t* marker = dmgmarker;
             damagemarker_t* next = marker->next;
 
@@ -227,8 +218,7 @@ static void ST_RunDamageMarkers(void)
 // ST_ClearDamageMarkers
 //
 
-void ST_ClearDamageMarkers(void)
-{
+void ST_ClearDamageMarkers(void) {
     dmgmarkers.next = dmgmarkers.prev = &dmgmarkers;
 }
 
@@ -236,12 +226,12 @@ void ST_ClearDamageMarkers(void)
 // ST_AddDamageMarker
 //
 
-void ST_AddDamageMarker(mobj_t* target, mobj_t* source)
-{
+void ST_AddDamageMarker(mobj_t* target, mobj_t* source) {
     damagemarker_t* dmgmarker;
 
-    if(target->player != &players[consoleplayer])
+    if(target->player != &players[consoleplayer]) {
         return;
+    }
 
     dmgmarker               = Z_Calloc(sizeof(*dmgmarker), PU_LEVEL, 0);
     dmgmarker->tics         = 32;
@@ -257,12 +247,10 @@ void ST_AddDamageMarker(mobj_t* target, mobj_t* source)
 // ST_DrawDamageMarkers
 //
 
-static void ST_DrawDamageMarkers(void)
-{
+static void ST_DrawDamageMarkers(void) {
     damagemarker_t* dmgmarker;
 
-    for(dmgmarker = dmgmarkers.next; dmgmarker != &dmgmarkers; dmgmarker = dmgmarker->next)
-    {
+    for(dmgmarker = dmgmarkers.next; dmgmarker != &dmgmarkers; dmgmarker = dmgmarker->next) {
         static vtx_t v[3];
         player_t* p;
         float angle;
@@ -273,8 +261,9 @@ static void ST_DrawDamageMarkers(void)
 
         alpha = (dmgmarker->tics << 3);
 
-        if(alpha < 0)
+        if(alpha < 0) {
             alpha = 0;
+        }
 
         v[0].x = -8;
         v[0].a = alpha;
@@ -287,8 +276,8 @@ static void ST_DrawDamageMarkers(void)
         p = &players[consoleplayer];
 
         angle = (float)TRUEANGLES(p->mo->angle -
-            R_PointToAngle2(dmgmarker->source->x, dmgmarker->source->y,
-            p->mo->x, p->mo->y));
+                                  R_PointToAngle2(dmgmarker->source->x, dmgmarker->source->y,
+                                          p->mo->x, p->mo->y));
 
         dglPushMatrix();
         dglTranslatef(160, 120, 0);
@@ -300,7 +289,7 @@ static void ST_DrawDamageMarkers(void)
         dglDrawGeometry(3, v);
         dglEnable(GL_TEXTURE_2D);
         dglPopMatrix();
-    
+
         GL_ResetViewport();
         GL_SetState(GLSTATE_BLEND, 0);
     }
@@ -310,8 +299,7 @@ static void ST_DrawDamageMarkers(void)
 // ST_DisplayPendingWeapon
 //
 
-void ST_DisplayPendingWeapon(void)
-{
+void ST_DisplayPendingWeapon(void) {
     st_wpndisplay_show = true;
     st_wpndisplay_alpha = 0xC0;
     st_wpndisplay_ticks = 2*TICRATE;
@@ -321,35 +309,38 @@ void ST_DisplayPendingWeapon(void)
 // ST_DrawPendingWeapon
 //
 
-static void ST_DrawPendingWeapon(void)
-{
+static void ST_DrawPendingWeapon(void) {
     int i;
     int x = 0;
     int wpn;
 
-    if(!st_wpndisplay_show)
+    if(!st_wpndisplay_show) {
         return;
+    }
 
     GL_SetOrthoScale(0.5f);
 
-    for(i = 0; i < NUMWEAPONS; i++)
-    {
+    for(i = 0; i < NUMWEAPONS; i++) {
         rcolor color;
 
-        if(plyr->weaponowned[i])
+        if(plyr->weaponowned[i]) {
             color = D_RGBA(0xff, 0xff, 0x3f, st_wpndisplay_alpha);
-        else
+        }
+        else {
             color = WHITEALPHA(st_wpndisplay_alpha);
+        }
 
         Draw_Number(245 + x, 400, i, 0, color);
         x += 16;
 
     }
 
-    if(plyr->pendingweapon == wp_nochange)
+    if(plyr->pendingweapon == wp_nochange) {
         wpn = plyr->readyweapon;
-    else
+    }
+    else {
         wpn = plyr->pendingweapon;
+    }
 
     Draw_BigText(235 + (wpn * 16), 404, WHITEALPHA(st_wpndisplay_alpha), "/b");
 
@@ -360,8 +351,7 @@ static void ST_DrawPendingWeapon(void)
 // ST_ClearMessage
 //
 
-void ST_ClearMessage(void)
-{
+void ST_ClearMessage(void) {
     st_msgtic = 0;
     st_msgalpha = 0xff;
     st_msg = NULL;
@@ -371,66 +361,62 @@ void ST_ClearMessage(void)
 // ST_Ticker
 //
 
-void ST_Ticker (void)
-{
+void ST_Ticker(void) {
     int ind = 0;
-    
+
     plyr = &players[consoleplayer];
-    
+
     //
     // keycard stuff
     //
-    
+
     /* */
     /* Tried to open a CARD or SKULL door? */
     /* */
-    for(ind = 0; ind < NUMCARDS; ind++)
-    {
+    for(ind = 0; ind < NUMCARDS; ind++) {
         /* CHECK FOR INITIALIZATION */
-        if(plyr->tryopen[ind])
-        {
+        if(plyr->tryopen[ind]) {
             plyr->tryopen[ind] = false;
             flashCards[ind].active = true;
             flashCards[ind].delay = FLASHDELAY;
             flashCards[ind].times = FLASHTIMES+1;
             flashCards[ind].doDraw = false;
         }
-        
+
         /* MIGHT AS WELL DO TICKING IN THE SAME LOOP! */
-        if(flashCards[ind].active && !--flashCards[ind].delay)
-        {
+        if(flashCards[ind].active && !--flashCards[ind].delay) {
             flashCards[ind].delay = FLASHDELAY;
             flashCards[ind].doDraw ^= 1;
-            
-            if(!--flashCards[ind].times)
+
+            if(!--flashCards[ind].times) {
                 flashCards[ind].active = false;
-            
-            if(flashCards[ind].doDraw && flashCards[ind].active)
+            }
+
+            if(flashCards[ind].doDraw && flashCards[ind].active) {
                 S_StartSound(NULL,sfx_itemup);
+            }
         }
     }
-    
+
     //
     // messages
     //
-    if(plyr->message)
-    {
+    if(plyr->message) {
         CON_Printf(WHITE, "%s\n", plyr->message);
 
         ST_ClearMessage();
         st_msg = plyr->message;
         plyr->message = NULL;
     }
-    
-    if(st_msg || plyr->messagepic >= 0)
-    {
+
+    if(st_msg || plyr->messagepic >= 0) {
         st_msgtic++;
-        
-        if(st_msgtic >= ST_MSGFADESTART)
+
+        if(st_msgtic >= ST_MSGFADESTART) {
             st_msgalpha = MAX((st_msgalpha -= ST_MSGFADETIME), 0);
-        
-        if(st_msgtic >= ST_MSGTIMEOUT)
-        {
+        }
+
+        if(st_msgtic >= ST_MSGTIMEOUT) {
             ST_ClearMessage();
             plyr->messagepic = -1;
         }
@@ -439,37 +425,36 @@ void ST_Ticker (void)
     //
     // flashes
     //
-    if(plyr->cameratarget == plyr->mo || !(plyr->cheats & CF_LOCKCAM))
+    if(plyr->cameratarget == plyr->mo || !(plyr->cheats & CF_LOCKCAM)) {
         ST_UpdateFlash();
-    
+    }
+
     //
     // chat stuff
     //
-    for(ind = 0; ind < MAXCHATNODES; ind++)
-    {
-        if(stchat[ind].tics)
+    for(ind = 0; ind < MAXCHATNODES; ind++) {
+        if(stchat[ind].tics) {
             stchat[ind].tics--;
+        }
     }
-    
+
     ST_EatChatMsg();
 
     //
     // damage indicator
     //
 
-    if(p_damageindicator.value)
+    if(p_damageindicator.value) {
         ST_RunDamageMarkers();
+    }
 
     //
     // pending weapon display
     //
-    if(st_wpndisplay_show)
-    {
-        if(st_wpndisplay_ticks-- <= 0)
-        {
+    if(st_wpndisplay_show) {
+        if(st_wpndisplay_ticks-- <= 0) {
             st_wpndisplay_alpha -= 8;
-            if(st_wpndisplay_alpha <= 0)
-            {
+            if(st_wpndisplay_alpha <= 0) {
                 st_wpndisplay_alpha = 0;
                 st_wpndisplay_show = false;
             }
@@ -481,18 +466,17 @@ void ST_Ticker (void)
 // ST_FlashingScreen
 //
 
-void ST_FlashingScreen(byte r, byte g, byte b, byte a)
-{
+void ST_FlashingScreen(byte r, byte g, byte b, byte a) {
     rcolor c = D_RGBA(r, g, b, a);
 
     GL_SetState(GLSTATE_BLEND, 1);
     GL_SetOrtho(1);
-    
+
     dglDisable(GL_TEXTURE_2D);
     dglColor4ubv((byte*)&c);
     dglRecti(SCREENWIDTH, SCREENHEIGHT, 0, 0);
     dglEnable(GL_TEXTURE_2D);
-    
+
     GL_SetState(GLSTATE_BLEND, 0);
 }
 
@@ -500,8 +484,7 @@ void ST_FlashingScreen(byte r, byte g, byte b, byte a)
 // ST_DrawStatusItem
 //
 
-static void ST_DrawStatusItem(const float xy[4][2], const float uv[4][2], rcolor color)
-{
+static void ST_DrawStatusItem(const float xy[4][2], const float uv[4][2], rcolor color) {
     int i;
 
     dglTriangle(st_vtxcount + 0, st_vtxcount + 1, st_vtxcount + 2);
@@ -509,8 +492,7 @@ static void ST_DrawStatusItem(const float xy[4][2], const float uv[4][2], rcolor
 
     dglSetVertexColor(st_vtx + st_vtxcount, color, 4);
 
-    for(i = 0; i < 4; i++)
-    {
+    for(i = 0; i < 4; i++) {
         st_vtx[st_vtxcount + i].x  = xy[i][0];
         st_vtx[st_vtxcount + i].y  = xy[i][1];
         st_vtx[st_vtxcount + i].tu = uv[i][0];
@@ -524,17 +506,14 @@ static void ST_DrawStatusItem(const float xy[4][2], const float uv[4][2], rcolor
 // ST_DrawKey
 //
 
-static void ST_DrawKey(int key, const float uv[4][2], const float xy[4][2])
-{
+static void ST_DrawKey(int key, const float uv[4][2], const float xy[4][2]) {
     float keydrawxy[4][2];
 
     if(plyr->cards[key] ||
-        (flashCards[key].doDraw && flashCards[key].active))
-    {
+            (flashCards[key].doDraw && flashCards[key].active)) {
         dmemcpy(keydrawxy, xy, (sizeof(float)*4) * 2);
 
-        if(st_drawhud.value >= 2)
-        {
+        if(st_drawhud.value >= 2) {
             keydrawxy[0][0] += 20;
             keydrawxy[1][0] += 20;
             keydrawxy[2][0] += 20;
@@ -554,48 +533,42 @@ static void ST_DrawKey(int key, const float uv[4][2], const float xy[4][2])
 // ST_DrawStatus
 //
 
-static const float st_healthVertex[4][2] =
-{
+static const float st_healthVertex[4][2] = {
     { ST_HEALTHTEXTX, ST_HEALTHTEXTY },
     { ST_HEALTHTEXTX + 40, ST_HEALTHTEXTY },
     { ST_HEALTHTEXTX + 40, ST_HEALTHTEXTY + 6 },
     { ST_HEALTHTEXTX, ST_HEALTHTEXTY + 6 }
 };
 
-static const float st_armorVertex[4][2] =
-{
+static const float st_armorVertex[4][2] = {
     { ST_ARMORTEXTX, ST_ARMORTEXTY },
     { ST_ARMORTEXTX + 36, ST_ARMORTEXTY },
     { ST_ARMORTEXTX + 36, ST_ARMORTEXTY + 6 },
     { ST_ARMORTEXTX, ST_ARMORTEXTY + 6 }
 };
 
-static const float st_key1Vertex[4][2] =
-{
+static const float st_key1Vertex[4][2] = {
     { ST_KEYX, ST_KEYY },
     { ST_KEYX + 9, ST_KEYY },
     { ST_KEYX + 9, ST_KEYY + 10 },
     { ST_KEYX, ST_KEYY + 10 }
 };
 
-static const float st_key2Vertex[4][2] =
-{
+static const float st_key2Vertex[4][2] = {
     { ST_KEYX + 10, ST_KEYY },
     { ST_KEYX + 19, ST_KEYY },
     { ST_KEYX + 19, ST_KEYY + 10 },
     { ST_KEYX + 10, ST_KEYY + 10 }
 };
 
-static const float st_key3Vertex[4][2] =
-{
+static const float st_key3Vertex[4][2] = {
     { ST_KEYX + 20, ST_KEYY },
     { ST_KEYX + 29, ST_KEYY },
     { ST_KEYX + 29, ST_KEYY + 10 },
     { ST_KEYX + 20, ST_KEYY + 10 }
 };
 
-static void ST_DrawStatus(void)
-{
+static void ST_DrawStatus(void) {
     int     lump;
     float   width;
     float   height;
@@ -611,16 +584,16 @@ static void ST_DrawStatus(void)
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, DGL_CLAMP);
     dglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, DGL_CLAMP);
 
-    if(st_drawhud.value >= 2)
+    if(st_drawhud.value >= 2) {
         GL_SetOrthoScale(0.725f);
+    }
 
     GL_SetOrtho(0);
 
     dglSetVertex(st_vtx);
     st_vtxcount = 0;
-    
-    if(st_drawhud.value == 1)
-    {
+
+    if(st_drawhud.value == 1) {
         // health
 
         uv[0][0] = uv[3][0] = 0.0f;
@@ -639,14 +612,14 @@ static void ST_DrawStatus(void)
 
         ST_DrawStatusItem(st_armorVertex, uv, color);
     }
-    
+
     // cards
 
     uv[0][0] = uv[3][0] = 0.0f;
     uv[0][1] = uv[1][1] = 6.0f / height;
     uv[1][0] = uv[2][0] = 9.0f / width;
     uv[2][1] = uv[3][1] = 1.0f;
-    
+
     ST_DrawKey(it_bluecard, uv, st_key1Vertex);
 
     uv[0][0] = uv[3][0] = 9.0f / width;
@@ -658,7 +631,7 @@ static void ST_DrawStatus(void)
     uv[1][0] = uv[2][0] = (9.0f / width) * 3;
 
     ST_DrawKey(it_redcard, uv, st_key3Vertex);
-    
+
     // skulls
 
     uv[0][0] = uv[3][0] = (9.0f / width) * 3;
@@ -675,31 +648,33 @@ static void ST_DrawStatus(void)
     uv[1][0] = uv[2][0] = (9.0f / width) * 6;
 
     ST_DrawKey(it_redskull, uv, st_key3Vertex);
-    
+
     dglDrawGeometry(st_vtxcount, st_vtx);
 
     GL_ResetViewport();
     GL_SetState(GLSTATE_BLEND, 0);
 
-    if(st_drawhud.value >= 2)
+    if(st_drawhud.value >= 2) {
         GL_SetOrthoScale(1.0f);
+    }
 }
 
 //
 // ST_DrawCrosshair
 //
 
-void ST_DrawCrosshair(int x, int y, int slot, byte scalefactor, rcolor color)
-{
+void ST_DrawCrosshair(int x, int y, int slot, byte scalefactor, rcolor color) {
     float u;
     int index;
     int scale;
 
-    if(slot <= 0)
+    if(slot <= 0) {
         return;
+    }
 
-    if(slot > st_crosshairs)
+    if(slot > st_crosshairs) {
         return;
+    }
 
     index = slot - 1;
 
@@ -713,7 +688,7 @@ void ST_DrawCrosshair(int x, int y, int slot, byte scalefactor, rcolor color)
     scale = scalefactor == 0 ? ST_CROSSHAIRSIZE : (ST_CROSSHAIRSIZE / (1 << scalefactor));
 
     GL_SetupAndDraw2DQuad((float)x, (float)y, scale, scale,
-        u*index, u + (u*index), 0, 1, color, 0);
+                          u*index, u + (u*index), 0, 1, color, 0);
 
     GL_SetState(GLSTATE_BLEND, 0);
 }
@@ -722,8 +697,7 @@ void ST_DrawCrosshair(int x, int y, int slot, byte scalefactor, rcolor color)
 // ST_DrawJMessage
 //
 
-static void ST_DrawJMessage(int pic)
-{
+static void ST_DrawJMessage(int pic) {
     int lump = st_jmessages[pic];
 
     GL_BindGfxTexture(lumpinfo[lump].name, true);
@@ -745,7 +719,7 @@ static void ST_DrawJMessage(int pic)
         1,
         ST_MSGCOLOR(automapactive ? 0xff : st_msgalpha),
         false
-        );
+    );
 
     GL_SetState(GLSTATE_BLEND, 0);
 }
@@ -754,8 +728,7 @@ static void ST_DrawJMessage(int pic)
 // ST_Drawer
 //
 
-void ST_Drawer(void)
-{
+void ST_Drawer(void) {
     dboolean checkautomap;
 
     //
@@ -763,75 +736,77 @@ void ST_Drawer(void)
     //
 
     if((st_flashoverlay.value ||
-        gl_max_texture_units <= 2 ||
-        r_texturecombiner.value <= 0) && flashcolor)
-    {
+            gl_max_texture_units <= 2 ||
+            r_texturecombiner.value <= 0) && flashcolor) {
         ST_FlashingScreen(st_flash_r, st_flash_g, st_flash_b, st_flash_a);
     }
 
-    if(demoplayback)
+    if(demoplayback) {
         return;
+    }
 
     checkautomap = (!automapactive || am_overlay.value);
-    
+
     //
     // draw hud
     //
 
-    if(checkautomap && st_drawhud.value)
-    {
+    if(checkautomap && st_drawhud.value) {
         //Status graphics
         ST_DrawStatus();
 
         // original hud layout
-        if(st_drawhud.value == 1)
-        {
+        if(st_drawhud.value == 1) {
             //Draw Ammo counter
-            if(weaponinfo[plyr->readyweapon].ammo != am_noammo)
+            if(weaponinfo[plyr->readyweapon].ammo != am_noammo) {
                 Draw_Number(160, 215, plyr->ammo[weaponinfo[plyr->readyweapon].ammo], 0, REDALPHA(0x7f));
-        
+            }
+
             //Draw Health
             Draw_Number(49, 215, plyr->health, 0, REDALPHA(0x7f));
-        
+
             //Draw Armor
             Draw_Number(271, 215, plyr->armorpoints, 0, REDALPHA(0x7f));
         }
         // arranged hud layout
-        else if(st_drawhud.value >= 2)
-        {
+        else if(st_drawhud.value >= 2) {
             int wpn;
 
-            if(plyr->pendingweapon == wp_nochange)
+            if(plyr->pendingweapon == wp_nochange) {
                 wpn = plyr->readyweapon;
-            else
+            }
+            else {
                 wpn = plyr->pendingweapon;
+            }
 
             // display ammo sprite
-            switch(weaponinfo[wpn].ammo)
-            {
-                case am_clip:
-                    Draw_Sprite2D(SPR_CLIP, 0, 0, 524, 460, 0.5f, 0, WHITEALPHA(0xC0));
-                    break;
-                case am_shell:
-                    Draw_Sprite2D(SPR_SHEL, 0, 0, 524, 460, 0.5f, 0, WHITEALPHA(0xC0));
-                    break;
-                case am_misl:
-                    Draw_Sprite2D(SPR_RCKT, 0, 0, 524, 464, 0.5f, 0, WHITEALPHA(0xC0));
-                    break;
-                case am_cell:
-                    Draw_Sprite2D(SPR_CELL, 0, 0, 524, 464, 0.5f, 0, WHITEALPHA(0xC0));
-                    break;
+            switch(weaponinfo[wpn].ammo) {
+            case am_clip:
+                Draw_Sprite2D(SPR_CLIP, 0, 0, 524, 460, 0.5f, 0, WHITEALPHA(0xC0));
+                break;
+            case am_shell:
+                Draw_Sprite2D(SPR_SHEL, 0, 0, 524, 460, 0.5f, 0, WHITEALPHA(0xC0));
+                break;
+            case am_misl:
+                Draw_Sprite2D(SPR_RCKT, 0, 0, 524, 464, 0.5f, 0, WHITEALPHA(0xC0));
+                break;
+            case am_cell:
+                Draw_Sprite2D(SPR_CELL, 0, 0, 524, 464, 0.5f, 0, WHITEALPHA(0xC0));
+                break;
             }
 
             // display artifact sprites
-            if(plyr->artifacts & (1<<ART_TRIPLE))
+            if(plyr->artifacts & (1<<ART_TRIPLE)) {
                 Draw_Sprite2D(SPR_ART3, 0, 0, 260, 872, 0.275f, 0, WHITEALPHA(0xC0));
-    
-            if(plyr->artifacts & (1<<ART_DOUBLE))
+            }
+
+            if(plyr->artifacts & (1<<ART_DOUBLE)) {
                 Draw_Sprite2D(SPR_ART2, 0, 0, 296, 872, 0.275f, 0, WHITEALPHA(0xC0));
-    
-            if(plyr->artifacts & (1<<ART_FAST))
+            }
+
+            if(plyr->artifacts & (1<<ART_FAST)) {
                 Draw_Sprite2D(SPR_ART1, 0, 0, 332, 872, 0.275f, 0, WHITEALPHA(0xC0));
+            }
 
             // display medkit/armor
             Draw_Sprite2D(SPR_MEDI, 0, 0, 50, 662, 0.35f, 0, WHITEALPHA(0xC0));
@@ -848,59 +823,56 @@ void ST_Drawer(void)
             Draw_BigText(104, 426, REDALPHA(0xC0), "%");
 
             //Draw Ammo counter
-            if(weaponinfo[wpn].ammo != am_noammo)
+            if(weaponinfo[wpn].ammo != am_noammo) {
                 Draw_Number(550, 448, plyr->ammo[weaponinfo[wpn].ammo], 1, REDALPHA(0xC0));
+            }
 
             GL_SetOrthoScale(1.0f);
         }
     }
-    
+
     //
     // draw messages
     //
 
-    if(st_hasjmsg && st_regionmsg.value && plyr->messagepic >= 0)
-    {
+    if(st_hasjmsg && st_regionmsg.value && plyr->messagepic >= 0) {
         ST_DrawJMessage(plyr->messagepic);
     }
-    else if(st_msg && (int)m_messages.value)
-    {
+    else if(st_msg && (int)m_messages.value) {
         Draw_Text(20, 20, ST_MSGCOLOR(automapactive ? 0xff : st_msgalpha), 1, false, st_msg);
     }
-    else if(automapactive)
-    {
+    else if(automapactive) {
         char str[128];
         mapdef_t* map = P_GetMapInfo(gamemap);
 
-        if(map)
-        {
+        if(map) {
             dmemset(&str, 0, 128);
 
-            if(map->type == 2)
+            if(map->type == 2) {
                 sprintf(str, "%s", map->mapname);
-            else
+            }
+            else {
                 sprintf(str, "Level %i: %s", gamemap, map->mapname);
+            }
 
             Draw_Text(20, 20, ST_MSGCOLOR(0xff), 1, false, str);
         }
     }
-    
+
     //
     // draw chat text and player names
     //
 
-    if(netgame)
-    {
+    if(netgame) {
         ST_DrawChatText();
 
-        if(checkautomap)
-        {
+        if(checkautomap) {
             int i;
 
-            for(i = 0; i < MAXPLAYERS; i++)
-            {
-                if(playeringame[i])
+            for(i = 0; i < MAXPLAYERS; i++) {
+                if(playeringame[i]) {
                     ST_DisplayName(i);
+                }
             }
         }
     }
@@ -909,17 +881,18 @@ void ST_Drawer(void)
     // draw crosshairs
     //
 
-    if(st_crosshairs && !automapactive)
-    {
+    if(st_crosshairs && !automapactive) {
         int x = (SCREENWIDTH / 2) - (ST_CROSSHAIRSIZE / 8);
         int y = (SCREENHEIGHT / 2) - (ST_CROSSHAIRSIZE / 8);
         int alpha = (int)st_crosshairopacity.value;
 
-        if(alpha > 0xff)
+        if(alpha > 0xff) {
             alpha = 0xff;
+        }
 
-        if(alpha < 0)
+        if(alpha < 0) {
             alpha = 0;
+        }
 
         ST_DrawCrosshair(x, y, (int)st_crosshair.value, 2, WHITEALPHA(alpha));
     }
@@ -928,17 +901,14 @@ void ST_Drawer(void)
     // use action context
     //
 
-    if(p_usecontext.value)
-    {
-        if(P_UseLines(&players[consoleplayer], true))
-        {
+    if(p_usecontext.value) {
+        if(P_UseLines(&players[consoleplayer], true)) {
             char usestring[16];
             char contextstring[32];
             float x;
 
 #ifdef _USE_XINPUT  // XINPUT
-            if(xgamepad.connected)
-            {
+            if(xgamepad.connected) {
                 M_DrawXInputButton(140, 156, XINPUT_GAMEPAD_A);
                 Draw_Text(213, 214, WHITEALPHA(0xA0), 0.75, false, "Use");
             }
@@ -959,30 +929,31 @@ void ST_Drawer(void)
     // damage indicator
     //
 
-    if(p_damageindicator.value)
+    if(p_damageindicator.value) {
         ST_DrawDamageMarkers();
+    }
 
     //
     // display pending weapon
     //
 
-    if(st_showpendingweapon.value)
+    if(st_showpendingweapon.value) {
         ST_DrawPendingWeapon();
+    }
 
     //
     // display stats in automap
     //
 
-    if(st_showstats.value && automapactive)
-    {
+    if(st_showstats.value && automapactive) {
         Draw_Text(20, 430, WHITE, 0.5f, false,
-            "Monsters:  %i / %i", plyr->killcount, totalkills);
+                  "Monsters:  %i / %i", plyr->killcount, totalkills);
         Draw_Text(20, 440, WHITE, 0.5f, false,
-            "Items:     %i / %i", plyr->itemcount, totalitems);
+                  "Items:     %i / %i", plyr->itemcount, totalitems);
         Draw_Text(20, 450, WHITE, 0.5f, false,
-            "Secrets:   %i / %i", plyr->secretcount, totalsecret);
+                  "Secrets:   %i / %i", plyr->secretcount, totalsecret);
         Draw_Text(20, 460, WHITE, 0.5f, false,
-            "Time:      %2.2d:%2.2d", (leveltime / TICRATE) / 60, (leveltime / TICRATE) % 60);
+                  "Time:      %2.2d:%2.2d", (leveltime / TICRATE) / 60, (leveltime / TICRATE) % 60);
     }
 }
 
@@ -994,15 +965,13 @@ void ST_Drawer(void)
 #define ST_MAXSTRCOUNT  32
 #define ST_MAXBONCOUNT  100
 
-void ST_UpdateFlash(void)
-{
+void ST_UpdateFlash(void) {
     player_t* p = &players[consoleplayer];
 
     flashcolor = 0;
 
     // invulnerability flash (white)
-    if(p->powers[pw_invulnerability] > 61 || (p->powers[pw_invulnerability] & 8))
-    {
+    if(p->powers[pw_invulnerability] > 61 || (p->powers[pw_invulnerability] & 8)) {
         flashcolor = D_RGBA(128, 128, 128, 0xff);
         st_flash_r = 255;
         st_flash_g = 255;
@@ -1010,8 +979,7 @@ void ST_UpdateFlash(void)
         st_flash_a = 64;
     }
     // bfg flash (green)
-    else if(p->bfgcount)
-    {
+    else if(p->bfgcount) {
         flashcolor = D_RGBA(0, p->bfgcount & 0xff, 0, 0xff);
         st_flash_r = 0;
         st_flash_g = 255;
@@ -1019,33 +987,32 @@ void ST_UpdateFlash(void)
         st_flash_a = p->bfgcount;
     }
     // damage and strength flash (red)
-    else if(p->damagecount || (p->powers[pw_strength] > 1))
-    {
+    else if(p->damagecount || (p->powers[pw_strength] > 1)) {
         int r1 = p->damagecount;
         int r2 = p->powers[pw_strength];
 
-        if(r1)
-        {
-            if(r1 > ST_MAXDMGCOUNT)
+        if(r1) {
+            if(r1 > ST_MAXDMGCOUNT) {
                 r1 = ST_MAXDMGCOUNT;
+            }
         }
 
-        if(r2 == 1)
+        if(r2 == 1) {
             r2 = 0;
-        else if(r2 > ST_MAXSTRCOUNT)
+        }
+        else if(r2 > ST_MAXSTRCOUNT) {
             r2 = ST_MAXSTRCOUNT;
+        }
 
         // take priority based on value
-        if(r1 > r2)
-        {
+        if(r1 > r2) {
             flashcolor = D_RGBA(r1 & 0xff, 0, 0, 0xff);
             st_flash_r = 255;
             st_flash_g = 0;
             st_flash_b = 0;
             st_flash_a = r1;
         }
-        else
-        {
+        else {
             flashcolor = D_RGBA(r2 & 0xff, 0, 0, 0xff);
             st_flash_r = 255;
             st_flash_g = 0;
@@ -1054,8 +1021,7 @@ void ST_UpdateFlash(void)
         }
     }
     // suit flash (green/yellow)
-    else if(p->powers[pw_ironfeet] > 61 || (p->powers[pw_ironfeet] & 8))
-    {
+    else if(p->powers[pw_ironfeet] > 61 || (p->powers[pw_ironfeet] & 8)) {
         flashcolor = D_RGBA(0, 32, 4, 0xff);
         st_flash_r = 0;
         st_flash_g = 255;
@@ -1063,13 +1029,13 @@ void ST_UpdateFlash(void)
         st_flash_a = 64;
     }
     // bonus flash (yellow)
-    else if(p->bonuscount)
-    {
+    else if(p->bonuscount) {
         int c1 = (p->bonuscount + 8) >> 3;
         int c2;
 
-        if(c1 > ST_MAXBONCOUNT)
+        if(c1 > ST_MAXBONCOUNT) {
             c1 = ST_MAXBONCOUNT;
+        }
 
         c2 = (((c1 << 2) + c1) << 1);
 
@@ -1085,42 +1051,39 @@ void ST_UpdateFlash(void)
 // ST_Init
 //
 
-void ST_Init (void)
-{
+void ST_Init(void) {
     int i = 0;
     int lump;
-    
+
     plyr = &players[consoleplayer];
-    
+
     // setup keycards
-    
-    for (i = 0; i < NUMCARDS; i++)
-    {
+
+    for(i = 0; i < NUMCARDS; i++) {
         flashCards[i].active = false;
         players[consoleplayer].tryopen[i] = false;
     }
-    
+
     // setup hud messages
-    
+
     ST_ClearMessage();
-    
+
     // setup player names
-    
-    for(i = 0; i < MAXPLAYERS; i++)
-    {
-        if(playeringame[i] && net_player_names[i][0])
+
+    for(i = 0; i < MAXPLAYERS; i++) {
+        if(playeringame[i] && net_player_names[i][0]) {
             snprintf(player_names[i], MAXPLAYERNAME, "%s", net_player_names[i]);
+        }
     }
-    
+
     // setup chat text
-    
-    for(i = 0; i < MAXCHATNODES; i++)
-    {
+
+    for(i = 0; i < MAXCHATNODES; i++) {
         stchat[i].msg[0] = 0;
         stchat[i].tics = 0;
         stchat[i].color = 0;
     }
-    
+
     dmemset(st_chatstring, 0, MAXPLAYERS * MAXCHATSIZE);
     dmemset(st_chatqueue, 0, STQUEUESIZE);
 
@@ -1129,22 +1092,23 @@ void ST_Init (void)
     st_crosshairs = 0;
     lump = W_CheckNumForName("CRSHAIRS");
 
-    if(!(lump <= -1))
+    if(!(lump <= -1)) {
         st_crosshairs = (gfxwidth[lump - g_start] / ST_CROSSHAIRSIZE);
+    }
 
     dmgmarkers.next = dmgmarkers.prev = &dmgmarkers;
 
     // setup region-specific messages
 
-    for(i = 0; i < ST_JMESSAGES; i++)
-    {
+    for(i = 0; i < ST_JMESSAGES; i++) {
         char name[9];
 
         sprintf(name, "JPMSG%02d", i + 1);
         st_jmessages[i] = W_CheckNumForName(name);
 
-        if(st_jmessages[i] != -1)
+        if(st_jmessages[i] != -1) {
             st_hasjmsg = true;
+        }
     }
 
     // setup weapon display variables
@@ -1158,17 +1122,16 @@ void ST_Init (void)
 // ST_AddChatMsg
 //
 
-void ST_AddChatMsg(char *msg, int player)
-{
+void ST_AddChatMsg(char *msg, int player) {
     char str[MAXCHATSIZE];
-    
+
     sprintf(str, "%s: %s", player_names[player], msg);
     dmemset(stchat[st_chatcount].msg, 0, MAXCHATSIZE);
     memcpy(stchat[st_chatcount].msg, str, dstrlen(str));
     stchat[st_chatcount].tics = MAXCHATTIME;
     stchat[st_chatcount].color = st_chatcolors[player];
     st_chatcount = (st_chatcount + 1) % MAXCHATNODES;
-    
+
     S_StartSound(NULL, sfx_darthit);
     CON_Printf(WHITE, str);
     CON_Printf(WHITE, "\n");
@@ -1179,14 +1142,13 @@ void ST_AddChatMsg(char *msg, int player)
 // Broadcast message to all clients
 //
 
-void ST_Notification(char *msg)
-{
+void ST_Notification(char *msg) {
     int i;
 
-    for(i = 0; i < MAXPLAYERS; i++)
-    {
-        if(playeringame[i] && i != consoleplayer)
+    for(i = 0; i < MAXPLAYERS; i++) {
+        if(playeringame[i] && i != consoleplayer) {
             ST_AddChatMsg(msg, i);
+        }
     }
 }
 
@@ -1194,38 +1156,38 @@ void ST_Notification(char *msg)
 // ST_DrawChatText
 //
 
-static void ST_DrawChatText(void)
-{
+static void ST_DrawChatText(void) {
     int i;
     int y = STCHATY;
     int current = (st_chatcount - 1);
-    
-    if(current < 0)
+
+    if(current < 0) {
         current = (MAXCHATNODES - 1);
-    else if(current >= (MAXCHATNODES - 1))
+    }
+    else if(current >= (MAXCHATNODES - 1)) {
         current = 0;
-    
-    for(i = 0; i < MAXCHATNODES; i++)
-    {
-        if(stchat[current].msg[0] && stchat[current].tics)
-        {
-            
+    }
+
+    for(i = 0; i < MAXCHATNODES; i++) {
+        if(stchat[current].msg[0] && stchat[current].tics) {
+
             Draw_Text(STCHATX, y, stchat[current].color, 0.5f, false, stchat[current].msg);
             y -= 8;
         }
-        
+
         current = (current - 1) % MAXCHATNODES;
-        
-        if(current < 0)
+
+        if(current < 0) {
             current = (MAXCHATNODES - 1);
-        else if(current >= (MAXCHATNODES - 1))
+        }
+        else if(current >= (MAXCHATNODES - 1)) {
             current = 0;
+        }
     }
-    
-    if(st_chatOn)
-    {
+
+    if(st_chatOn) {
         char tmp[MAXCHATSIZE];
-        
+
         sprintf(tmp, "%s_", st_chatstring[consoleplayer]);
         Draw_Text(STCHATX, STCHATY + 8, WHITE, 0.5f, false, tmp);
     }
@@ -1235,11 +1197,11 @@ static void ST_DrawChatText(void)
 // ST_QueueChatChar
 //
 
-static void ST_QueueChatChar(char ch)
-{
-    if(((st_chattail+1) & (STQUEUESIZE - 1)) == st_chathead)
-        return; // the queue is full
-    
+static void ST_QueueChatChar(char ch) {
+    if(((st_chattail+1) & (STQUEUESIZE - 1)) == st_chathead) {
+        return;    // the queue is full
+    }
+
     st_chatqueue[st_chattail] = ch;
     st_chattail = ((st_chattail + 1) & (STQUEUESIZE - 1));
 }
@@ -1248,13 +1210,13 @@ static void ST_QueueChatChar(char ch)
 // ST_DequeueChatChar
 //
 
-char ST_DequeueChatChar(void)
-{
+char ST_DequeueChatChar(void) {
     byte temp;
-    
-    if(st_chathead == st_chattail)
-        return 0; // queue is empty
-    
+
+    if(st_chathead == st_chattail) {
+        return 0;    // queue is empty
+    }
+
     temp = st_chatqueue[st_chathead];
     st_chathead = ((st_chathead + 1) & (STQUEUESIZE - 1));
     return temp;
@@ -1265,28 +1227,29 @@ char ST_DequeueChatChar(void)
 //
 
 static dboolean st_shiftOn = false;
-static void ST_FeedChatMsg(event_t *ev)
-{
+static void ST_FeedChatMsg(event_t *ev) {
     int c;
-    
-    if(!st_chatOn)
+
+    if(!st_chatOn) {
         return;
-    
-    if(!(c = ev->data1))
+    }
+
+    if(!(c = ev->data1)) {
         return;
-    
-    switch(c)
-    {
+    }
+
+    switch(c) {
         int len;
-        
+
     case KEY_ENTER:
     case KEY_KEYPADENTER:
         ST_QueueChatChar((char)c);
         st_chatOn = false;
         break;
     case KEY_BACKSPACE:
-        if(ev->type != ev_keydown)
+        if(ev->type != ev_keydown) {
             return;
+        }
         ST_QueueChatChar((char)c);
         break;
     case KEY_ESCAPE:
@@ -1295,14 +1258,17 @@ static void ST_FeedChatMsg(event_t *ev)
         dmemset(st_chatstring[consoleplayer], 0, len);
         break;
     case KEY_CAPS:
-        if(ev->type == ev_keydown)
+        if(ev->type == ev_keydown) {
             st_shiftOn ^= 1;
+        }
         break;
     case KEY_SHIFT:
-        if(ev->type == ev_keydown)
+        if(ev->type == ev_keydown) {
             st_shiftOn = true;
-        else if(ev->type == ev_keyup)
+        }
+        else if(ev->type == ev_keyup) {
             st_shiftOn = false;
+        }
         break;
     case KEY_ALT:
     case KEY_PAUSE:
@@ -1333,11 +1299,13 @@ static void ST_FeedChatMsg(event_t *ev)
     case KEY_NUMLOCK:
         break; // too lazy to do anything clever here..
     default:
-        if(ev->type != ev_keydown)
+        if(ev->type != ev_keydown) {
             return;
-        
-        if(st_shiftOn)
+        }
+
+        if(st_shiftOn) {
             c = shiftxform[c];
+        }
         ST_QueueChatChar((char)c);
         break;
     }
@@ -1347,23 +1315,24 @@ static void ST_FeedChatMsg(event_t *ev)
 // ST_EatChatMsg
 //
 
-static void ST_EatChatMsg(void)
-{
+static void ST_EatChatMsg(void) {
     int c;
     int len;
     int i;
-    
-    for(i = 0; i < MAXPLAYERS; i++)
-    {
-        if(!playeringame[i]) continue;
-        if(!players[i].cmd.chatchar) continue;
-        
+
+    for(i = 0; i < MAXPLAYERS; i++) {
+        if(!playeringame[i]) {
+            continue;
+        }
+        if(!players[i].cmd.chatchar) {
+            continue;
+        }
+
         c = players[i].cmd.chatchar;
-        
+
         len = dstrlen(st_chatstring[i]);
-        
-        switch(c)
-        {
+
+        switch(c) {
         case KEY_ENTER:
         case KEY_KEYPADENTER:
             ST_AddChatMsg(st_chatstring[i], i);
@@ -1384,21 +1353,21 @@ static void ST_EatChatMsg(void)
 // Respond to keyboard input events, intercept cheats.
 //
 
-dboolean ST_Responder(event_t* ev)
-{
+dboolean ST_Responder(event_t* ev) {
     M_CheatProcess(plyr, ev);
 
-    if(netgame)
-    {
+    if(netgame) {
         ST_FeedChatMsg(ev);
-        
-        if(st_chatOn)
+
+        if(st_chatOn) {
             return true;
-        
-        if(ev->type == ev_keydown && ev->data1 == 't')
+        }
+
+        if(ev->type == ev_keydown && ev->data1 == 't') {
             st_chatOn = true;
+        }
     }
-    
+
     return false;
 }
 
@@ -1406,8 +1375,7 @@ dboolean ST_Responder(event_t* ev)
 // ST_DisplayName
 //
 
-static void ST_DisplayName(int playernum)
-{
+static void ST_DisplayName(int playernum) {
     fixed_t     x;
     fixed_t     y;
     fixed_t     z;
@@ -1423,72 +1391,84 @@ static void ST_DisplayName(int playernum)
     fixed_t     distance;
 
     // don't display self
-    if(playernum == consoleplayer)
+    if(playernum == consoleplayer) {
         return;
+    }
 
-    player = &players[playernum];    
+    player = &players[playernum];
 
     // get distance
     distance = P_AproxDistance(viewx - player->mo->x, viewy - player->mo->y);
-    if(distance > (1280*FRACUNIT))
-        return;     // too far
+    if(distance > (1280*FRACUNIT)) {
+        return;    // too far
+    }
 
     x = player->mo->x - viewx;
     y = player->mo->y - viewy;
     z = player->mo->z - (players[consoleplayer].viewz - (96*FRACUNIT));
-        
+
     // set relative viewpoint
     xangle = (FixedMul(dsin(viewangle), x) - FixedMul(dcos(viewangle), y));
     yangle = (FixedMul(dsin(viewangle), y) + FixedMul(dcos(viewangle), x));
     xpitch = (FixedMul(dsin(viewpitch), yangle) - FixedMul(dcos(viewpitch), z));
     ypitch = (FixedMul(dsin(viewpitch), z) + FixedMul(dcos(viewpitch), yangle));
-    
-    // check x offscreen
-    if(xangle < -yangle)
-        return;
-    
-    // check y offscreen
-    if(yangle < xangle)
-        return;
-    
-    // check if behind view
-    if(yangle < 0x80001)
-        return;
 
-    if(ypitch > xpitch)
+    // check x offscreen
+    if(xangle < -yangle) {
         return;
-    
+    }
+
+    // check y offscreen
+    if(yangle < xangle) {
+        return;
+    }
+
+    // check if behind view
+    if(yangle < 0x80001) {
+        return;
+    }
+
+    if(ypitch > xpitch) {
+        return;
+    }
+
     // adjust if needed
-    if(yangle < 0x80000)
-    {
+    if(yangle < 0x80000) {
         xangle += FixedMul(FixedDiv(0x80000 - yangle,
-            xangle - yangle), yangle - xangle);
+                                    xangle - yangle), yangle - xangle);
         yangle = 0x80000;
     }
 
     // convert to screen space
     screenx = ((FixedDiv(xangle, yangle) * (SCREENWIDTH/2)) >> FRACBITS) + (SCREENWIDTH/2);
     screeny = (((FixedDiv(ypitch, xpitch) * -(SCREENWIDTH/2)) >> FRACBITS) + (SCREENWIDTH/2)) - 40;
-    
-    if(screenx < 0)
+
+    if(screenx < 0) {
         screenx = 0;
+    }
 
-    if(screenx > SCREENWIDTH)
+    if(screenx > SCREENWIDTH) {
         screenx = SCREENWIDTH;
+    }
 
-    if(screeny < 0)
+    if(screeny < 0) {
         screeny = 0;
+    }
 
-    if(screeny > SCREENHEIGHT)
+    if(screeny > SCREENHEIGHT) {
         screeny = SCREENHEIGHT;
+    }
 
     // change colors based on health/condition
-    if(player->health < 40)
+    if(player->health < 40) {
         color = RED;
-    else if(player->health < 80)
+    }
+    else if(player->health < 80) {
         color = YELLOW;
-    else
+    }
+    else {
         color = WHITE;
+    }
 
     // fade alpha based on distance. farther will mean less alpha
     distance /= FRACUNIT;
@@ -1507,8 +1487,7 @@ static void ST_DisplayName(int playernum)
 // ST_RegisterCvars
 //
 
-void ST_RegisterCvars(void)
-{
+void ST_RegisterCvars(void) {
     CON_CvarRegister(&st_drawhud);
     CON_CvarRegister(&st_crosshair);
     CON_CvarRegister(&st_crosshairopacity);

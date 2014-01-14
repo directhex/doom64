@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1997 Midway Home Entertainment, Inc
@@ -45,13 +45,11 @@ static int wipeFadeAlpha        = 0;
 // WIPE_DisplayScreen
 //
 
-static void WIPE_RefreshDelay(void)
-{
+static void WIPE_RefreshDelay(void) {
     int starttime = I_GetTime();
     int tics = 0;
 
-    do
-    {
+    do {
         tics = I_GetTime() - starttime;
         //
         // don't bash the CPU
@@ -65,8 +63,7 @@ static void WIPE_RefreshDelay(void)
 // WIPE_FadeScreen
 //
 
-void WIPE_FadeScreen(int fadetics)
-{
+void WIPE_FadeScreen(int fadetics) {
     int padw, padh;
     vtx_t v[4];
     float left, right, top, bottom;
@@ -78,7 +75,7 @@ void WIPE_FadeScreen(int fadetics)
 
     padw = GL_PadTextureDims(video_width);
     padh = GL_PadTextureDims(video_height);
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
     dglEnable(GL_TEXTURE_2D);
 
@@ -89,14 +86,14 @@ void WIPE_FadeScreen(int fadetics)
     right = left + (SCREENWIDTH * ViewWidth / video_width);
     top = (float)(ViewWindowY * ViewHeight / video_height);
     bottom = top + (SCREENHEIGHT * ViewHeight / video_height);
-    
+
     v[0].x = v[2].x = left;
     v[1].x = v[3].x = right;
     v[0].y = v[1].y = top;
     v[2].y = v[3].y = bottom;
 
     v[0].z = v[1].z = v[2].z = v[3].z = 0.0f;
-    
+
     v[0].tu = v[2].tu = 0.0f;
     v[1].tu = v[3].tu = (float)video_width / (float)padw;
     v[0].tv = v[1].tv = (float)video_height / (float)padh;
@@ -107,8 +104,7 @@ void WIPE_FadeScreen(int fadetics)
     //
     // begin fade out
     //
-    while(wipeFadeAlpha > 0)
-    {
+    while(wipeFadeAlpha > 0) {
         rcolor color;
 
         //
@@ -116,8 +112,9 @@ void WIPE_FadeScreen(int fadetics)
         //
         GL_ClearView(0xFF000000);
 
-        if(wipeFadeAlpha < 0)
+        if(wipeFadeAlpha < 0) {
             wipeFadeAlpha = 0;
+        }
 
         //
         // display screen overlay
@@ -144,8 +141,7 @@ void WIPE_FadeScreen(int fadetics)
 // WIPE_MeltScreen
 //
 
-void WIPE_MeltScreen(void)
-{
+void WIPE_MeltScreen(void) {
     int padw, padh;
     vtx_t v[4];
     vtx_t v2[4];
@@ -159,7 +155,7 @@ void WIPE_MeltScreen(void)
 
     padw = GL_PadTextureDims(video_width);
     padh = GL_PadTextureDims(video_height);
-    
+
     GL_SetState(GLSTATE_BLEND, 1);
     dglEnable(GL_TEXTURE_2D);
 
@@ -170,14 +166,14 @@ void WIPE_MeltScreen(void)
     right = left + (SCREENWIDTH * ViewWidth / video_width);
     top = (float)(ViewWindowY * ViewHeight / video_height);
     bottom = top + (SCREENHEIGHT * ViewHeight / video_height);
-    
+
     v[0].x = v[2].x = left;
     v[1].x = v[3].x = right;
     v[0].y = v[1].y = top;
     v[2].y = v[3].y = bottom;
 
     v[0].z = v[1].z = v[2].z = v[3].z = 0.0f;
-    
+
     v[0].tu = v[2].tu = 0.0f;
     v[1].tu = v[3].tu = (float)video_width / (float)padw;
     v[0].tv = v[1].tv = (float)video_height / (float)padh;
@@ -188,8 +184,7 @@ void WIPE_MeltScreen(void)
     dglBindTexture(GL_TEXTURE_2D, wipeMeltTexture);
     GL_SetTextureMode(GL_ADD);
 
-    for(i = 0; i < 160; i += 2)
-    {
+    for(i = 0; i < 160; i += 2) {
         int j;
 
         GL_ClearView(0xFF000000);
@@ -204,8 +199,9 @@ void WIPE_MeltScreen(void)
         // move screen down. without clearing the frame, we should
         // get a nice melt effect using the HOM effect
         //
-        for(j = 0; j < 4; j++)
+        for(j = 0; j < 4; j++) {
             v[j].y += 0.5f;
+        }
 
         //
         // update screen buffer
@@ -219,7 +215,7 @@ void WIPE_MeltScreen(void)
             0,
             padw,
             padh
-            );
+        );
 
         GL_SwapBuffers();
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -60,16 +60,14 @@
 // drawn directly on the view screen,
 // coordinates are given for a 320*200 view screen.
 //
-typedef enum
-{
+typedef enum {
     ps_weapon,
     ps_flash,
     NUMPSPRITES
 
 } psprnum_t;
 
-typedef struct
-{
+typedef struct {
     state_t*    state;    // a NULL state means not active
     int         tics;
     fixed_t     sx;
@@ -82,8 +80,7 @@ typedef struct
 
 } pspdef_t;
 
-typedef struct
-{
+typedef struct {
     ammotype_t    ammo;
     int        upstate;
     int        downstate;

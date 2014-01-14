@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -50,30 +50,28 @@ CVAR_EXTERNAL(sv_lockmonsters);
 // ST_DrawFPS
 //
 
-void ST_DrawFPS(int offset)
-{
+void ST_DrawFPS(int offset) {
     static int    frames;
     static int    lasttick=0;
     static int    fps;
     int           ticks;
     int           n;
-    
+
     ticks = I_GetTime();
-    if(!lasttick)
-    {
+    if(!lasttick) {
         lasttick = ticks;
         frames = fps = 0;
     }
 
     frames++;
 
-    if(ticks - lasttick >= TICRATE)
-    {
+    if(ticks - lasttick >= TICRATE) {
         lasttick = ticks;
         fps = frames;
         frames = 0;
-        if(fps > 99)
+        if(fps > 99) {
             fps = 99;
+        }
     }
     n = fps;
     Draw_Text(0, offset, WHITE, 0.35f, false, "FPS: %i", n);
@@ -83,16 +81,14 @@ void ST_DrawFPS(int offset)
 // D_DeveloperDisplay
 //
 
-void D_DeveloperDisplay(void)
-{
+void D_DeveloperDisplay(void) {
     rcolor  sevclr = WHITE;
     int p_nummobjthinkers = 0;
     fixed_t px, py, pz, pa, pp;
     int y = 8;
     mobj_t* mo;
 
-    if(!showstats)
-    {
+    if(!showstats) {
         glBindCalls = 0;
         vertCount = 0;
         statindice = 0;
@@ -103,8 +99,7 @@ void D_DeveloperDisplay(void)
     /*PLAYER INFORMATION*/
 
     px=py=pz=pa=pp=0;
-    if(players[0].cameratarget && gamestate == GS_LEVEL)
-    {
+    if(players[0].cameratarget && gamestate == GS_LEVEL) {
         px=players[0].cameratarget->x/FRACUNIT;
         py=players[0].cameratarget->y/FRACUNIT;
         pz=players[0].cameratarget->z/FRACUNIT;
@@ -146,8 +141,7 @@ void D_DeveloperDisplay(void)
     Draw_Text(0, y, WHITE, 0.35f, false, "Draw List AMAP Usage: %6d kb", DL_GetDrawListSize(DLT_AMAP) >> 10);
     y+=16;
 
-    if(gamestate == GS_LEVEL)
-    {
+    if(gamestate == GS_LEVEL) {
         ST_DrawFPS(y);
         y+=16;
     }
@@ -155,12 +149,11 @@ void D_DeveloperDisplay(void)
 
     /*MOBJ INFORMATION*/
 
-    if(gamestate == GS_LEVEL)
-    {
-        for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
-        {
-            if(!mo->player)
+    if(gamestate == GS_LEVEL) {
+        for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next) {
+            if(!mo->player) {
                 p_nummobjthinkers++;
+            }
         }
 
         Draw_Text(0, y, WHITE, 0.35f, false, "P_Mobj Total Things: %i", p_nummobjthinkers);
@@ -184,8 +177,7 @@ void D_DeveloperDisplay(void)
     Draw_Text(0, y, WHITE, 0.35f, false, "Draw Indices: %i", statindice);
     y+=16;
 
-    if(gamestate == GS_LEVEL && !automapactive)
-    {
+    if(gamestate == GS_LEVEL && !automapactive) {
         Draw_Text(0, y, WHITE, 0.35f, false, "PlayerView Render Time: %ims", renderTic);
         y+=16;
 
@@ -212,18 +204,16 @@ void D_DeveloperDisplay(void)
 // D_BoyISuck
 //
 
-void D_BoyISuck(void)
-{
+void D_BoyISuck(void) {
     mobj_t* mo;
 
-    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
-    {
-        if(mo->player)
+    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next) {
+        if(mo->player) {
             continue;
+        }
 
-        if(mo->health > 0 && mo->flags & MF_COUNTKILL)
-        {
-            P_DamageMobj (mo, NULL, NULL, 99999);
+        if(mo->health > 0 && mo->flags & MF_COUNTKILL) {
+            P_DamageMobj(mo, NULL, NULL, 99999);
             continue;
         }
     }
@@ -235,25 +225,20 @@ void D_BoyISuck(void)
 //
 
 static dboolean freelook = false;
-dboolean D_DevKeyResponder(event_t* ev)
-{
-    if(ev->type == ev_keydown)
-    {
-        switch(ev->data1)
-        {
-            case KEY_F7:    // toggle wireframe
-                R_DrawWireframe(r_fillmode.value?1:0);
-                return true;
+dboolean D_DevKeyResponder(event_t* ev) {
+    if(ev->type == ev_keydown) {
+        switch(ev->data1) {
+        case KEY_F7:    // toggle wireframe
+            R_DrawWireframe(r_fillmode.value?1:0);
+            return true;
 
-            case KEY_F9:    // toggle display stats
-                showstats ^= 1;
-                return true;
+        case KEY_F9:    // toggle display stats
+            showstats ^= 1;
+            return true;
         }
 
-        if(gamestate == GS_LEVEL)
-        {
-            switch(ev->data1)
-            {
+        if(gamestate == GS_LEVEL) {
+            switch(ev->data1) {
             case KEY_F1:    // toggle demo mode - take damage but never die
                 players[consoleplayer].cheats |= CF_UNDYING;
                 players[consoleplayer].message = "Demo Mode On";
@@ -262,26 +247,24 @@ dboolean D_DevKeyResponder(event_t* ev)
                 return true;
 
             case KEY_F2:    // toggle spectator mode
-                if(!(players[consoleplayer].cheats & CF_SPECTATOR))
-                {
+                if(!(players[consoleplayer].cheats & CF_SPECTATOR)) {
                     players[consoleplayer].cheats |= CF_SPECTATOR;
                     players[consoleplayer].message = "Spectator Mode On";
-                          
+
                     freelook = (int)v_mlook.value;
                     CON_CvarSetValue(v_mlook.name, 1);
-                          
+
                     players[consoleplayer].mo->flags |= MF_FLOAT;
                     players[consoleplayer].mo->flags |= MF_NOCLIP;
                     players[consoleplayer].mo->flags &= ~MF_GRAVITY;
                 }
-                else
-                {
+                else {
                     players[consoleplayer].cheats &= ~CF_SPECTATOR;
                     players[consoleplayer].message = "Spectator Mode Off";
-                          
+
                     CON_CvarSetValue(v_mlook.name, (float)freelook);
                     freelook = false;
-                          
+
                     players[consoleplayer].mo->flags &= ~MF_FLOAT;
                     players[consoleplayer].mo->flags &= ~MF_NOCLIP;
                     players[consoleplayer].mo->flags |= MF_GRAVITY;

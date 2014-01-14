@@ -51,7 +51,7 @@ byte rndtable[256] = {
     71,  17, 161,  93, 186,  87, 244, 138,  20,  52, 123, 251,  26,  36 ,
     17,  46,  52, 231, 232,  76,  31, 221,  84,  37, 216, 165, 212, 106 ,
     197, 242,  98,  43,  39, 175, 254, 145, 190,  84, 118, 222, 187, 136 ,
-    120, 163, 236, 249 
+    120, 163, 236, 249
 };
 
 rng_t rng;                      // the random number state
@@ -62,8 +62,7 @@ int    rndindex = 0;
 int    prndindex = 0;
 
 // Which one is deterministic?
-int P_Random(pr_class_t pr_class)
-{
+int P_Random(pr_class_t pr_class) {
     unsigned long boom;
 
     boom = rng.seed[pr_class];
@@ -75,24 +74,22 @@ int P_Random(pr_class_t pr_class)
     return boom & 255;
 }
 
-int M_Random(void)
-{
+int M_Random(void) {
     return P_Random(pr_misc);
 }
 
-void M_ClearRandom(void)
-{
+void M_ClearRandom(void) {
     int i;
     unsigned int seed = rngseed*2+1;    // add 3/26/98: add rngseed
 
-    for(i = 0; i < NUMPRCLASS; i++)     // go through each pr_class and set
-        rng.seed[i] = seed *= 69069ul;  // each starting seed differently
-    
+    for(i = 0; i < NUMPRCLASS; i++) {   // go through each pr_class and set
+        rng.seed[i] = seed *= 69069ul;    // each starting seed differently
+    }
+
     rng.prndindex = rng.rndindex = 0;   // clear two compatibility indices
 }
 
-int P_RandomShift(pr_class_t pr_class, int shift)
-{
+int P_RandomShift(pr_class_t pr_class, int shift) {
     int rand = P_Random(pr_class);
     return (rand - P_Random(pr_class)) << shift;
 }

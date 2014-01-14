@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -28,8 +28,7 @@
 // Identifiers for all sfx in game.
 //
 
-typedef enum
-{
+typedef enum {
     sfx_None,
     sfx_punch,      //punch
     sfx_spawn,      //spawn

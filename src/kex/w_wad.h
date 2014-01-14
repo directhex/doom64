@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -38,8 +38,7 @@
 //
 // WADFILE I/O related stuff.
 //
-typedef struct
-{
+typedef struct {
     char        name[8];
     wad_file_t* wadfile;
     int         position;

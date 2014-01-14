@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -35,8 +35,7 @@ extern    int    levelTimeCount;
 
 extern short globalint;
 
-typedef struct
-{
+typedef struct {
     int         delay;
     char        name[9];
     int         frames;
@@ -57,12 +56,12 @@ void        P_SpawnDelayTimer(line_t* line, void (*func)(void));
 
 // when needed
 dboolean    P_UseSpecialLine(mobj_t* thing, line_t* line, int side);
-void        P_PlayerInSpecialSector (player_t* player);
+void        P_PlayerInSpecialSector(player_t* player);
 
 int         twoSided(int sector, int line);
 sector_t*   getSector(int currentSector, int line, int side);
 side_t*     getSide(int currentSector, int line, int side);
-sector_t*   getNextSector(line_t* line, sector_t* sec );
+sector_t*   getNextSector(line_t* line, sector_t* sec);
 
 fixed_t     P_FindLowestFloorSurrounding(sector_t* sec);
 fixed_t     P_FindHighestFloorSurrounding(sector_t* sec);
@@ -84,24 +83,21 @@ int EV_DoFloorAndCeiling(line_t * line, dboolean fast, dboolean elevatorOrSplit)
 // P_LIGHTS
 //
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t*    sector;
     int          count;
     int          special;
 } fireflicker_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t*    sector;
     int          count;
     int          special;
 } lightflash_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t*    sector;
     int          count;
@@ -111,8 +107,7 @@ typedef struct
     int          special;
 } strobe_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t*    sector;
     int          type;
@@ -123,8 +118,7 @@ typedef struct
     int          special;
 } glow_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t     *sector;
     sector_t     *headsector;
@@ -134,8 +128,7 @@ typedef struct
     int          special;
 } sequenceGlow_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t     *sector;
     thinker_t    *combiner;
@@ -143,8 +136,7 @@ typedef struct
     actionf_p1   func;
 } combine_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     light_t *dest;
     light_t *src;
@@ -163,9 +155,9 @@ typedef struct
 #define PULSESLOW           1
 #define PULSERANDOM         2
 
-void        P_SpawnFireFlicker (sector_t* sector);
+void        P_SpawnFireFlicker(sector_t* sector);
 void        T_LightFlash(lightflash_t* flash);
-void        P_SpawnLightFlash (sector_t* sector);
+void        P_SpawnLightFlash(sector_t* sector);
 void        T_StrobeFlash(strobe_t* flash);
 void        T_FireFlicker(fireflicker_t* flick);
 void        P_UpdateLightThinker(light_t* destlight, light_t* srclight);
@@ -183,16 +175,14 @@ void        P_DoSectorLightChange(line_t* line, short tag);
 void        P_FadeInBrightness(void);
 
 
-typedef enum
-{
+typedef enum {
     top,
     middle,
     bottom
 } bwhere_e;
 
 
-typedef struct
-{
+typedef struct {
     line_t*     line;
     bwhere_e    where;
     int         btexture;
@@ -220,8 +210,7 @@ void P_ChangeSwitchTexture(line_t* line, int useAgain);
 //
 // P_PLATS
 //
-typedef enum
-{
+typedef enum {
     up,
     down,
     waiting,
@@ -230,8 +219,7 @@ typedef enum
 
 
 
-typedef enum
-{
+typedef enum {
     perpetualRaise,
     downWaitUpStay,
     raiseAndChange,
@@ -247,8 +235,7 @@ typedef enum
 
 
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t*    sector;
     fixed_t      speed;
@@ -286,8 +273,7 @@ void    P_ActivateInStasis(int tag);
 // P_DOORS
 //
 
-typedef enum
-{
+typedef enum {
     normal,
     close30ThenOpen,
     doorclose,
@@ -300,8 +286,7 @@ typedef enum
 
 
 
-typedef struct
-{
+typedef struct {
     thinker_t   thinker;
     vldoor_e    type;
     sector_t*   sector;
@@ -309,17 +294,17 @@ typedef struct
     fixed_t     bottomheight;
     fixed_t     initceiling;
     fixed_t     speed;
-    
+
     // 1 = up, 0 = waiting at top, -1 = down
     int         direction;
-    
+
     // tics to wait at the top
     int         topwait;
 
     // (keep in case a door going down is reset)
     // when it reaches 0, start going down
     int         topcountdown;
-    
+
 } vldoor_t;
 
 
@@ -330,15 +315,14 @@ typedef struct
 
 void    EV_VerticalDoor(line_t* line, mobj_t* thing);
 int     EV_DoDoor(line_t* line, vldoor_e type);
-void    T_VerticalDoor (vldoor_t* door);
+void    T_VerticalDoor(vldoor_t* door);
 
 
 
 //
 // P_CEILNG
 //
-typedef enum
-{
+typedef enum {
     lowerToFloor,
     raiseToHighest,
     lowerAndCrush,
@@ -352,8 +336,7 @@ typedef enum
 
 
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     ceiling_e    type;
     sector_t*    sector;
@@ -378,7 +361,7 @@ typedef struct
 extern ceiling_t*    activeceilings[MAXCEILINGS];
 
 int        EV_DoCeiling(line_t* line, ceiling_e type, fixed_t speed);
-void    T_MoveCeiling (ceiling_t* ceiling);
+void    T_MoveCeiling(ceiling_t* ceiling);
 void    P_AddActiveCeiling(ceiling_t* c);
 void    P_RemoveActiveCeiling(ceiling_t* c);
 int        EV_CeilingCrushStop(line_t* line);
@@ -388,8 +371,7 @@ void    P_ActivateInStasisCeiling(line_t* line);
 //
 // P_FLOOR
 //
-typedef enum
-{
+typedef enum {
     lowerFloor,             // lower floor to highest surrounding floor
     lowerFloorToLowest,     // lower floor to lowest surrounding floor
     turboLower,             // lower floor to highest surrounding floor VERY FAST
@@ -406,16 +388,14 @@ typedef enum
 
 
 
-typedef enum
-{
+typedef enum {
     build8, // slowly build by 8
     turbo16 // quickly build by 16
 } stair_e;
 
 
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     floor_e      type;
     dboolean     crush;
@@ -428,8 +408,7 @@ typedef struct
     dboolean     instant;
 } floormove_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t    thinker;
     sector_t     *sector;
     fixed_t      ceildest;
@@ -442,13 +421,12 @@ typedef struct
 
 #define FLOORSPEED FRACUNIT * 3
 
-typedef enum
-{
+typedef enum {
     ok,
     crushed,
     pastdest,
     stop
-        
+
 } result_e;
 
 result_e T_MovePlane(sector_t* sector, fixed_t speed, fixed_t dest,
@@ -470,22 +448,19 @@ int EV_SilentTeleport(line_t* line, mobj_t* thing);
 
 // Misc stuff
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     int tics;
     void (*finishfunc)(void);
 } delay_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     mobj_t* viewmobj;
     player_t* activator;
 } aimcamera_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     fixed_t x;
     fixed_t y;
@@ -498,8 +473,7 @@ typedef struct
     int tic;
 } movecamera_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     mobj_t* mobj;
     int amount;
@@ -507,8 +481,7 @@ typedef struct
     int flagReserve;
 } mobjfade_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     int delay;
     int lifetime;
@@ -516,14 +489,12 @@ typedef struct
     mobj_t *mobj;
 } mobjexp_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t thinker;
     int tics;
 } quake_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t   thinker;
     fixed_t     x1;
     fixed_t     x2;

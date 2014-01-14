@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -47,29 +47,27 @@ button_t buttonlist[MAXBUTTONS];
 // Start a button counting down till it turns off.
 //
 
-void P_StartButton(line_t* line, bwhere_e w, int texture, int time)
-{
+void P_StartButton(line_t* line, bwhere_e w, int texture, int time) {
     int    i;
-    
+
     // See if button is already pressed
-    for(i = 0; i < MAXBUTTONS; i++)
-    {
-        if(buttonlist[i].btimer && buttonlist[i].line == line)
+    for(i = 0; i < MAXBUTTONS; i++) {
+        if(buttonlist[i].btimer && buttonlist[i].line == line) {
             return;
+        }
     }
-    
-    for(i = 0; i < MAXBUTTONS; i++)
-    {
-        if(!buttonlist[i].btimer)
-        {
+
+    for(i = 0; i < MAXBUTTONS; i++) {
+        if(!buttonlist[i].btimer) {
             buttonlist[i].line = line;
             buttonlist[i].where = w;
             buttonlist[i].btexture = texture;
             buttonlist[i].btimer = time;
-            
-            if(SWITCHMASK(line->flags))
+
+            if(SWITCHMASK(line->flags)) {
                 buttonlist[i].soundorg = (mobj_t *)&line->frontsector->soundorg;
-            
+            }
+
             return;
         }
     }
@@ -83,53 +81,55 @@ void P_StartButton(line_t* line, bwhere_e w, int texture, int time)
 // Tell it if switch is ok to use again (1=yes, it's a button).
 //
 
-void P_ChangeSwitchTexture(line_t* line, int useAgain)
-{
+void P_ChangeSwitchTexture(line_t* line, int useAgain) {
     int sound;
     int swx;
-    
-    if(SPECIALMASK(line->special) == 52 || SPECIALMASK(line->special) == 124)
+
+    if(SPECIALMASK(line->special) == 52 || SPECIALMASK(line->special) == 124) {
         sound = sfx_switch2;
-    else
+    }
+    else {
         sound = sfx_switch1;
-    
-    if(!useAgain)
+    }
+
+    if(!useAgain) {
         line->special = 0;
-    
-    if(SWITCHMASK(line->flags) == ML_SWITCHX04)
-    {
+    }
+
+    if(SWITCHMASK(line->flags) == ML_SWITCHX04) {
         swx = swx_start + (sides[line->sidenum[0]].bottomtexture - swx_start) ^ 1;
-        
+
         S_StartSound(buttonlist->soundorg, sound);
         sides[line->sidenum[0]].bottomtexture = swx;
-        
-        if(useAgain)
+
+        if(useAgain) {
             P_StartButton(line, bottom, swx, BUTTONTIME);
-        
+        }
+
         return;
     }
-    else if(SWITCHMASK(line->flags) == ML_SWITCHX02)
-    {
+    else if(SWITCHMASK(line->flags) == ML_SWITCHX02) {
         swx = swx_start + (sides[line->sidenum[0]].toptexture - swx_start) ^ 1;
-        
+
         S_StartSound(buttonlist->soundorg, sound);
         sides[line->sidenum[0]].toptexture = swx;
-        
-        if(useAgain)
+
+        if(useAgain) {
             P_StartButton(line, top, swx, BUTTONTIME);
-        
+        }
+
         return;
     }
-    else if(SWITCHMASK(line->flags) == (ML_SWITCHX02 | ML_SWITCHX04))
-    {
+    else if(SWITCHMASK(line->flags) == (ML_SWITCHX02 | ML_SWITCHX04)) {
         swx = swx_start + (sides[line->sidenum[0]].midtexture - swx_start) ^ 1;
-        
+
         S_StartSound(buttonlist->soundorg, sound);
         sides[line->sidenum[0]].midtexture = swx;
-        
-        if(useAgain)
+
+        if(useAgain) {
             P_StartButton(line, middle, swx, BUTTONTIME);
-        
+        }
+
         return;
     }
 }

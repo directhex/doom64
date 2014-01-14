@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -98,8 +98,7 @@ extern fixed_t frame_viewz;
 // P_PSPR
 //
 struct laser_s;
-typedef struct laser_s
-{
+typedef struct laser_s {
     fixed_t         x1;
     fixed_t         y1;
     fixed_t         z1;
@@ -116,24 +115,23 @@ typedef struct laser_s
     angle_t         angle;
 } laser_t;
 
-typedef struct
-{
+typedef struct {
     thinker_t   thinker;
     mobj_t*     dest;
     laser_t*    laser;
 } laserthinker_t;
 
-void P_SetupPsprites (player_t* curplayer);
-void P_MovePsprites (player_t* curplayer);
-void P_DropWeapon (player_t* player);
+void P_SetupPsprites(player_t* curplayer);
+void P_MovePsprites(player_t* curplayer);
+void P_DropWeapon(player_t* player);
 void T_LaserThinker(laserthinker_t *laser);
 
 
 //
 // P_USER
 //
-void    P_PlayerThink (player_t* player);
-void    P_Thrust(player_t* player, angle_t angle, fixed_t move );
+void    P_PlayerThink(player_t* player);
+void    P_Thrust(player_t* player, angle_t angle, fixed_t move);
 angle_t P_AdjustAngle(angle_t angle, angle_t newangle, int threshold);
 void    P_SetStaticCamera(player_t* player);
 void    P_SetFollowCamera(player_t* player);
@@ -152,19 +150,19 @@ extern int          numspawnlist;
 mobj_t*     P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 void        P_SafeRemoveMobj(mobj_t* mobj);
 void        P_RemoveMobj(mobj_t* th);
-void        P_SpawnPlayer (mapthing_t* mthing);
+void        P_SpawnPlayer(mapthing_t* mthing);
 void        P_SetTarget(mobj_t **mop, mobj_t *targ);
-dboolean    P_SetMobjState (mobj_t* mobj, statenum_t state);
-void        P_MobjThinker (mobj_t* mobj);
+dboolean    P_SetMobjState(mobj_t* mobj, statenum_t state);
+void        P_MobjThinker(mobj_t* mobj);
 dboolean    P_OnMobjZ(mobj_t* mobj);
 void        P_NightmareRespawn(mobj_t* mobj);
 void        P_RespawnSpecials(mobj_t* special);
-void        P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z);
-void        P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
-void        P_SpawnPlayerMissile (mobj_t* source, mobjtype_t type);
+void        P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z);
+void        P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, int damage);
+void        P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type);
 void        P_FadeMobj(mobj_t* mobj, int amount, int alpha, int flags);
-int         EV_SpawnMobjTemplate (line_t* line);
-int         EV_FadeOutMobj (line_t* line);
+int         EV_SpawnMobjTemplate(line_t* line);
+int         EV_FadeOutMobj(line_t* line);
 void        P_SpawnDartMissile(int tid, int type, mobj_t *target);
 mobj_t*     P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
                            fixed_t xoffs, fixed_t yoffs, fixed_t heightoffs, dboolean aim);
@@ -172,23 +170,21 @@ mobj_t*     P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 //
 // P_ENEMY
 //
-void P_NoiseAlert (mobj_t* target, mobj_t* emmiter);
+void P_NoiseAlert(mobj_t* target, mobj_t* emmiter);
 
 
 //
 // P_MAPUTL
 //
-typedef struct
-{
+typedef struct {
     fixed_t    x;
     fixed_t    y;
     fixed_t    dx;
     fixed_t    dy;
-    
+
 } divline_t;
 
-typedef struct
-{
+typedef struct {
     fixed_t    frac;        // along trace line
     dboolean    isaline;
     union {
@@ -202,24 +198,24 @@ typedef struct
 extern intercept_t    intercepts[MAXINTERCEPTS];
 extern intercept_t*    intercept_p;
 
-typedef dboolean (*traverser_t) (intercept_t *in);
+typedef dboolean(*traverser_t)(intercept_t *in);
 
-fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
-int     P_PointOnLineSide (fixed_t x, fixed_t y, line_t* line);
-int     P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t* line);
-void     P_MakeDivline (line_t* li, divline_t* dl);
-fixed_t P_InterceptVector (divline_t* v2, divline_t* v1);
+fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+int     P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line);
+int     P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line);
+void     P_MakeDivline(line_t* li, divline_t* dl);
+fixed_t P_InterceptVector(divline_t* v2, divline_t* v1);
 void    P_GetIntersectPoint(fixed_t *s1, fixed_t *s2, fixed_t *x, fixed_t *y);
-int     P_BoxOnLineSide (fixed_t* tmbox, line_t* ld);
+int     P_BoxOnLineSide(fixed_t* tmbox, line_t* ld);
 
 extern fixed_t        opentop;
 extern fixed_t         openbottom;
 extern fixed_t        openrange;
 extern fixed_t        lowfloor;
 
-void         P_LineOpening (line_t* linedef);
-dboolean    P_BlockLinesIterator (int x, int y, dboolean(*func)(line_t*) );
-dboolean    P_BlockThingsIterator (int x, int y, dboolean(*func)(mobj_t*) );
+void         P_LineOpening(line_t* linedef);
+dboolean    P_BlockLinesIterator(int x, int y, dboolean(*func)(line_t*));
+dboolean    P_BlockThingsIterator(int x, int y, dboolean(*func)(mobj_t*));
 
 #define PT_ADDLINES        1
 #define PT_ADDTHINGS    2
@@ -228,8 +224,8 @@ dboolean    P_BlockThingsIterator (int x, int y, dboolean(*func)(mobj_t*) );
 extern divline_t    trace;
 
 dboolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int    flags, dboolean(*trav)(intercept_t *));
-void    P_UnsetThingPosition (mobj_t* thing);
-void    P_SetThingPosition (mobj_t* thing);
+void    P_UnsetThingPosition(mobj_t* thing);
+void    P_SetThingPosition(mobj_t* thing);
 
 
 //
@@ -243,14 +239,14 @@ extern fixed_t      tmfloorz;
 extern fixed_t      tmceilingz;
 extern    line_t*     tmhitline;
 
-dboolean    P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y);
-dboolean    P_TryMove (mobj_t* thing, fixed_t x, fixed_t y);
-dboolean    P_TeleportMove (mobj_t* thing, fixed_t x, fixed_t y);
-void        P_SlideMove (mobj_t* mo);
-dboolean    P_CheckSight (mobj_t* t1, mobj_t* t2);
+dboolean    P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
+dboolean    P_TryMove(mobj_t* thing, fixed_t x, fixed_t y);
+dboolean    P_TeleportMove(mobj_t* thing, fixed_t x, fixed_t y);
+void        P_SlideMove(mobj_t* mo);
+dboolean    P_CheckSight(mobj_t* t1, mobj_t* t2);
 void        P_ScanSights(void);
-dboolean    P_UseLines (player_t* player, dboolean showcontext);
-dboolean    P_ChangeSector (sector_t* sector, dboolean crunch);
+dboolean    P_UseLines(player_t* player, dboolean showcontext);
+dboolean    P_ChangeSector(sector_t* sector, dboolean crunch);
 mobj_t*     P_CheckOnMobj(mobj_t *thing);
 void        P_CheckChaseCamPosition(mobj_t* target, mobj_t* camera, fixed_t x, fixed_t y);
 

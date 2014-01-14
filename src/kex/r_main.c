@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -93,19 +93,16 @@ CVAR(r_rendersprites, 1);
 CVAR(r_drawfill, 0);
 CVAR(r_skybox, 0);
 
-CVAR_CMD(r_filter, 0)
-{
+CVAR_CMD(r_filter, 0) {
     GL_DumpTextures();
     GL_SetTextureFilter();
 }
 
-CVAR_CMD(r_texnonpowresize, 0)
-{
+CVAR_CMD(r_texnonpowresize, 0) {
     GL_DumpTextures();
 }
 
-CVAR_CMD(r_anisotropic, 0)
-{
+CVAR_CMD(r_anisotropic, 0) {
     GL_DumpTextures();
     GL_SetTextureFilter();
 }
@@ -118,13 +115,13 @@ CVAR_EXTERNAL(p_usecontext);
 // CMD_Wireframe
 //
 
-static CMD(Wireframe)
-{
+static CMD(Wireframe) {
     dboolean b;
-    
-    if(!param[0])
+
+    if(!param[0]) {
         return;
-    
+    }
+
     b = datoi(param[0]) & 1;
     R_DrawWireframe(b);
 }
@@ -139,77 +136,63 @@ static CMD(Wireframe)
 // tantoangle[] table.
 //Note not same as software version, which gets angle from (viewx, viewy) rather than (0, 0)
 
-angle_t R_PointToAngle(fixed_t x, fixed_t y)
-{
-    if((!x) && (!y))
+angle_t R_PointToAngle(fixed_t x, fixed_t y) {
+    if((!x) && (!y)) {
         return 0;
-    
-    if(x >= 0)
-    {
+    }
+
+    if(x >= 0) {
         // x >=0
-        if(y>= 0)
-        {
+        if(y>= 0) {
             // y>= 0
-            
-            if(x > y)
-            {
+
+            if(x > y) {
                 // octant 0
                 return tantoangle[SlopeDiv(y, x)];
             }
-            else
-            {
+            else {
                 // octant 1
                 return ANG90-1-tantoangle[SlopeDiv(x, y)];
             }
         }
-        else
-        {
+        else {
             // y<0
             y = -y;
-            
-            if(x > y)
-            {
+
+            if(x > y) {
                 // octant 8
                 return 0-tantoangle[SlopeDiv(y,x)];
             }
-            else
-            {
+            else {
                 // octant 7
                 return ANG270+tantoangle[SlopeDiv(x,y)];
             }
         }
     }
-    else
-    {
+    else {
         // x<0
         x = -x;
-        
-        if(y >= 0)
-        {
+
+        if(y >= 0) {
             // y>= 0
-            if(x > y)
-            {
+            if(x > y) {
                 // octant 3
                 return ANG180-1-tantoangle[SlopeDiv(y,x)];
             }
-            else
-            {
+            else {
                 // octant 2
                 return ANG90+ tantoangle[SlopeDiv(x,y)];
             }
         }
-        else
-        {
+        else {
             // y<0
             y = -y;
-            
-            if(x > y)
-            {
+
+            if(x > y) {
                 // octant 4
                 return ANG180+tantoangle[SlopeDiv(y,x)];
             }
-            else
-            {
+            else {
                 // octant 5
                 return ANG270-1-tantoangle[SlopeDiv(x,y)];
             }
@@ -224,47 +207,43 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y)
 // Returns side 0 (front) or 1 (back).
 //
 
-int R_PointOnSide(fixed_t x, fixed_t y, node_t* node)
-{
+int R_PointOnSide(fixed_t x, fixed_t y, node_t* node) {
     fixed_t    dx;
     fixed_t    dy;
     fixed_t    left;
     fixed_t    right;
-    
-    if (!node->dx)
-    {
-        if (x <= node->x)
+
+    if(!node->dx) {
+        if(x <= node->x) {
             return node->dy > 0;
-        
+        }
+
         return node->dy < 0;
     }
-    if (!node->dy)
-    {
-        if (y <= node->y)
+    if(!node->dy) {
+        if(y <= node->y) {
             return node->dx < 0;
-        
+        }
+
         return node->dx > 0;
     }
-    
+
     dx = (x - node->x);
     dy = (y - node->y);
-    
+
     // Try to quickly decide by looking at sign bits.
-    if ( (node->dy ^ node->dx ^ dx ^ dy)&0x80000000 )
-    {
-        if  ( (node->dy ^ dx) & 0x80000000 )
-        {
+    if((node->dy ^ node->dx ^ dx ^ dy)&0x80000000) {
+        if((node->dy ^ dx) & 0x80000000) {
             // (left is negative)
             return 1;
         }
         return 0;
     }
-    
-    left = FixedMul ( F2INT(node->dy), dx );
-    right = FixedMul ( dy , F2INT(node->dx));
-    
-    if (right < left)
-    {
+
+    left = FixedMul(F2INT(node->dy), dx);
+    right = FixedMul(dy , F2INT(node->dx));
+
+    if(right < left) {
         // front side
         return 0;
     }
@@ -276,17 +255,15 @@ int R_PointOnSide(fixed_t x, fixed_t y, node_t* node)
 // R_PointToAngle2
 //
 
-angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
-{
-    return R_PointToAngle (x2-x1, y2-y1);
+angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) {
+    return R_PointToAngle(x2-x1, y2-y1);
 }
 
 //
 // R_PointToPitch
 //
 
-angle_t R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist)
-{
+angle_t R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist) {
     return R_PointToAngle2(0, z1, dist, z2);
 }
 
@@ -294,8 +271,7 @@ angle_t R_PointToPitch(fixed_t z1, fixed_t z2, fixed_t dist)
 // R_Init
 //
 
-void R_Init(void)
-{
+void R_Init(void) {
     int i = 0;
     int a = 0;
     double an;
@@ -303,8 +279,7 @@ void R_Init(void)
     //
     // [d64] build finesine table
     //
-    for(i = 0; i < (5 * FINEANGLES / 4); i++)
-    {
+    for(i = 0; i < (5 * FINEANGLES / 4); i++) {
         an = a * M_PI / (double)FINEANGLES;
         finesine[i] = (fixed_t)(sin(an) * (double)FRACUNIT);
         a += 2;
@@ -320,25 +295,24 @@ void R_Init(void)
 // R_PointInSubsector
 //
 
-subsector_t* R_PointInSubsector(fixed_t x, fixed_t y)
-{
+subsector_t* R_PointInSubsector(fixed_t x, fixed_t y) {
     node_t*    node;
     int        side;
     int        nodenum;
-    
+
     // single subsector is a special case
-    if (!numnodes)
+    if(!numnodes) {
         return subsectors;
-    
+    }
+
     nodenum = numnodes-1;
-    
-    while (! (nodenum & NF_SUBSECTOR) )
-    {
+
+    while(!(nodenum & NF_SUBSECTOR)) {
         node = &nodes[nodenum];
-        side = R_PointOnSide (x, y, node);
+        side = R_PointOnSide(x, y, node);
         nodenum = node->children[side];
     }
-    
+
     return &subsectors[nodenum & ~NF_SUBSECTOR];
 }
 
@@ -346,8 +320,7 @@ subsector_t* R_PointInSubsector(fixed_t x, fixed_t y)
 // R_SetViewAngleOffset
 //
 
-void R_SetViewAngleOffset(angle_t angle)
-{
+void R_SetViewAngleOffset(angle_t angle) {
     viewangleoffset = angle;
 }
 
@@ -355,8 +328,7 @@ void R_SetViewAngleOffset(angle_t angle)
 // R_SetViewOffset
 //
 
-void R_SetViewOffset(int offset)
-{
+void R_SetViewOffset(int offset) {
     viewoffset=((float)offset)/10.0f;
 }
 
@@ -364,13 +336,12 @@ void R_SetViewOffset(int offset)
 // R_SetupLevel
 //
 
-void R_SetupLevel(void)
-{
+void R_SetupLevel(void) {
     R_AllocSubsectorBuffer();
     R_RefreshBrightness();
 
     DL_Init();
-    
+
     bRenderSky = true;
 }
 
@@ -379,8 +350,7 @@ void R_SetupLevel(void)
 // Loads and binds all world textures before level startup
 //
 
-void R_PrecacheLevel(void)
-{
+void R_PrecacheLevel(void) {
     char *texturepresent;
     char *spritepresent;
     int    i;
@@ -391,49 +361,44 @@ void R_PrecacheLevel(void)
 
     CON_DPrintf("--------R_PrecacheLevel--------\n");
     GL_DumpTextures();
-    
+
     texturepresent = (char*)Z_Alloca(numtextures);
     spritepresent = (char*)Z_Alloca(NUMSPRITES);
-    
-    for(i = 0; i < numsides; i++)
-    {
+
+    for(i = 0; i < numsides; i++) {
         texturepresent[sides[i].toptexture] = 1;
         texturepresent[sides[i].midtexture] = 1;
         texturepresent[sides[i].bottomtexture] = 1;
     }
-    
-    for(i = 0; i < numsectors; i++)
-    {
+
+    for(i = 0; i < numsectors; i++) {
         texturepresent[sectors[i].ceilingpic] = 1;
         texturepresent[sectors[i].floorpic] = 1;
 
-        if(sectors[i].flags & MS_LIQUIDFLOOR)
+        if(sectors[i].flags & MS_LIQUIDFLOOR) {
             texturepresent[sectors[i].floorpic + 1] = 1;
+        }
     }
 
     num = 0;
-    
-    for(i = 0; i < numtextures; i++)
-    {
-        if(texturepresent[i])
-        {
+
+    for(i = 0; i < numtextures; i++) {
+        if(texturepresent[i]) {
             GL_BindWorldTexture(i, 0, 0);
             num++;
 
-            for(p = 0; p < numanimdef; p++)
-            {
+            for(p = 0; p < numanimdef; p++) {
                 int lump = W_GetNumForName(animdefs[p].name) - t_start;
-            
-                if(lump != i)
+
+                if(lump != i) {
                     continue;
+                }
 
                 //
                 // TODO - add support for precaching palettes
                 //
-                if(!animdefs[p].palette)
-                {
-                    for(j = 1; j < animdefs[p].frames; j++)
-                    {
+                if(!animdefs[p].palette) {
+                    for(j = 1; j < animdefs[p].frames; j++) {
                         GL_BindWorldTexture(i + j, 0, 0);
                         num++;
                     }
@@ -444,39 +409,34 @@ void R_PrecacheLevel(void)
 
     CON_DPrintf("%i world textures cached\n", num);
 
-    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next)
+    for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next) {
         spritepresent[mo->sprite] = 1;
+    }
 
     num = 0;
 
     //
     // TODO - add support for precaching palettes
     //
-    for(i = 0; i < NUMSPRITES; i++)
-    {
-        if(spritepresent[i])
-        {
+    for(i = 0; i < NUMSPRITES; i++) {
+        if(spritepresent[i]) {
             spritedef_t    *sprdef;
             int k;
 
             sprdef = &spriteinfo[i];
 
-            for(k = 0; k < sprdef->numframes; k++)
-            {
+            for(k = 0; k < sprdef->numframes; k++) {
                 spriteframe_t *sprframe;
                 int p;
 
                 sprframe = &sprdef->spriteframes[k];
-                if(sprframe->rotate)
-                {
-                    for(p = 0; p < 8; p++)
-                    {
+                if(sprframe->rotate) {
+                    for(p = 0; p < 8; p++) {
                         GL_BindSpriteTexture(sprframe->lump[p], 0);
                         num++;
                     }
                 }
-                else
-                {
+                else {
                     GL_BindSpriteTexture(sprframe->lump[0], 0);
                     num++;
                 }
@@ -486,8 +446,7 @@ void R_PrecacheLevel(void)
 
     CON_DPrintf("%i sprites cached\n", num);
 
-    if(has_GL_ARB_multitexture)
-    {
+    if(has_GL_ARB_multitexture) {
         GL_SetTextureUnit(1, true);
         GL_BindEnvTexture();
 
@@ -505,8 +464,7 @@ void R_PrecacheLevel(void)
 // R_SetupFrame
 //
 
-void R_SetupFrame(player_t *player)
-{
+void R_SetupFrame(player_t *player) {
     angle_t pitch;
     angle_t angle;
     fixed_t cam_z;
@@ -534,15 +492,16 @@ void R_SetupFrame(player_t *player)
     pitch = viewcamera->pitch + ANG90;
     cam_z = (viewcamera == player->mo ? player->viewz : viewcamera->z) + quakeviewy;
 
-    if(viewcamera == player->mo)
+    if(viewcamera == player->mo) {
         pitch += player->recoilpitch;
+    }
 
     viewangle   = R_Interpolate(angle, frame_angle, (int)i_interpolateframes.value);
     viewpitch   = R_Interpolate(pitch, frame_pitch, (int)i_interpolateframes.value);
     viewx       = R_Interpolate(viewcamera->x, frame_viewx, (int)i_interpolateframes.value);
     viewy       = R_Interpolate(viewcamera->y, frame_viewy, (int)i_interpolateframes.value);
     viewz       = R_Interpolate(cam_z, frame_viewz, (int)i_interpolateframes.value);
-    
+
     fviewx      = F2D3D(viewx);
     fviewy      = F2D3D(viewy);
     fviewz      = F2D3D(viewz);
@@ -552,7 +511,7 @@ void R_SetupFrame(player_t *player)
 
     viewcos[0]  = F2D3D(dcos(viewangle));
     viewcos[1]  = F2D3D(dcos(viewpitch - ANG90));
-    
+
     D_IncValidCount();
 }
 
@@ -560,8 +519,7 @@ void R_SetupFrame(player_t *player)
 // R_SetViewClipping
 //
 
-static void R_SetViewClipping(angle_t angle)
-{
+static void R_SetViewClipping(angle_t angle) {
     R_Clipper_Clear();
     R_Clipper_SafeAddClipRange(viewangle + angle, viewangle - angle);
     R_FrustrumSetup();
@@ -571,12 +529,11 @@ static void R_SetViewClipping(angle_t angle)
 // R_DrawWireframe
 //
 
-void R_DrawWireframe(dboolean enable)
-{
-    if (enable == true)
+void R_DrawWireframe(dboolean enable) {
+    if(enable == true) {
         CON_CvarSetValue(r_fillmode.name, 0);
-    else    //Turn off wireframe and set device back to the way it was
-    {
+    }
+    else {  //Turn off wireframe and set device back to the way it was
         CON_CvarSetValue(r_fillmode.name, 1);
         dglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
@@ -586,8 +543,7 @@ void R_DrawWireframe(dboolean enable)
 // R_Interpolate
 //
 
-fixed_t R_Interpolate(fixed_t ticframe, fixed_t updateframe, dboolean enable)
-{
+fixed_t R_Interpolate(fixed_t ticframe, fixed_t updateframe, dboolean enable) {
     return !enable ? ticframe : updateframe + FixedMul(rendertic_frac, ticframe - updateframe);
 }
 
@@ -595,12 +551,10 @@ fixed_t R_Interpolate(fixed_t ticframe, fixed_t updateframe, dboolean enable)
 // R_InterpolateSectors
 //
 
-static void R_InterpolateSectors(void)
-{
+static void R_InterpolateSectors(void) {
     int i;
 
-    for(i = 0; i < numsectors; i++)
-    {
+    for(i = 0; i < numsectors; i++) {
         sector_t* s = &sectors[i];
 
         s->frame_z1[1] = R_Interpolate(s->floorheight, s->frame_z1[0], 1);
@@ -612,13 +566,13 @@ static void R_InterpolateSectors(void)
 // R_DrawReadDisk
 //
 
-static void R_DrawReadDisk(void)
-{
-    if(!BusyDisk)
+static void R_DrawReadDisk(void) {
+    if(!BusyDisk) {
         return;
-    
+    }
+
     Draw_Text(296, 8, WHITE, 1, 0, "**");
-    
+
     BusyDisk=true;
 }
 
@@ -626,8 +580,7 @@ static void R_DrawReadDisk(void)
 // R_DrawBlockMap
 //
 
-static void R_DrawBlockMap(void)
-{
+static void R_DrawBlockMap(void) {
     float   fx;
     float   fy;
     float   fz;
@@ -643,10 +596,8 @@ static void R_DrawBlockMap(void)
     mo = players[displayplayer].mo;
     fz = F2D3D(mo->floorz);
 
-    for(x = bmaporgx; x < ((bmapwidth << MAPBLOCKSHIFT) + bmaporgx); x += INT2F(MAPBLOCKUNITS))
-    {
-        for(y = bmaporgy; y < ((bmapheight << MAPBLOCKSHIFT) + bmaporgy); y += INT2F(MAPBLOCKUNITS))
-        {
+    for(x = bmaporgx; x < ((bmapwidth << MAPBLOCKSHIFT) + bmaporgx); x += INT2F(MAPBLOCKUNITS)) {
+        for(y = bmaporgy; y < ((bmapheight << MAPBLOCKSHIFT) + bmaporgy); y += INT2F(MAPBLOCKUNITS)) {
             fx = F2D3D(x);
             fy = F2D3D(y);
 
@@ -668,33 +619,26 @@ static void R_DrawBlockMap(void)
 // R_DrawRayTrace
 //
 
-static void R_DrawRayTrace(void)
-{
+static void R_DrawRayTrace(void) {
     thinker_t* thinker;
     tracedrawer_t* tdrawer;
 
-    for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
-    {
-        if(thinker->function.acp1 == (actionf_p1)T_TraceDrawer)
-        {
+    for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next) {
+        if(thinker->function.acp1 == (actionf_p1)T_TraceDrawer) {
             rcolor c = WHITE;
 
             tdrawer = ((tracedrawer_t*)thinker);
 
-            if(tdrawer->flags == PT_ADDLINES)
-            {
+            if(tdrawer->flags == PT_ADDLINES) {
                 c = D_RGBA(0, 0xff, 0, 0xff);
             }
-            else if(tdrawer->flags == PT_ADDTHINGS)
-            {
+            else if(tdrawer->flags == PT_ADDTHINGS) {
                 c = D_RGBA(0, 0, 0xff, 0xff);
             }
-            else if(tdrawer->flags == PT_EARLYOUT)
-            {
+            else if(tdrawer->flags == PT_EARLYOUT) {
                 c = D_RGBA(0xff, 0, 0, 0xff);
             }
-            else if(tdrawer->flags == (PT_ADDLINES | PT_ADDTHINGS))
-            {
+            else if(tdrawer->flags == (PT_ADDLINES | PT_ADDTHINGS)) {
                 c = D_RGBA(0, 0xff, 0xff, 0xff);
             }
 
@@ -719,34 +663,35 @@ static void R_DrawRayTrace(void)
 extern line_t* contextline; // from p_map.c
 dboolean R_GenerateSwitchPlane(seg_t *line, vtx_t *v); // from r_bsp.c
 
-static vertex_t* TraverseVertex(vertex_t* vertex, line_t* line)
-{
+static vertex_t* TraverseVertex(vertex_t* vertex, line_t* line) {
     int i;
     line_t** l;
 
-    for(i = 0, l = line->frontsector->lines; i < line->frontsector->linecount; i++)
-    {
-        if(l[i] == line)
+    for(i = 0, l = line->frontsector->lines; i < line->frontsector->linecount; i++) {
+        if(l[i] == line) {
             continue;
+        }
 
-        if(l[i]->v1 == vertex)
-        {
-            if(l[i]->angle != line->angle)
+        if(l[i]->v1 == vertex) {
+            if(l[i]->angle != line->angle) {
                 return vertex;
+            }
 
-            if(l[i]->special != line->special)
+            if(l[i]->special != line->special) {
                 return vertex;
+            }
 
             // keep searching
             return TraverseVertex(l[i]->v2, l[i]);
         }
-        else if(l[i]->v2 == vertex)
-        {
-            if(l[i]->angle != line->angle)
+        else if(l[i]->v2 == vertex) {
+            if(l[i]->angle != line->angle) {
                 return vertex;
+            }
 
-            if(l[i]->special != line->special)
+            if(l[i]->special != line->special) {
                 return vertex;
+            }
 
             // keep searching
             return TraverseVertex(l[i]->v1, l[i]);
@@ -757,14 +702,14 @@ static vertex_t* TraverseVertex(vertex_t* vertex, line_t* line)
     return vertex;
 }
 
-static void R_DrawContextWall(line_t* line)
-{
+static void R_DrawContextWall(line_t* line) {
     vtx_t vtx[4];
 
-    if(!line) return;
+    if(!line) {
+        return;
+    }
 
-    if(!SWITCHMASK(line->flags))
-    {
+    if(!SWITCHMASK(line->flags)) {
         vertex_t *v1;
         vertex_t *v2;
 
@@ -788,23 +733,21 @@ static void R_DrawContextWall(line_t* line)
         vtx[2].z = F2D3D(line->frontsector->ceilingheight);
         vtx[3].z = F2D3D(line->frontsector->ceilingheight);
     }
-    else
-    {
+    else {
         int i;
         vtx_t v[4];
         seg_t* seg = NULL;
 
-        for(i = 0; i < numsegs; i++)
-        {
-            if(segs[i].linedef == line)
-            {
+        for(i = 0; i < numsegs; i++) {
+            if(segs[i].linedef == line) {
                 seg = &segs[i];
                 break;
             }
         }
 
-        if(seg == NULL)
+        if(seg == NULL) {
             return;
+        }
 
         R_GenerateSwitchPlane(seg, v);
 
@@ -857,19 +800,20 @@ static void R_DrawContextWall(line_t* line)
 // R_RenderPlayerView
 //
 
-void R_RenderPlayerView(player_t *player)
-{
-    if(!r_fillmode.value)
+void R_RenderPlayerView(player_t *player) {
+    if(!r_fillmode.value) {
         dglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
-    if(devparm)
+    }
+
+    if(devparm) {
         renderTic = I_GetTimeMS();
-    
+    }
+
     //
     // clear sprite list
     //
     R_ClearSprites();
-    
+
     //
     // setup draw frame
     //
@@ -878,8 +822,7 @@ void R_RenderPlayerView(player_t *player)
     //
     // check for t-junction cracks
     //
-    if(r_drawfill.value >= 1)
-    {
+    if(r_drawfill.value >= 1) {
         dglClearColor(1, 0, 1, 0);
         dglClear(GL_COLOR_BUFFER_BIT);
         bRenderSky = false;
@@ -888,9 +831,10 @@ void R_RenderPlayerView(player_t *player)
     //
     // draw sky
     //
-    if(bRenderSky)
+    if(bRenderSky) {
         R_DrawSky();
-    
+    }
+
     bRenderSky = false;
 
     //
@@ -902,7 +846,7 @@ void R_RenderPlayerView(player_t *player)
     // check for new console commands
     //
     NetUpdate();
-    
+
     //
     // setup clipping
     //
@@ -911,8 +855,9 @@ void R_RenderPlayerView(player_t *player)
     //
     // interpolate moving sectors before draw
     //
-    if(i_interpolateframes.value)
+    if(i_interpolateframes.value) {
         R_InterpolateSectors();
+    }
 
     //
     // traverse BSP for rendering
@@ -929,35 +874,41 @@ void R_RenderPlayerView(player_t *player)
     //
     R_RenderWorld();
 
-    if(r_drawblockmap.value)
+    if(r_drawblockmap.value) {
         R_DrawBlockMap();
+    }
 
-    if(r_drawmobjbox.value)
+    if(r_drawmobjbox.value) {
         R_DrawThingBBox();
+    }
 
-    if(r_drawtrace.value)
+    if(r_drawtrace.value) {
         R_DrawRayTrace();
+    }
 
-    if(p_usecontext.value)
+    if(p_usecontext.value) {
         R_DrawContextWall(contextline);
-    
+    }
+
     //
     // render player weapon sprites
     //
     if(ShowGun && player->cameratarget == player->mo &&
-        !(player->cheats & CF_SPECTATOR))
-    {
+            !(player->cheats & CF_SPECTATOR)) {
         R_RenderPlayerSprites(player);
     }
-    
-    if(devparm)
+
+    if(devparm) {
         spriteRenderTic = (I_GetTimeMS() - spriteRenderTic);
-    
-    if(devparm)
+    }
+
+    if(devparm) {
         R_DrawReadDisk();
-    
-    if(devparm)
+    }
+
+    if(devparm) {
         renderTic = (I_GetTimeMS() - renderTic);
+    }
 
     //
     // check for new console commands
@@ -969,8 +920,7 @@ void R_RenderPlayerView(player_t *player)
 // R_RegisterCvars
 //
 
-void R_RegisterCvars(void)
-{
+void R_RegisterCvars(void) {
     CON_CvarRegister(&r_fov);
     CON_CvarRegister(&r_fillmode);
     CON_CvarRegister(&r_uniformtime);

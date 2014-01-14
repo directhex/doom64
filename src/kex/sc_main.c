@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -44,23 +44,21 @@ scparser_t sc_parser;
 // SC_Open
 //
 
-static void SC_Open(char* name)
-{
+static void SC_Open(char* name) {
     int lump;
 
     CON_DPrintf("--------SC_Open: Reading %s--------\n", name);
 
     lump = W_CheckNumForName(name);
 
-    if(lump <= -1)
-    {
+    if(lump <= -1) {
         sc_parser.buffsize   = M_ReadFile(name, &sc_parser.buffer);
 
-        if(sc_parser.buffsize == -1)
+        if(sc_parser.buffsize == -1) {
             I_Error("SC_Open: %s not found", name);
+        }
     }
-    else
-    {
+    else {
         sc_parser.buffer     = W_CacheLumpNum(lump, PU_STATIC);
         sc_parser.buffsize   = W_LumpLength(lump);
     }
@@ -78,8 +76,7 @@ static void SC_Open(char* name)
 // SC_Close
 //
 
-static void SC_Close(void)
-{
+static void SC_Close(void) {
     Z_Free(sc_parser.buffer);
 
     sc_parser.buffer         = NULL;
@@ -95,13 +92,11 @@ static void SC_Close(void)
 // SC_Compare
 //
 
-static void SC_Compare(char* token)
-{
+static void SC_Compare(char* token) {
     sc_parser.find(false);
-    if(dstricmp(sc_parser.token, token))
-    {
+    if(dstricmp(sc_parser.token, token)) {
         I_Error("SC_Compare: Expected '%s', found '%s' (line = %i, pos = %i)",
-        token, sc_parser.token, sc_parser.linepos, sc_parser.rowpos);
+                token, sc_parser.token, sc_parser.linepos, sc_parser.rowpos);
     }
 }
 
@@ -109,8 +104,7 @@ static void SC_Compare(char* token)
 // SC_ReadTokens
 //
 
-static int SC_ReadTokens(void)
-{
+static int SC_ReadTokens(void) {
     return (sc_parser.buffpos < sc_parser.buffsize);
 }
 
@@ -118,8 +112,7 @@ static int SC_ReadTokens(void)
 // SC_GetString
 //
 
-static char* SC_GetString(void)
-{
+static char* SC_GetString(void) {
     sc_parser.compare("="); // expect a '='
     sc_parser.find(false);  // get next token which should be a string
 
@@ -130,8 +123,7 @@ static char* SC_GetString(void)
 // SC_GetInteger
 //
 
-static int SC_GetInteger(void)
-{
+static int SC_GetInteger(void) {
     sc_parser.compare("="); // expect a '='
     sc_parser.find(false);  // get next token which should be an integer
 
@@ -142,23 +134,19 @@ static int SC_GetInteger(void)
 // SC_SetData
 //
 
-static int SC_SetData(byte* data, const scdatatable_t* table)
-{
+static int SC_SetData(byte* data, const scdatatable_t* table) {
     int i;
     dboolean ok = false;
 
-    for(i = 0; table[i].token; i++)
-    {
-        if(!dstricmp(table[i].token, sc_parser.token))
-        {
+    for(i = 0; table[i].token; i++) {
+        if(!dstricmp(table[i].token, sc_parser.token)) {
             byte* pointer = ((byte*)data + table[i].ptroffset);
             char* name;
             byte rgb[3];
 
             ok = true;
 
-            switch(table[i].type)
-            {
+            switch(table[i].type) {
             case 's':
                 name = sc_parser.getstring();
                 dstrncpy((char*)pointer, name, dstrlen(name));
@@ -197,8 +185,7 @@ static int SC_SetData(byte* data, const scdatatable_t* table)
 // SC_Find
 //
 
-static int SC_Find(dboolean forceupper)
-{
+static int SC_Find(dboolean forceupper) {
     char c = 0;
     int i = 0;
     dboolean comment = false;
@@ -207,66 +194,58 @@ static int SC_Find(dboolean forceupper)
 
     dmemset(sc_parser.token, 0, 256);
 
-    while(sc_parser.readtokens())
-    {
+    while(sc_parser.readtokens()) {
         c = sc_parser.fgetchar();
 
-        if(c == '/')
+        if(c == '/') {
             comment = true;
+        }
 
-        if(comment == false)
-        {
-            if(c == '"')
-            {
-                if(!string)
-                {
+        if(comment == false) {
+            if(c == '"') {
+                if(!string) {
                     string = true;
                     continue;
                 }
-                else if(havetoken)
-                {
+                else if(havetoken) {
                     c = sc_parser.fgetchar();
 
-                    if(c != ',')
+                    if(c != ',') {
                         return true;
-                    else
-                    {
+                    }
+                    else {
                         havetoken = false;
                         continue;
                     }
                 }
-                else
-                {
-                    if(sc_parser.fgetchar() == '"')
-                    {
-                        if(sc_parser.fgetchar() == ',')
+                else {
+                    if(sc_parser.fgetchar() == '"') {
+                        if(sc_parser.fgetchar() == ',') {
                             continue;
-                        else
-                        {
+                        }
+                        else {
                             sc_parser.rewind();
                             sc_parser.rewind();
                         }
                     }
-                    else
+                    else {
                         sc_parser.rewind();
+                    }
                 }
             }
 
-            if(!string)
-            {
-                if(c > ' ')
-                {
+            if(!string) {
+                if(c > ' ') {
                     havetoken = true;
                     sc_parser.token[i++] =
                         forceupper ? toupper(c) : c;
                 }
-                else if(havetoken)
+                else if(havetoken) {
                     return true;
+                }
             }
-            else
-            {
-                if(c >= ' ' && c != '"')
-                {
+            else {
+                if(c >= ' ' && c != '"') {
                     havetoken = true;
                     sc_parser.token[i++] =
                         forceupper ? toupper(c) : c;
@@ -274,13 +253,13 @@ static int SC_Find(dboolean forceupper)
             }
         }
 
-        if(c == '\n')
-        {
+        if(c == '\n') {
             sc_parser.linepos++;
             sc_parser.rowpos = 1;
             comment = false;
-            if(string)
+            if(string) {
                 sc_parser.token[i++] = c;
+            }
         }
     }
 
@@ -291,8 +270,7 @@ static int SC_Find(dboolean forceupper)
 // SC_GetChar
 //
 
-static char SC_GetChar(void)
-{
+static char SC_GetChar(void) {
     sc_parser.rowpos++;
     return sc_parser.buffer[sc_parser.buffpos++];
 }
@@ -301,8 +279,7 @@ static char SC_GetChar(void)
 // SC_Rewind
 //
 
-static void SC_Rewind(void)
-{
+static void SC_Rewind(void) {
     sc_parser.rowpos--;
     sc_parser.buffpos--;
 }
@@ -311,21 +288,20 @@ static void SC_Rewind(void)
 // SC_Error
 //
 
-static void SC_Error(char* function)
-{
-    if(sc_parser.token[0] < ' ')
+static void SC_Error(char* function) {
+    if(sc_parser.token[0] < ' ') {
         return;
+    }
 
     I_Error("%s: Unknown token: '%s' (line = %i, pos = %i)",
-        function, sc_parser.token, sc_parser.linepos, sc_parser.rowpos);
+            function, sc_parser.token, sc_parser.linepos, sc_parser.rowpos);
 }
 
 //
 // SC_Init
 //
 
-void SC_Init(void)
-{
+void SC_Init(void) {
     //
     // clear variables
     //

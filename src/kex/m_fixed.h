@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -44,9 +44,9 @@
 
 typedef int fixed_t;
 
-fixed_t FixedMul    (fixed_t a, fixed_t b);
-fixed_t FixedDiv    (fixed_t a, fixed_t b);
-fixed_t FixedDiv2   (fixed_t a, fixed_t b);
-fixed_t FixedDot    (fixed_t a1, fixed_t b1, fixed_t c1, fixed_t a2, fixed_t b2, fixed_t c2);
+fixed_t FixedMul(fixed_t a, fixed_t b);
+fixed_t FixedDiv(fixed_t a, fixed_t b);
+fixed_t FixedDiv2(fixed_t a, fixed_t b);
+fixed_t FixedDot(fixed_t a1, fixed_t b1, fixed_t c1, fixed_t a2, fixed_t b2, fixed_t c2);
 
 #endif

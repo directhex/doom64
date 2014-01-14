@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -35,7 +35,7 @@
 void    F_Start(void);
 void    F_Stop(void);
 int     F_Ticker(void);     // Called by main loop.
-void    F_Drawer (void);
+void    F_Drawer(void);
 
 void    IN_Start(void);
 void    IN_Stop(void);

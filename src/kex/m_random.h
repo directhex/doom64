@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -101,13 +101,13 @@ extern unsigned int rngseed;           // The starting seed (not part of state)
 // from a lookup table.
 extern byte rndtable[256];
 
-int M_Random (void);
+int M_Random(void);
 
 // As M_Random, but used only by the play simulation.
 int P_Random(pr_class_t pr_class);
 
 // Fix randoms for demos.
-void M_ClearRandom (void);
+void M_ClearRandom(void);
 
 int P_RandomShift(pr_class_t pr_class, int shift);
 

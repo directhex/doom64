@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -36,7 +36,7 @@
 #endif
 
 // Called by DoomMain.
-void I_Init (void);
+void I_Init(void);
 
 #ifdef _WIN32
 
@@ -53,7 +53,7 @@ void I_ShowSysConsole(dboolean show);
 
 extern fixed_t rendertic_frac;
 
-extern int      (*I_GetTime)(void);
+extern int (*I_GetTime)(void);
 void            I_InitClockRate(void);
 int             I_GetTimeMS(void);
 void            I_Sleep(unsigned long usecs);
@@ -71,15 +71,15 @@ unsigned long   I_GetRandomTimeSeed(void);
 // or calls a loadable driver to build it.
 // This ticcmd will then be modified by the gameloop
 // for normal input.
-ticcmd_t* I_BaseTiccmd (void);
+ticcmd_t* I_BaseTiccmd(void);
 
 
 // Called by M_Responder when quit is selected.
 // Clean exit, displays sell blurb.
-void I_Quit (void);
+void I_Quit(void);
 
 void I_BeginRead(void);
-void I_Error (char *error, ...);
+void I_Error(char *error, ...);
 void I_Printf(char *msg, ...);
 char *I_DoomExeDir(void);
 

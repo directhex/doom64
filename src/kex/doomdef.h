@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -97,7 +97,7 @@ extern d_inline float D_fabs(float x);
 #endif
 
 //
-// The packed attribute forces structures to be packed into the minimum 
+// The packed attribute forces structures to be packed into the minimum
 // space necessary.  If this is not done, the compiler may align structure
 // fields differently to optimise memory access, inflating the overall
 // structure size.  It is important to use the packed attribute on certain
@@ -148,8 +148,7 @@ extern d_inline float D_fabs(float x);
 // The current state of the game: whether we are
 // playing, gazing at the intermission screen,
 // the game final animation, or a demo.
-typedef enum
-{
+typedef enum {
     GS_NONE,
     GS_LEVEL,
     GS_SKIPPABLE
@@ -174,8 +173,7 @@ typedef enum
 #define MTF_NONETGAME       2048   // Don't spawn in standard netgame mode
 #define MTF_NIGHTMARE       4096    // [kex] Nightmare thing
 
-typedef enum
-{
+typedef enum {
     sk_baby,
     sk_easy,
     sk_medium,
@@ -189,17 +187,16 @@ typedef enum
 //
 // Key cards.
 //
-typedef enum
-{
+typedef enum {
     it_bluecard,
     it_yellowcard,
     it_redcard,
     it_blueskull,
     it_yellowskull,
     it_redskull,
-        
+
     NUMCARDS
-        
+
 } card_t;
 
 
@@ -207,8 +204,7 @@ typedef enum
 // The defined weapons,
 //  including a marker indicating
 //  user has not changed weapon.
-typedef enum
-{
+typedef enum {
     wp_chainsaw,
     wp_fist,
     wp_pistol,
@@ -220,29 +216,27 @@ typedef enum
     wp_bfg,
     wp_laser,
     NUMWEAPONS,
-    
+
     // No pending weapon change.
     wp_nochange
-    
+
 } weapontype_t;
 
 
 // Ammunition types defined.
-typedef enum
-{
+typedef enum {
     am_clip,    // Pistol / chaingun ammo.
     am_shell,   // Shotgun / double barreled shotgun.
     am_cell,    // Plasma rifle, BFG.
     am_misl,    // Missile launcher.
     NUMAMMO,
     am_noammo    // Unlimited for chainsaw / fist.
-    
+
 } ammotype_t;
 
 
 // Power up artifacts.
-typedef enum
-{
+typedef enum {
     pw_invulnerability,
     pw_strength,
     pw_invisibility,
@@ -250,7 +244,7 @@ typedef enum
     pw_allmap,
     pw_infrared,
     NUMPOWERS
-    
+
 } powertype_t;
 
 #define BONUSADD    4
@@ -259,19 +253,17 @@ typedef enum
 // Power up durations,
 //  how many seconds till expiration,
 //
-typedef enum
-{
+typedef enum {
     INVULNTICS    = (30*TICRATE),
     INVISTICS     = (60*TICRATE),
     INFRATICS     = (120*TICRATE),
     IRONTICS      = (60*TICRATE),
     STRTICS     = (3*TICRATE)
-    
+
 } powerduration_t;
 
 // 20120209 villsa - game flags
-enum
-{
+enum {
     GF_NOMONSTERS       = (1 << 0),
     GF_FASTMONSTERS     = (1 << 1),
     GF_RESPAWNMONSTERS  = (1 << 2),
@@ -285,8 +277,7 @@ enum
 };
 
 // 20120209 villsa - compatibility flags
-enum
-{
+enum {
     COMPATF_COLLISION   = (1 << 0),     // don't use maxradius for mobj position checks
     COMPATF_MOBJPASS    = (1 << 1),     // allow mobjs to stand on top one another
     COMPATF_LIMITPAIN   = (1 << 2),     // pain elemental limited to 17 lost souls?

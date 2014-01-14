@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1999-2000 Paul Brook
@@ -33,8 +33,7 @@
 #define PCKF_UP         0x8000
 #define PCKF_COUNTMASK  0x00ff
 
-typedef enum
-{
+typedef enum {
     PCKEY_ATTACK,
     PCKEY_USE,
     PCKEY_STRAFE,
@@ -52,8 +51,7 @@ typedef enum
     NUM_PCKEYS
 } pckeys_t;
 
-typedef struct
-{
+typedef struct {
     int            mousex;
     int            mousey;
     int            joyx;
@@ -63,7 +61,7 @@ typedef struct
     int            sdclicktime;
     int            fdclicktime;
     int            flags;
-}playercontrols_t;
+} playercontrols_t;
 
 #define PCF_NEXTWEAPON    0x01
 #define PCF_FDCLICK        0x02

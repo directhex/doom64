@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1997 Id Software, Inc.
@@ -56,8 +56,7 @@
 
 // automap flags
 
-enum
-{
+enum {
     AF_PANLEFT      = 1,
     AF_PANRIGHT     = 2,
     AF_PANTOP       = 4,
@@ -117,19 +116,16 @@ CVAR_EXTERNAL(i_xinputscheme);
 // CMD_Automap
 //
 
-static CMD(Automap)
-{
-    if(gamestate != GS_LEVEL)
+static CMD(Automap) {
+    if(gamestate != GS_LEVEL) {
         return;
+    }
 
-    if(!automapactive)
-    {
+    if(!automapactive) {
         AM_Start();
     }
-    else
-    {
-        if(++amModeCycle >= 2)
-        {
+    else {
+        if(++amModeCycle >= 2) {
             amModeCycle = 0;
             AM_Stop();
         }
@@ -140,25 +136,25 @@ static CMD(Automap)
 // CMD_AutomapSetFlag
 //
 
-static CMD(AutomapSetFlag)
-{
-    if(gamestate != GS_LEVEL)
+static CMD(AutomapSetFlag) {
+    if(gamestate != GS_LEVEL) {
         return;
+    }
 
-    if(!automapactive)
+    if(!automapactive) {
         return;
+    }
 
-    if(data & PCKF_UP)
-    {
+    if(data & PCKF_UP) {
         int64 flags = (data ^ PCKF_UP);
 
         am_flags &= ~flags;
 
-        if(flags & (AF_PANMODE|AF_PANGAMEPAD))
+        if(flags & (AF_PANMODE|AF_PANGAMEPAD)) {
             automappany = automappanx = 0;
+        }
     }
-    else
-    {
+    else {
         am_flags |= data;
     }
 }
@@ -167,25 +163,24 @@ static CMD(AutomapSetFlag)
 // CMD_AutomapFollow
 //
 
-static CMD(AutomapFollow)
-{
-    if(gamestate != GS_LEVEL)
+static CMD(AutomapFollow) {
+    if(gamestate != GS_LEVEL) {
         return;
+    }
 
-    if(!automapactive)
+    if(!automapactive) {
         return;
+    }
 
     followplayer = !followplayer;
     plr->message = followplayer ? AMSTR_FOLLOWON : AMSTR_FOLLOWOFF;
 
-    if(!followplayer)
-    {
+    if(!followplayer) {
         automapx = plr->mo->x;
         automapy = plr->mo->y;
         automapangle = plr->mo->angle;
     }
-    else
-    {
+    else {
         automappany = automappanx = 0;
     }
 }
@@ -194,8 +189,7 @@ static CMD(AutomapFollow)
 // AM_Reset
 //
 
-void AM_Reset(void)
-{
+void AM_Reset(void) {
     automapx        = 0;
     automapy        = 0;
     automappanx     = 0;
@@ -218,8 +212,7 @@ void AM_Reset(void)
 // AM_Stop
 //
 
-void AM_Stop(void)
-{
+void AM_Stop(void) {
     automapactive = false;
     stopped = true;
     R_RefreshBrightness();
@@ -229,29 +222,28 @@ void AM_Stop(void)
 // AM_Start
 //
 
-void AM_Start(void)
-{
+void AM_Start(void) {
     int pnum;
-    
-    if(!stopped)
+
+    if(!stopped) {
         AM_Stop();
-    
+    }
+
     stopped = false;
     automapactive = true;
     amModeCycle = 0;
     am_flags = 0;
     am_blink = 0x5F | 0x100;
-    
+
     // find player to center on initially
-    if(!playeringame[pnum = consoleplayer])
-    {
-        for(pnum=0;pnum<MAXPLAYERS;pnum++)
-        {
-            if(playeringame[pnum])
+    if(!playeringame[pnum = consoleplayer]) {
+        for(pnum=0; pnum<MAXPLAYERS; pnum++) {
+            if(playeringame[pnum]) {
                 break;
+            }
         }
     }
-    
+
     plr = &players[pnum];
 
     automapx = plr->mo->x;
@@ -265,8 +257,7 @@ void AM_Start(void)
 // of the automap
 //
 
-static void AM_GetBounds(void)
-{
+static void AM_GetBounds(void) {
     int i;
     fixed_t block[8];
     fixed_t x;
@@ -281,8 +272,7 @@ static void AM_GetBounds(void)
     // need to manually flip the origins based on player's angle otherwise
     // the bounding box will get screwed up.
 
-    if(automapangle >= ANG90 && automapangle <= -ANG90)
-    {
+    if(automapangle >= ANG90 && automapangle <= -ANG90) {
         block[0] = ((bmapwidth<<MAPBLOCKSHIFT) + bmaporgx);
         block[1] = bmaporgy;
         block[2] = bmaporgx;
@@ -292,8 +282,7 @@ static void AM_GetBounds(void)
         block[6] = ((bmapwidth<<MAPBLOCKSHIFT) + bmaporgx);
         block[7] = ((bmapheight<<MAPBLOCKSHIFT) + bmaporgy);
     }
-    else
-    {
+    else {
         block[0] = bmaporgx;
         block[1] = ((bmapheight<<MAPBLOCKSHIFT) + bmaporgy);
         block[2] = ((bmapwidth<<MAPBLOCKSHIFT) + bmaporgx);
@@ -306,8 +295,7 @@ static void AM_GetBounds(void)
 
     M_ClearBox(am_box);
 
-    for(i = 0; i < 8; i+=2)
-    {
+    for(i = 0; i < 8; i+=2) {
         bx = (block[i] - automapx) / FRACUNIT;
         by = (block[i+1] - automapy) / FRACUNIT;
 
@@ -318,7 +306,7 @@ static void AM_GetBounds(void)
 
         x = (x1 - y1) + automapx;
         y = (x2 + y2) + automapy;
-        
+
         M_AddToBox(am_box, x, y);
     }
 }
@@ -329,37 +317,29 @@ static void AM_GetBounds(void)
 // Handle events (user inputs) in automap mode
 //
 
-dboolean AM_Responder(event_t* ev)
-{
+dboolean AM_Responder(event_t* ev) {
     int rc = false;
-    
-    if(am_flags & AF_PANMODE)
-    {
-        if(ev->type == ev_mouse)
-        {
+
+    if(am_flags & AF_PANMODE) {
+        if(ev->type == ev_mouse) {
             mpanx = ev->data2;
             mpany = ev->data3;
             rc = true;
         }
-        else
-        {
-            if(ev->type == ev_mousedown && ev->data1)
-            {
-                if(ev->data1 & 1)
-                {
+        else {
+            if(ev->type == ev_mousedown && ev->data1) {
+                if(ev->data1 & 1) {
                     am_flags &= ~AF_ZOOMOUT;
                     am_flags |= AF_ZOOMIN;
                     rc = true;
                 }
-                else if(ev->data1 & 4)
-                {
+                else if(ev->data1 & 4) {
                     am_flags &= ~AF_ZOOMIN;
                     am_flags |= AF_ZOOMOUT;
                     rc = true;
                 }
             }
-            else
-            {
+            else {
                 am_flags &= ~AF_ZOOMOUT;
                 am_flags &= ~AF_ZOOMIN;
             }
@@ -367,16 +347,13 @@ dboolean AM_Responder(event_t* ev)
     }
 #ifdef _USE_XINPUT  // XINPUT
 
-    else if(ev->type == ev_gamepad)
-    {
+    else if(ev->type == ev_gamepad) {
         //
         // user has pan button held down and is
         // moving around with the stick
         //
-        if(am_flags & AF_PANGAMEPAD)
-        {
-            if(ev->data3 == XINPUT_GAMEPAD_LEFT_STICK)
-            {
+        if(am_flags & AF_PANGAMEPAD) {
+            if(ev->data3 == XINPUT_GAMEPAD_LEFT_STICK) {
                 float x;
                 float y;
 
@@ -390,12 +367,9 @@ dboolean AM_Responder(event_t* ev)
             }
         }
     }
-    else if(automapactive)
-    {
-        if(ev->type == ev_keydown)
-        {
-            switch(ev->data1)
-            {
+    else if(automapactive) {
+        if(ev->type == ev_keydown) {
+            switch(ev->data1) {
             //
             // pan button
             //
@@ -404,58 +378,50 @@ dboolean AM_Responder(event_t* ev)
                 break;
 
             case BUTTON_LEFT_SHOULDER:
-                if(am_flags & AF_PANGAMEPAD)
-                {
+                if(am_flags & AF_PANGAMEPAD) {
                     CMD_AutomapSetFlag(AF_ZOOMIN, NULL);
                     rc = true;
                 }
                 break;
 
             case BUTTON_RIGHT_SHOULDER:
-                if(am_flags & AF_PANGAMEPAD)
-                {
+                if(am_flags & AF_PANGAMEPAD) {
                     CMD_AutomapSetFlag(AF_ZOOMOUT, NULL);
                     rc = true;
                 }
                 break;
 
             case BUTTON_DPAD_UP:
-                if(am_flags & AF_PANGAMEPAD)
-                {
+                if(am_flags & AF_PANGAMEPAD) {
                     CMD_AutomapSetFlag(AF_PANTOP, NULL);
                     rc = true;
                 }
                 break;
 
             case BUTTON_DPAD_DOWN:
-                if(am_flags & AF_PANGAMEPAD)
-                {
+                if(am_flags & AF_PANGAMEPAD) {
                     CMD_AutomapSetFlag(AF_PANBOTTOM, NULL);
                     rc = true;
                 }
                 break;
 
             case BUTTON_DPAD_LEFT:
-                if(am_flags & AF_PANGAMEPAD)
-                {
+                if(am_flags & AF_PANGAMEPAD) {
                     CMD_AutomapSetFlag(AF_PANLEFT, NULL);
                     rc = true;
                 }
                 break;
 
             case BUTTON_DPAD_RIGHT:
-                if(am_flags & AF_PANGAMEPAD)
-                {
+                if(am_flags & AF_PANGAMEPAD) {
                     CMD_AutomapSetFlag(AF_PANRIGHT, NULL);
                     rc = true;
                 }
                 break;
             }
         }
-        else if(ev->type == ev_keyup)
-        {
-            switch(ev->data1)
-            {
+        else if(ev->type == ev_keyup) {
+            switch(ev->data1) {
             case BUTTON_A:
                 CMD_AutomapSetFlag(AF_PANGAMEPAD|PCKF_UP, NULL);
                 break;
@@ -487,9 +453,9 @@ dboolean AM_Responder(event_t* ev)
         }
     }
 #endif
-    
+
     return rc;
-    
+
 }
 
 //
@@ -497,38 +463,36 @@ dboolean AM_Responder(event_t* ev)
 // Updates on Game Tick
 //
 
-void AM_Ticker(void)
-{
+void AM_Ticker(void) {
     fixed_t speed;
     fixed_t oldautomapx;
     fixed_t oldautomapy;
 
-    if(!automapactive)
+    if(!automapactive) {
         return;
+    }
 
     AM_GetBounds();
 
-    if(am_flags & AF_ZOOMOUT)
-    {
+    if(am_flags & AF_ZOOMOUT) {
         scale += 32.0f;
-        if(scale > 1500.0f)
+        if(scale > 1500.0f) {
             scale = 1500.0f;
+        }
     }
-    if(am_flags & AF_ZOOMIN)
-    {
+    if(am_flags & AF_ZOOMIN) {
         scale -= 32.0f;
-        if(scale < 200.0f)
+        if(scale < 200.0f) {
             scale = 200.0f;
+        }
     }
 
     speed = (int)(scale / 16) * FRACUNIT;
     oldautomapx = automappanx;
     oldautomapy = automappany;
-    
-    if(followplayer)
-    {
-        if(am_flags & AF_PANMODE)
-        {
+
+    if(followplayer) {
+        if(am_flags & AF_PANMODE) {
             int panscalex = (int)(v_msensitivityx.value / (1500.0f / scale));
             int panscaley = (int)(v_msensitivityy.value / (1500.0f / scale));
 
@@ -536,8 +500,7 @@ void AM_Ticker(void)
             automappany += ((I_MouseAccel(mpany)*panscaley)/128) << 16;
             mpanx = mpany = 0;
         }
-        else
-        {
+        else {
             automapx = plr->mo->x;
             automapy = plr->mo->y;
             automapangle = plr->mo->angle;
@@ -546,14 +509,12 @@ void AM_Ticker(void)
 
 #ifdef _USE_XINPUT  // XINPUT
 
-    if(am_flags & AF_PANGAMEPAD)
-    {
+    if(am_flags & AF_PANGAMEPAD) {
         automappanx += mpanx;
         automappany += mpany;
         mpanx = mpany = 0;
     }
-    else
-    {
+    else {
         automapx = plr->mo->x;
         automapy = plr->mo->y;
         automapangle = plr->mo->angle;
@@ -562,25 +523,20 @@ void AM_Ticker(void)
 #endif
 
     if((!followplayer || (am_flags & AF_PANGAMEPAD)) &&
-        am_flags & (AF_PANLEFT|AF_PANRIGHT|AF_PANTOP|AF_PANBOTTOM))
-    {
-        if(am_flags & AF_PANTOP)
-        {
+            am_flags & (AF_PANLEFT|AF_PANRIGHT|AF_PANTOP|AF_PANBOTTOM)) {
+        if(am_flags & AF_PANTOP) {
             automappany += speed;
         }
 
-        if(am_flags & AF_PANLEFT)
-        {
+        if(am_flags & AF_PANLEFT) {
             automappanx -= speed;
         }
 
-        if(am_flags & AF_PANRIGHT)
-        {
+        if(am_flags & AF_PANRIGHT) {
             automappanx += speed;
         }
 
-        if(am_flags & AF_PANBOTTOM)
-        {
+        if(am_flags & AF_PANBOTTOM) {
             automappany -= speed;
         }
     }
@@ -589,33 +545,39 @@ void AM_Ticker(void)
     // check bounding box collision
     //
 
-    if(am_box[BOXRIGHT] < (automappanx+automapx))
+    if(am_box[BOXRIGHT] < (automappanx+automapx)) {
         automappanx = oldautomapx;
-    else if((automappanx+automapx) < am_box[BOXLEFT])
+    }
+    else if((automappanx+automapx) < am_box[BOXLEFT]) {
         automappanx = oldautomapx;
+    }
 
-    if(am_box[BOXTOP] < (automappany+automapy))
+    if(am_box[BOXTOP] < (automappany+automapy)) {
         automappany = oldautomapy;
-    else if((automappany+automapy) < am_box[BOXBOTTOM])
+    }
+    else if((automappany+automapy) < am_box[BOXBOTTOM]) {
         automappany = oldautomapy;
+    }
 
     //
     // blinking tics
     //
 
-    if(am_blink & 0x100)
-    {
-        if((am_blink & 0xff) == 0xff)
+    if(am_blink & 0x100) {
+        if((am_blink & 0xff) == 0xff) {
             am_blink = 0xff;
-        else
+        }
+        else {
             am_blink += 0x10;
+        }
     }
-    else
-    {
-        if(am_blink < 0x5F)
+    else {
+        if(am_blink < 0x5F) {
             am_blink = 0x5F | 0x100;
-        else
+        }
+        else {
             am_blink -= 0x10;
+        }
     }
 }
 
@@ -623,10 +585,9 @@ void AM_Ticker(void)
 // AM_DrawMapped
 //
 
-static void AM_DrawMapped(void)
-{
+static void AM_DrawMapped(void) {
     int i;
-    
+
     //
     // draw textured subsectors for automap
     //
@@ -635,8 +596,7 @@ static void AM_DrawMapped(void)
     //
     // draw white outlines around the subsectors for overlay mode
     //
-    if(am_overlay.value)
-    {
+    if(am_overlay.value) {
         fixed_t x1;
         fixed_t x2;
         fixed_t y1;
@@ -645,13 +605,12 @@ static void AM_DrawMapped(void)
         int j;
         int p;
 
-        for(j = 0; j < numsubsectors; j++)
-        {
-            if(subsectors[j].sector->flags & MS_HIDESSECTOR)
+        for(j = 0; j < numsubsectors; j++) {
+            if(subsectors[j].sector->flags & MS_HIDESSECTOR) {
                 continue;
+            }
 
-            for(p = 0; p < subsectors[j].numlines; p++)
-            {
+            for(p = 0; p < subsectors[j].numlines; p++) {
                 seg = &segs[subsectors[j].firstline + p];
 
                 //
@@ -659,20 +618,19 @@ static void AM_DrawMapped(void)
                 // draw the white outline for the entire subsector
                 //
                 if(seg->linedef->flags & ML_MAPPED ||
-                    (plr->powers[pw_allmap] || amCheating))
-                {
-                    for(i = 0; i < subsectors[j].numlines; i++)
-                    {
+                        (plr->powers[pw_allmap] || amCheating)) {
+                    for(i = 0; i < subsectors[j].numlines; i++) {
                         seg = &segs[subsectors[j].firstline + i];
 
-                        if(!(seg->linedef->flags & ML_SECRET) && seg->linedef->backsector)
+                        if(!(seg->linedef->flags & ML_SECRET) && seg->linedef->backsector) {
                             continue;
+                        }
 
                         x1 = seg->linedef->v1->x;
                         y1 = seg->linedef->v1->y;
                         x2 = seg->linedef->v2->x;
                         y2 = seg->linedef->v2->y;
-  
+
                         AM_DrawLine(x1, x2, y1, y2, scale, WHITE);
                     }
 
@@ -690,104 +648,98 @@ static void AM_DrawMapped(void)
 // AM_DrawNodes
 //
 
-static void AM_DrawNodes(void)
-{
+static void AM_DrawNodes(void) {
     int i;
     int x1, x2, y1, y2;
     node_t*    node;
     int        side;
     int        nodenum;
-    
+
     nodenum = numnodes-1;
-    
-    if(am_nodes.value >= 4)
-    {
-        while(!(nodenum & NF_SUBSECTOR))
-        {
+
+    if(am_nodes.value >= 4) {
+        while(!(nodenum & NF_SUBSECTOR)) {
             node = &nodes[nodenum];
             side = R_PointOnSide(plr->mo->x, plr->mo->y, node);
             nodenum = node->children[side];
         }
     }
-    
-    for(i = 0; i < numnodes; i++)
-    {
-        if(am_nodes.value < 4)
-        {
+
+    for(i = 0; i < numnodes; i++) {
+        if(am_nodes.value < 4) {
             node = &nodes[i];
-            
-            if(am_nodes.value == 1 || am_nodes.value >= 3)
-            {
+
+            if(am_nodes.value == 1 || am_nodes.value >= 3) {
                 x1 = node->bbox[0][BOXLEFT];
                 y1 = node->bbox[0][BOXTOP];
                 x2 = node->bbox[0][BOXRIGHT];
                 y2 = node->bbox[0][BOXTOP];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FFFFFF);
-                
+
                 x1 = node->bbox[0][BOXRIGHT];
                 y1 = node->bbox[0][BOXTOP];
                 x2 = node->bbox[0][BOXRIGHT];
                 y2 = node->bbox[0][BOXBOTTOM];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FFFFFF);
-                
+
                 x1 = node->bbox[0][BOXRIGHT];
                 y1 = node->bbox[0][BOXBOTTOM];
                 x2 = node->bbox[0][BOXLEFT];
                 y2 = node->bbox[0][BOXBOTTOM];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FFFFFF);
-                
+
                 x1 = node->bbox[0][BOXLEFT];
                 y1 = node->bbox[0][BOXBOTTOM];
                 x2 = node->bbox[0][BOXLEFT];
                 y2 = node->bbox[0][BOXTOP];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FFFFFF);
-                
+
                 x1 = node->bbox[1][BOXLEFT];
                 y1 = node->bbox[1][BOXTOP];
                 x2 = node->bbox[1][BOXRIGHT];
                 y2 = node->bbox[1][BOXTOP];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FF00FF);
-                
+
                 x1 = node->bbox[1][BOXRIGHT];
                 y1 = node->bbox[1][BOXTOP];
                 x2 = node->bbox[1][BOXRIGHT];
                 y2 = node->bbox[1][BOXBOTTOM];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FF00FF);
-                
+
                 x1 = node->bbox[1][BOXRIGHT];
                 y1 = node->bbox[1][BOXBOTTOM];
                 x2 = node->bbox[1][BOXLEFT];
                 y2 = node->bbox[1][BOXBOTTOM];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FF00FF);
-                
+
                 x1 = node->bbox[1][BOXLEFT];
                 y1 = node->bbox[1][BOXBOTTOM];
                 x2 = node->bbox[1][BOXLEFT];
                 y2 = node->bbox[1][BOXTOP];
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0x00FF00FF);
             }
-            
-            if(am_nodes.value == 2 || am_nodes.value >= 3)
-            {
+
+            if(am_nodes.value == 2 || am_nodes.value >= 3) {
                 x1 = node->x;
                 y1 = node->y;
                 x2 = (node->x + node->dx);
                 y2 = (node->y + node->dy);
-                
+
                 AM_DrawLine(x1, x2, y1, y2, scale, 0xFFFF00FF);
             }
         }
-        
-        if(am_nodes.value >= 4)
+
+        if(am_nodes.value >= 4) {
             break;
+        }
     }
 }
 
@@ -797,13 +749,11 @@ static void AM_DrawNodes(void)
 // This is LineDef based, not LineSeg based.
 //
 
-void AM_DrawWalls(void)
-{
+void AM_DrawWalls(void) {
     int i;
     int x1, x2, y1, y2;
-    
-    for(i = 0; i < numlines; i++)
-    {
+
+    for(i = 0; i < numlines; i++) {
         line_t *l;
 
         l = &lines[i];
@@ -817,59 +767,50 @@ void AM_DrawWalls(void)
         // 20120208 villsa - re-ordered flag checks to match original game
         //
 
-        if(l->flags & ML_DONTDRAW)
+        if(l->flags & ML_DONTDRAW) {
             continue;
-        
-        if((l->flags & ML_MAPPED) || am_fulldraw.value || plr->powers[pw_allmap] || amCheating)
-        {
+        }
+
+        if((l->flags & ML_MAPPED) || am_fulldraw.value || plr->powers[pw_allmap] || amCheating) {
             rcolor color = D_RGBA(0x8A, 0x5C, 0x30, 0xFF);  // default color
 
             //
             // check for cheats
             //
-            if((plr->powers[pw_allmap] || amCheating) && !(l->flags & ML_MAPPED))
-            {
+            if((plr->powers[pw_allmap] || amCheating) && !(l->flags & ML_MAPPED)) {
                 color = D_RGBA(0x80, 0x80, 0x80, 0xFF);
             }
             //
             // check for secret line
             //
-            else if(l->flags & ML_SECRET)
-            {
+            else if(l->flags & ML_SECRET) {
                 color = D_RGBA(0xA4, 0x00, 0x00, 0xFF);
             }
             //
             // handle special line
             //
-            else if(l->special)
-            {
+            else if(l->special) {
                 //
                 // draw colored doors based on key requirement
                 //
-                if(am_showkeycolors.value)
-                {
-                    if(l->special & MLU_RED)
-                    {
+                if(am_showkeycolors.value) {
+                    if(l->special & MLU_RED) {
                         color = D_RGBA(0xFF, 0x00, 0x00, 0xFF);
                     }
-                    else if(l->special & MLU_BLUE)
-                    {
+                    else if(l->special & MLU_BLUE) {
                         color = D_RGBA(0x00, 0x00, 0xFF, 0xFF);
                     }
-                    else if(l->special & MLU_YELLOW)
-                    {
+                    else if(l->special & MLU_YELLOW) {
                         color = D_RGBA(0xFF, 0xFF, 0x00, 0xFF);
                     }
-                    else
-                    {
+                    else {
                         //
                         // change color to green to avoid confusion with yellow key doors
                         //
                         color = D_RGBA(0x00, 0xCC, 0x00, 0xFF);
                     }
                 }
-                else
-                {
+                else {
                     //
                     // default color for special lines
                     //
@@ -879,8 +820,7 @@ void AM_DrawWalls(void)
             //
             // solid wall?
             //
-            else if(!(l->flags & ML_TWOSIDED))
-            {
+            else if(!(l->flags & ML_TWOSIDED)) {
                 color = D_RGBA(0xA4, 0x00, 0x00, 0xFF);
             }
 
@@ -893,34 +833,31 @@ void AM_DrawWalls(void)
 // AM_drawPlayers
 //
 
-void AM_drawPlayers(void)
-{
+void AM_drawPlayers(void) {
     int         i;
     player_t*   p;
     byte        flash;
-    
+
     flash = am_blink & 0xff;
-    
-    if(!netgame)
-    {
+
+    if(!netgame) {
         AM_DrawTriangle(plr->mo, scale, amModeCycle, 0, flash, 0);
         return;
     }
-    
-    else
-    {   
-        for(i = 0; i < MAXPLAYERS; i++)
-        {
+
+    else {
+        for(i = 0; i < MAXPLAYERS; i++) {
             p = &players[i];
-            
-            if ((deathmatch && !singledemo) && p != plr)
+
+            if((deathmatch && !singledemo) && p != plr) {
                 continue;
-            
-            if(!playeringame[i])
+            }
+
+            if(!playeringame[i]) {
                 continue;
-            
-            switch(i)
-            {
+            }
+
+            switch(i) {
             case 0:        // Green
                 AM_DrawTriangle(p->mo, scale, amModeCycle, 0, flash, 0);
                 break;
@@ -936,54 +873,49 @@ void AM_drawPlayers(void)
             }
         }
     }
-    
+
 }
 
 //
 // AM_drawThings
 //
 
-void AM_drawThings(void)
-{
+void AM_drawThings(void) {
     int     i;
     mobj_t*    t;
-    
-    for(i = 0; i < numsectors; i++)
-    {
+
+    for(i = 0; i < numsectors; i++) {
         t = sectors[i].thinglist;
 
-        while(t)
-        {
+        while(t) {
             //
             // draw thing triangles for automap cheat
             //
-            if(amCheating == 2)
-            {
-                if(t->type != MT_PLAYER && am_drawobjects.value != 1)
-                {
+            if(amCheating == 2) {
+                if(t->type != MT_PLAYER && am_drawobjects.value != 1) {
                     //
                     // shootable stuff are marked as red while normal things are blue
                     //
-                    if(t->flags & MF_SHOOTABLE || t->flags & MF_MISSILE)
+                    if(t->flags & MF_SHOOTABLE || t->flags & MF_MISSILE) {
                         AM_DrawTriangle(t, scale, amModeCycle, 164, 0, 0);
-                    else
+                    }
+                    else {
                         AM_DrawTriangle(t, scale, amModeCycle, 51, 115, 179);
+                    }
                 }
 
-                if(am_drawobjects.value)
+                if(am_drawobjects.value) {
                     AM_DrawSprite(t, scale);
+                }
             }
             //
             // draw colored keys and artifacts in automap for new players
             //
-            else if(am_showkeymarkers.value)
-            {
-                if(t->type >= MT_ITEM_BLUECARDKEY && t->type <= MT_ITEM_ARTIFACT3)
-                {
+            else if(am_showkeymarkers.value) {
+                if(t->type >= MT_ITEM_BLUECARDKEY && t->type <= MT_ITEM_ARTIFACT3) {
                     byte r, g, b;
 
-                    switch(t->type)
-                    {
+                    switch(t->type) {
                     case MT_ITEM_BLUECARDKEY:
                     case MT_ITEM_BLUESKULLKEY:
                         r = 0;
@@ -1027,11 +959,13 @@ void AM_drawThings(void)
                         break;
                     }
 
-                    if(am_drawobjects.value != 1)
+                    if(am_drawobjects.value != 1) {
                         AM_DrawTriangle(t, scale, amModeCycle, r, g, b);
+                    }
 
-                    if(am_drawobjects.value)
+                    if(am_drawobjects.value) {
                         AM_DrawSprite(t, scale);
+                    }
                 }
             }
 
@@ -1044,20 +978,19 @@ void AM_drawThings(void)
 // AM_Drawer
 //
 
-void AM_Drawer(void)
-{
+void AM_Drawer(void) {
     fixed_t x;
     fixed_t y;
     angle_t view;
     dboolean follow = false;
 
-    if(!automapactive)
+    if(!automapactive) {
         return;
+    }
 
     follow = (followplayer && !(am_flags & AF_PANMODE));
-    
-    if(follow)
-    {
+
+    if(follow) {
         automapprevx = automapx;
         automapprevy = automapy;
         autoprevangle = automapangle;
@@ -1067,48 +1000,46 @@ void AM_Drawer(void)
     x = automapprevx;
     y = automapprevy;
 
-    if(plr->onground)
-    {
+    if(plr->onground) {
         x += (quakeviewx >> 7);
         y += quakeviewy;
     }
 
     AM_BeginDraw(view, x, y);
-    
-    if(!amModeCycle)
+
+    if(!amModeCycle) {
         AM_DrawMapped();
-    else
-    {
-        if(am_lines.value)
-            AM_DrawWalls();
     }
-    
-    if(am_nodes.value)
+    else {
+        if(am_lines.value) {
+            AM_DrawWalls();
+        }
+    }
+
+    if(am_nodes.value) {
         AM_DrawNodes();
-    
+    }
+
     AM_drawPlayers();
 
-    if(amCheating == 2 || am_showkeymarkers.value)
+    if(amCheating == 2 || am_showkeymarkers.value) {
         AM_drawThings();
-    
-    if(plr->artifacts)
-    {
+    }
+
+    if(plr->artifacts) {
         int x = 280;
-        
-        if(plr->artifacts & (1<<ART_TRIPLE))
-        {
+
+        if(plr->artifacts & (1<<ART_TRIPLE)) {
             Draw_Sprite2D(SPR_ART3, 0, 0, x, 255, 1.0f, 0, WHITEALPHA(0x80));
             x -= 40;
         }
-        
-        if(plr->artifacts & (1<<ART_DOUBLE))
-        {
+
+        if(plr->artifacts & (1<<ART_DOUBLE)) {
             Draw_Sprite2D(SPR_ART2, 0, 0, x, 255, 1.0f, 0, WHITEALPHA(0x80));
             x -= 40;
         }
-        
-        if(plr->artifacts & (1<<ART_FAST))
-        {
+
+        if(plr->artifacts & (1<<ART_FAST)) {
             Draw_Sprite2D(SPR_ART1, 0, 0, x, 255, 1.0f, 0, WHITEALPHA(0x80));
             x -= 40;
         }
@@ -1121,8 +1052,7 @@ void AM_Drawer(void)
 // AM_RegisterCvars
 //
 
-void AM_RegisterCvars(void)
-{
+void AM_RegisterCvars(void) {
     CON_CvarRegister(&am_lines);
     CON_CvarRegister(&am_nodes);
     CON_CvarRegister(&am_ssect);

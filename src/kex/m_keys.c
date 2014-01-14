@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1999-2000 Paul Brook
@@ -29,14 +29,12 @@
 #include "doomdef.h"
 #include "i_xinput.h"
 
-typedef struct
-{
+typedef struct {
     int        code;
     char    *name;
-}keyinfo_t;
+} keyinfo_t;
 
-static keyinfo_t    Keys[]=
-{
+static keyinfo_t    Keys[]= {
     {KEY_RIGHTARROW,        "Right"},
     {KEY_LEFTARROW,         "Left"},
     {KEY_UPARROW,           "Up"},
@@ -133,26 +131,22 @@ static keyinfo_t    Keys[]=
 #endif
 
     {0,                 NULL}
-    };
+};
 
 //
 // M_GetKeyName
 //
 
-int M_GetKeyName(char *buff, int key)
-{
+int M_GetKeyName(char *buff, int key) {
     keyinfo_t *pkey;
-        
-    if(((key >= 'a') && (key <= 'z')) || ((key >= '0') && (key <= '9')))
-    {
+
+    if(((key >= 'a') && (key <= 'z')) || ((key >= '0') && (key <= '9'))) {
         buff[0] = (char)toupper(key);
         buff[1] = 0;
         return true;
     }
-    for(pkey = Keys; pkey->name; pkey++)
-    {
-        if(pkey->code == key)
-        {
+    for(pkey = Keys; pkey->name; pkey++) {
+        if(pkey->code == key) {
             dstrcpy(buff, pkey->name);
             return true;
         }

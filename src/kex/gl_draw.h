@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007-2012 Samuel Villarreal
@@ -38,8 +38,7 @@ void Draw_Sprite2D(int type, int rot, int frame, int x, int y,
 #define SM_THERMO        68
 #define SM_MICONS        78
 
-typedef struct
-{
+typedef struct {
     int x;
     int y;
     int w;
@@ -60,7 +59,7 @@ int Center_Text(const char* string);
 int Draw_BigText(int x, int y, rcolor color, const char* string);
 void Draw_Number(int x, int y, int num, int type, rcolor c);
 float Draw_ConsoleText(float x, float y, rcolor color,
-                   float scale, const char* string, ...);
+                       float scale, const char* string, ...);
 
 #endif
 
