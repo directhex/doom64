@@ -47,14 +47,13 @@ typedef unsigned int    uint;
 typedef int32_t         int32;
 typedef uint32_t        uint32;
 typedef int             bool;
-typedef byte*			cache;
-typedef char			path[MAX_PATH];
+typedef byte*           cache;
+typedef char            path[MAX_PATH];
 
-#define false	0
-#define true	1
+#define false   0
+#define true    1
 
-typedef struct
-{
+typedef struct {
     byte r;
     byte g;
     byte b;
@@ -62,8 +61,8 @@ typedef struct
 } dPalette_t;
 
 #ifdef _WIN32
-extern HWND	hwnd;
-extern HWND	hwndWait;
+extern HWND hwnd;
+extern HWND hwndWait;
 #endif
 extern int myargc;
 extern char** myargv;
@@ -71,11 +70,11 @@ extern char** myargv;
 int WGen_Swap16(int x);
 uint WGen_Swap32(unsigned int x);
 
-#define	_SWAP16(x)	WGen_Swap16(x)
-#define _SWAP32(x)	WGen_Swap32(x)
-#define _PAD4(x)	x += (4 - ((uint) x & 3)) & 3
-#define _PAD8(x)	x += (8 - ((uint) x & 7)) & 7
-#define _PAD16(x)	x += (16 - ((uint) x & 15)) & 15
+#define _SWAP16(x)  WGen_Swap16(x)
+#define _SWAP32(x)  WGen_Swap32(x)
+#define _PAD4(x)    x += (4 - ((uint) x & 3)) & 3
+#define _PAD8(x)    x += (8 - ((uint) x & 7)) & 7
+#define _PAD16(x)   x += (16 - ((uint) x & 15)) & 15
 
 void WGen_Printf(char* s, ...);
 void WGen_Complain(char *fmt, ...);
@@ -88,14 +87,12 @@ cache Png_Create(int width, int height, int numpal, dPalette_t* pal,
                  int bits, cache data, int lump, int* size);
 #endif
 
-#define TOTALSTEPS	3500
+#define TOTALSTEPS  3500
 
 #ifndef _WIN32
-static inline char* strupr(char* in)
-{
+static inline char* strupr(char* in) {
     unsigned char * ptr = (unsigned char *)in;
-    while(*ptr != '\0')
-    {
+    while(*ptr != '\0') {
         int c = toupper(*ptr);
         *ptr++ = c;
     }

@@ -1,4 +1,4 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // $Id$
@@ -35,59 +35,58 @@ static const char rcsid[] = "$Id$";
 
 rom_t RomFile;
 
-int	Rom_Verify(void);
+int Rom_Verify(void);
 void Rom_SwapBigEndian(int swaptype);
 void Rom_GetIwad(void);
 void Rom_VerifyChecksum(void);
 
 //**************************************************************
 //**************************************************************
-//	Rom_Open
+//  Rom_Open
 //**************************************************************
 //**************************************************************
 
-void Rom_Open(void)
-{
+void Rom_Open(void) {
     int id = 0;
-    
+
     RomFile.length = File_Read(wgenfile.filePath, &RomFile.data);
-    if(RomFile.length <= 0)
+    if(RomFile.length <= 0) {
         WGen_Complain("Rom_Open: Rom file length <= 0");
-    
+    }
+
     id = Rom_Verify();
-    
-    if(!id)
+
+    if(!id) {
         WGen_Complain("VGen_RomOpen: Not a valid n64 rom..");
-    
+    }
+
     Rom_SwapBigEndian(id);
 
     memcpy(&RomFile.header, RomFile.data, ROMHEADERSIZE);
     strupr(RomFile.header.Name);
 
     Rom_VerifyChecksum();
-    
+
     Wad_GetIwad();
 }
 
 //**************************************************************
 //**************************************************************
-//	Rom_Close
+//  Rom_Close
 //**************************************************************
 //**************************************************************
 
-void Rom_Close(void)
-{
+void Rom_Close(void) {
     Mem_Free((void**)&RomFile.data);
 }
 
 //**************************************************************
 //**************************************************************
-//	Rom_VerifyChecksum
+//  Rom_VerifyChecksum
 //**************************************************************
 //**************************************************************
 
-static const md5_digest_t rom_digests[10] =
-{
+static const md5_digest_t rom_digests[10] = {
     { 0x2e,0x1c,0xea,0x7e,0x24,0x82,0xb6,0xe8,0x3d,0x6d,0x64,0x54,0x34,0x44,0x52,0x95 },
     { 0x0a,0x91,0x28,0x16,0x15,0x9b,0x4a,0xbd,0x6c,0xd7,0xd1,0xce,0x0a,0x3e,0x3c,0x4e },
     { 0x54,0x77,0x4e,0x31,0x19,0x0a,0x01,0xf1,0x23,0x68,0x00,0x79,0x6c,0x03,0xae,0x87 },
@@ -100,8 +99,7 @@ static const md5_digest_t rom_digests[10] =
     { 0xb9,0xcc,0x68,0x8f,0x59,0xa0,0x64,0xe2,0xce,0x13,0x02,0xfc,0x3e,0x51,0xb7,0xd9 }
 };
 
-void Rom_VerifyChecksum(void)
-{
+void Rom_VerifyChecksum(void) {
     md5_context_t md5_context;
     md5_digest_t digest;
     int i;
@@ -131,19 +129,25 @@ void Rom_VerifyChecksum(void)
         path tbuff;
         int i = 0;
         int j = 0;
-        
-        do { sprintf(tbuff, "md5rominfo%02d.txt", j++); } while(File_Poke(tbuff));
+
+        do {
+            sprintf(tbuff, "md5rominfo%02d.txt", j++);
+        }
+        while(File_Poke(tbuff));
 
         md5info = fopen(tbuff, "w");
 
         fprintf(md5info, "static const md5_digest_t <rename me> =\n");
         fprintf(md5info, "{ ");
 
-        for(i = 0; i < 16; i++)
-        {
+        for(i = 0; i < 16; i++) {
             fprintf(md5info, "0x%02x", digest[i]);
-            if(i < 15) fprintf(md5info, ",");
-            else fprintf(md5info, " ");
+            if(i < 15) {
+                fprintf(md5info, ",");
+            }
+            else {
+                fprintf(md5info, " ");
+            }
         }
 
         fprintf(md5info, "};\n");
@@ -152,10 +156,10 @@ void Rom_VerifyChecksum(void)
 #endif
 #endif
 
-    for(i = 0; i < 10; i++)
-    {
-        if(!memcmp(rom_digests[i], digest, sizeof(md5_digest_t)))
+    for(i = 0; i < 10; i++) {
+        if(!memcmp(rom_digests[i], digest, sizeof(md5_digest_t))) {
             return;
+        }
     }
 
     WGen_Complain("Rom checksum verification failed. Rom is either broken or corrupted");
@@ -163,71 +167,74 @@ void Rom_VerifyChecksum(void)
 
 //**************************************************************
 //**************************************************************
-//	Rom_SwapBigEndian
+//  Rom_SwapBigEndian
 //
-//	Convert ROM into big endian format before processing iwad
+//  Convert ROM into big endian format before processing iwad
 //**************************************************************
 //**************************************************************
 
-void Rom_SwapBigEndian(int swaptype)
-{
+void Rom_SwapBigEndian(int swaptype) {
     uint len;
-    
+
     // v64
-    if(swaptype == 3)
-    {
+    if(swaptype == 3) {
         int* swap;
 
-        for(swap = (int*)RomFile.data, len = 0; len < RomFile.length / 4; len++)
+        for(swap = (int*)RomFile.data, len = 0; len < RomFile.length / 4; len++) {
             swap[len] = _SWAP32(swap[len]);
+        }
     }
     // n64
-    else if(swaptype == 2)
-    {
+    else if(swaptype == 2) {
         short* swap;
 
-        for(swap = (short*)RomFile.data, len = 0; len < RomFile.length / 2; len++)
+        for(swap = (short*)RomFile.data, len = 0; len < RomFile.length / 2; len++) {
             swap[len] = _SWAP16(swap[len]);
+        }
     }
     // z64 (do nothing)
 }
 
 //**************************************************************
 //**************************************************************
-//	Rom_Verify
+//  Rom_Verify
 //
-//	Checks the beginning of a rom to verify if its a valid N64
-//	rom and that its a Doom64 rom.
+//  Checks the beginning of a rom to verify if its a valid N64
+//  rom and that its a Doom64 rom.
 //**************************************************************
 //**************************************************************
 
-int Rom_Verify(void)
-{
-    if(strstr(wgenfile.filePath, ".z64"))   // big endian
+int Rom_Verify(void) {
+    if(strstr(wgenfile.filePath, ".z64")) { // big endian
         return 1;
-    
-    if(strstr(wgenfile.filePath, ".n64"))   // little endian
+    }
+
+    if(strstr(wgenfile.filePath, ".n64")) { // little endian
         return 2;
-    
-    if(strstr(wgenfile.filePath, ".v64"))   // byte swapped
+    }
+
+    if(strstr(wgenfile.filePath, ".v64")) { // byte swapped
         return 3;
-    
+    }
+
     return 0;
 }
 
 //**************************************************************
 //**************************************************************
-//	Rom_VerifyRomCode
+//  Rom_VerifyRomCode
 //**************************************************************
 //**************************************************************
 
-bool Rom_VerifyRomCode(const romLumpSpecial_t* l)
-{
-    if(RomFile.header.VersionID == 0x1)
-    {
-        if(strstr(l->countryID, "X") && RomFile.header.CountryID == 'E') return true;
+bool Rom_VerifyRomCode(const romLumpSpecial_t* l) {
+    if(RomFile.header.VersionID == 0x1) {
+        if(strstr(l->countryID, "X") && RomFile.header.CountryID == 'E') {
+            return true;
+        }
     }
-    if(strstr(l->countryID, &RomFile.header.CountryID)) return true;
-    
+    if(strstr(l->countryID, &RomFile.header.CountryID)) {
+        return true;
+    }
+
     return false;
 }

@@ -5,8 +5,7 @@
 
 extern byte* sfxdata;
 
-typedef struct
-{
+typedef struct {
     char            id[4];
     uint            game_id;        // must be 2
     uint            pad1;
@@ -29,14 +28,12 @@ typedef struct
 extern sn64_t* sn64;
 extern uint sn64size;
 
-typedef struct
-{
+typedef struct {
     word            length;         // length (little endian)
     word            offset;         // offset in sn64 file
 } patch_t;
 
-typedef struct
-{
+typedef struct {
     byte            unitypitch;     // unknown; used by N64 library
     byte            attenuation;    // attenuation
     byte            pan;            // left/right panning
@@ -56,8 +53,7 @@ typedef struct
     byte            volume2;        // volume (unused?)
 } subpatch_t;
 
-typedef struct
-{
+typedef struct {
     uint            start;          // start of rom offset
     uint            size;           // size of sfx
     uint            wavsize;        // suppose to be pad1 but used as temp size for wavdata
@@ -69,16 +65,14 @@ typedef struct
 extern wavtable_t* sfx;
 extern cache* wavtabledata;
 
-typedef struct
-{
+typedef struct {
     word            nsfx1;          // sfx count (124)
     word            pad1;
     word            ncount;         // loop data count (23)
     word            nsfx2;          // sfx count again?? (124)
 } loopinfo_t;
 
-typedef struct
-{
+typedef struct {
     uint            loopstart;
     uint            loopend;
     uint            data[10];       // its nothing but pure initialized garbage in rom but changed/set in game
@@ -86,15 +80,13 @@ typedef struct
 
 extern looptable_t* looptable;
 
-typedef struct
-{
+typedef struct {
     uint            order;          // order id
     uint            npredictors;    // number of predictors
     short           preds[128];     // predictor array
 } predictor_t;
 
-typedef struct
-{
+typedef struct {
     char            id[4];
     uint            game_id;        // must be 2
     uint            pad1;
@@ -108,8 +100,7 @@ typedef struct
 extern sseq_t* sseq;
 extern uint sseqsize;
 
-typedef struct
-{
+typedef struct {
     word            ntrack;         // number of tracks
     word            pad1;
     uint            length;         // length of entry
@@ -119,8 +110,7 @@ typedef struct
 
 extern entry_t* entries;
 
-typedef struct
-{
+typedef struct {
     word            flag;           // usually 0 on sounds, 0x100 on musics
     word            id;             // subpatch id
     word            pad1;
@@ -134,15 +124,13 @@ typedef struct
     word            datalen;        // length of midi data
 } track_t;
 
-typedef struct
-{
+typedef struct {
     char            header[4];
     int             length;
     byte*           data;
 } miditrack_t;
 
-typedef struct
-{
+typedef struct {
     char            header[4];
     int             chunksize;
     short           type;

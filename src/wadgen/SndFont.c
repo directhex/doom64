@@ -1,4 +1,4 @@
-// Emacs style mode select	 -*- C++ -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // $Id$
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
- 
+
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
- 
+
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -51,8 +51,7 @@ sfinst_t        *inst;
 // UTILITES
 //
 
-static double mylog2(double x)
-{
+static double mylog2(double x) {
     return (log10(x) / log10(2));
 }
 
@@ -61,14 +60,12 @@ static double mylog2(double x)
 // but they have to be measured in milliseconds. wouldn't make sense
 // if it wasn't
 //
-static double usectotimecents(int usec)
-{
+static double usectotimecents(int usec) {
     double t = (double)usec / 1000.0;
     return (1200 * mylog2(t));
 }
 
-static double pantopercent(int pan)
-{
+static double pantopercent(int pan) {
     double p = (double)((pan - 64) * 25) / 32.0f;
     return p / 0.1;
 }
@@ -79,28 +76,25 @@ static double pantopercent(int pan)
 // instead of mimicing what they're doing, I'll just correct
 // the pitch and update the root key directly
 //
-static int getoriginalpitch(int key, int pitch)
-{
+static int getoriginalpitch(int key, int pitch) {
     return ((pitch / 100) - key) * -1;
 }
 
-static double attentopercent(int attenuation)
-{
+static double attentopercent(int attenuation) {
     double a = (double)((127 - attenuation) * 45) / 63.5f;
     return a / 0.1;
 }
 
 //**************************************************************
 //**************************************************************
-//	SF_AddPreset
+//  SF_AddPreset
 //**************************************************************
 //**************************************************************
 
 static int npresets = 0;
 static int curpbag = 0;
 
-void SF_AddPreset(sfpheader_t* preset, char* name, int idx, int bank, int presetidx)
-{
+void SF_AddPreset(sfpheader_t* preset, char* name, int idx, int bank, int presetidx) {
     SF_NEWITEM(preset->presets, sfpresetinfo_t, npresets);
     strncpy(preset->presets[idx].achPresetName, name, 20);
     preset->presets[idx].wPresetBagNdx = curpbag;
@@ -114,13 +108,12 @@ void SF_AddPreset(sfpheader_t* preset, char* name, int idx, int bank, int preset
 
 //**************************************************************
 //**************************************************************
-//	SF_AddInstrument
+//  SF_AddInstrument
 //**************************************************************
 //**************************************************************
 
 static int ninstruments = 0;
-void SF_AddInstrument(sfinstheader_t* inst, char* name, int idx)
-{
+void SF_AddInstrument(sfinstheader_t* inst, char* name, int idx) {
     SF_NEWITEM(inst->instruments, sfinstinfo_t, ninstruments);
     strncpy(inst->instruments[idx].achInstName, name, 20);
     inst->instruments[idx].wInstBagNdx = idx;
@@ -129,14 +122,13 @@ void SF_AddInstrument(sfinstheader_t* inst, char* name, int idx)
 
 //**************************************************************
 //**************************************************************
-//	SF_AddInstrumentGenerator
+//  SF_AddInstrumentGenerator
 //**************************************************************
 //**************************************************************
 
 static int igenpos = 0;
 static int nigens = 0;
-void SF_AddInstrumentGenerator(sfigenheader_t* gen, generatorops_e op, gentypes_t value)
-{
+void SF_AddInstrumentGenerator(sfigenheader_t* gen, generatorops_e op, gentypes_t value) {
     sfinstgen_t* igen;
 
     SF_NEWITEM(gen->info, sfinstgen_t, nigens);
@@ -149,14 +141,13 @@ void SF_AddInstrumentGenerator(sfigenheader_t* gen, generatorops_e op, gentypes_
 
 //**************************************************************
 //**************************************************************
-//	SF_AddPresetGenerator
+//  SF_AddPresetGenerator
 //**************************************************************
 //**************************************************************
 
 static int pgenpos = 0;
 static int npgens = 0;
-void SF_AddPresetGenerator(sfpgenheader_t* gen, generatorops_e op, gentypes_t value)
-{
+void SF_AddPresetGenerator(sfpgenheader_t* gen, generatorops_e op, gentypes_t value) {
     sfpresetgen_t* pgen;
 
     SF_NEWITEM(gen->info, sfpresetgen_t, npgens);
@@ -169,13 +160,12 @@ void SF_AddPresetGenerator(sfpgenheader_t* gen, generatorops_e op, gentypes_t va
 
 //**************************************************************
 //**************************************************************
-//	SF_AddInstrumentBag
+//  SF_AddInstrumentBag
 //**************************************************************
 //**************************************************************
 
 static int nibags = 0;
-void SF_AddInstrumentBag(sfibagheader_t* bag)
-{
+void SF_AddInstrumentBag(sfibagheader_t* bag) {
     sfinstbag_t* instbag;
 
     SF_NEWITEM(bag->instbags, sfinstbag_t, nibags);
@@ -187,13 +177,12 @@ void SF_AddInstrumentBag(sfibagheader_t* bag)
 
 //**************************************************************
 //**************************************************************
-//	SF_AddPresetBag
+//  SF_AddPresetBag
 //**************************************************************
 //**************************************************************
 
 static int npbags = 0;
-void SF_AddPresetBag(sfpbagheader_t* bag)
-{
+void SF_AddPresetBag(sfpbagheader_t* bag) {
     sfpresetbag_t* presetbag;
 
     SF_NEWITEM(bag->presetbags, sfpresetbag_t, npbags);
@@ -207,21 +196,21 @@ void SF_AddPresetBag(sfpbagheader_t* bag)
 
 //**************************************************************
 //**************************************************************
-//	SF_AddSample
+//  SF_AddSample
 //**************************************************************
 //**************************************************************
 
 static int nsamples = 0;
-void SF_AddSample(sfsample_t* sample, char* name, size_t size, size_t offset, int loopid)
-{
+void SF_AddSample(sfsample_t* sample, char* name, size_t size, size_t offset, int loopid) {
     sfsampleinfo_t* info;
     looptable_t* lptbl;
 
     SF_NEWITEM(sample->info, sfsampleinfo_t, nsamples);
     sample->size = 46 * nsamples;
 
-    if(loopid != -1)
+    if(loopid != -1) {
         lptbl = &looptable[loopid];
+    }
 
     info = &sample->info[nsamples - 1];
     strncpy(info->achSampleName, name, 20);
@@ -233,13 +222,11 @@ void SF_AddSample(sfsample_t* sample, char* name, size_t size, size_t offset, in
     info->dwStart = offset / 2;
     info->dwEnd = (size / 2) + (offset / 2);
 
-    if(loopid == -1)
-    {
+    if(loopid == -1) {
         info->dwStartloop = offset / 2;
         info->dwEndloop = ((size / 2) + (offset / 2)) - 1;
     }
-    else
-    {
+    else {
         info->dwStartloop = (offset / 2) + lptbl->loopstart;
         info->dwEndloop = lptbl->loopend + (offset / 2);
     }
@@ -247,14 +234,13 @@ void SF_AddSample(sfsample_t* sample, char* name, size_t size, size_t offset, in
 
 //**************************************************************
 //**************************************************************
-//	SF_AddSampleData
+//  SF_AddSampleData
 //**************************************************************
 //**************************************************************
 
 static uint offset = 0;
 void SF_AddSampleData(soundfont_t* sf, cache in, size_t insize,
-                   char* newname, int loopid)
-{
+                      char* newname, int loopid) {
     sfdata_t* data;
 
     data = &sf->data;
@@ -270,12 +256,11 @@ void SF_AddSampleData(soundfont_t* sf, cache in, size_t insize,
 
 //**************************************************************
 //**************************************************************
-//	SF_SetupModulators
+//  SF_SetupModulators
 //**************************************************************
 //**************************************************************
 
-void SF_SetupModulators(void)
-{
+void SF_SetupModulators(void) {
     preset->mod.sfModTransOper  = 1;
     preset->mod.modAmount       = 0;
     preset->mod.sfModAmtSrcOper = 0;
@@ -293,12 +278,11 @@ void SF_SetupModulators(void)
 
 //**************************************************************
 //**************************************************************
-//	SF_FinalizeChunkSizes
+//  SF_FinalizeChunkSizes
 //**************************************************************
 //**************************************************************
 
-void SF_FinalizeChunkSizes(void)
-{
+void SF_FinalizeChunkSizes(void) {
     list->listsize  = 0x4C;
     list->listsize  += preset->info.size;
     list->listsize  += preset->bag.size;
@@ -315,7 +299,7 @@ void SF_FinalizeChunkSizes(void)
 
 //**************************************************************
 //**************************************************************
-//	SF_CreatePresets
+//  SF_CreatePresets
 //**************************************************************
 //**************************************************************
 
@@ -324,8 +308,7 @@ uint totalinstruments = 0;
 
 void SF_CreatePresets(patch_t* patch, int npatch,
                       subpatch_t* subpatch, int nsubpatch,
-                      wavtable_t* wavtable)
-{
+                      wavtable_t* wavtable) {
     int i;
     int j;
     uint banks = 0;
@@ -335,8 +318,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
 
     WGen_UpdateProgress("Building Soundfont Presets...");
 
-    for(i = 0; i < npatch; i++)
-    {
+    for(i = 0; i < npatch; i++) {
         patch_t* p;
 
         p = &patch[i];
@@ -345,8 +327,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
         // I can only assume that normal sounds come after all instruments...
         // it would suck if they didn't...
         //
-        if(!subpatch[p->offset].instrument && !banks)
-        {
+        if(!subpatch[p->offset].instrument && !banks) {
             presetcount = 0;
             banks++;
         }
@@ -354,8 +335,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
         sprintf(name, "PRESET_%03d", totalpresets);
         SF_AddPreset(&preset->info, name, totalpresets, banks, presetcount++);
 
-        for(j = 0; j < p->length; j++)
-        {
+        for(j = 0; j < p->length; j++) {
             subpatch_t* sp;
             wavtable_t* wt;
 
@@ -380,8 +360,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
             //
             // attenuation
             //
-            if(sp->attenuation < 127)
-            {
+            if(sp->attenuation < 127) {
                 value.wAmount = (int)attentopercent(sp->attenuation);
                 SF_AddInstrumentGenerator(&inst->gen, GEN_ATTENUATION, value);
             }
@@ -389,8 +368,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
             //
             // panning
             //
-            if(sp->pan != 64)
-            {
+            if(sp->pan != 64) {
                 value.wAmount = (int)pantopercent(sp->pan);
                 SF_AddInstrumentGenerator(&inst->gen, GEN_PAN, value);
             }
@@ -398,8 +376,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
             //
             // attack time
             //
-            if(sp->attacktime > 1)
-            {
+            if(sp->attacktime > 1) {
                 value.wAmount = (int)usectotimecents(sp->attacktime);
                 SF_AddInstrumentGenerator(&inst->gen, GEN_VOLENVATTACK, value);
             }
@@ -407,8 +384,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
             //
             // release time
             //
-            if(sp->decaytime > 1)
-            {
+            if(sp->decaytime > 1) {
                 value.wAmount = (int)usectotimecents(sp->decaytime);
                 SF_AddInstrumentGenerator(&inst->gen, GEN_VOLENVRELEASE, value);
             }
@@ -416,8 +392,7 @@ void SF_CreatePresets(patch_t* patch, int npatch,
             //
             // sample loops
             //
-            if(wt->loopid != -1)
-            {
+            if(wt->loopid != -1) {
                 value.wAmount = 1;
                 SF_AddInstrumentGenerator(&inst->gen, GEN_SAMPLEMODE, value);
             }
@@ -453,18 +428,17 @@ void SF_CreatePresets(patch_t* patch, int npatch,
 
 //**************************************************************
 //**************************************************************
-//	SF_WriteSoundFont
+//  SF_WriteSoundFont
 //**************************************************************
 //**************************************************************
 
-void SF_WriteSoundFont(void)
-{
+void SF_WriteSoundFont(void) {
     int handle;
     int i;
     path outFile;
 
     sprintf(outFile, "%s/DOOMSND.SF2", wgenfile.basePath);
-	handle = File_Open(outFile);
+    handle = File_Open(outFile);
 
     File_Write(handle, soundfont.RIFF, 4);
     File_Write(handle, &soundfont.filesize, 4);
@@ -488,8 +462,7 @@ void SF_WriteSoundFont(void)
     File_Write(handle, preset->info.phdr, 4);
     File_Write(handle, &preset->info.size, 4);
 
-    for(i = 0; i < npresets; i++)
-    {
+    for(i = 0; i < npresets; i++) {
         File_Write(handle, preset->info.presets[i].achPresetName, 20);
         File_Write(handle, &preset->info.presets[i].wPreset, 2);
         File_Write(handle, &preset->info.presets[i].wBank, 2);
@@ -531,8 +504,7 @@ void SF_WriteSoundFont(void)
     File_Write(handle, sample->shdr, 4);
     File_Write(handle, &sample->size, 4);
 
-    for(i = 0; i < nsamples; i++)
-    {
+    for(i = 0; i < nsamples; i++) {
         File_Write(handle, sample->info[i].achSampleName, 20);
         File_Write(handle, &sample->info[i].dwStart, 4);
         File_Write(handle, &sample->info[i].dwEnd, 4);
@@ -562,12 +534,11 @@ void SF_WriteSoundFont(void)
 
 //**************************************************************
 //**************************************************************
-//	SF_Setup
+//  SF_Setup
 //**************************************************************
 //**************************************************************
 
-void SF_Setup(void)
-{
+void SF_Setup(void) {
     data    = &soundfont.data;
     list    = &soundfont.presetlist;
     sample  = &soundfont.samples;

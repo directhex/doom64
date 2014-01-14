@@ -6,36 +6,33 @@
 #include "Texture.h"
 #include "Sound.h"
 
-#define MAX_LUMPS	4096
+#define MAX_LUMPS   4096
 
 #ifdef _MSC_VER
 #pragma pack(push, 1)
 #endif
 
-typedef struct
-{
-    char		id[4];
-    int			lmpcount;
-    int			lmpdirpos;
+typedef struct {
+    char        id[4];
+    int         lmpcount;
+    int         lmpdirpos;
 } wadheader_t;
 
-typedef struct
-{
-    int			filepos;
-    int			size;
-    char		name[8];
+typedef struct {
+    int         filepos;
+    int         size;
+    char        name[8];
 } lump_t;
 
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
 
-typedef struct
-{
-	wadheader_t header;
-	lump_t lump[MAX_LUMPS];
-	cache lumpcache[MAX_LUMPS];
-	uint size;
+typedef struct {
+    wadheader_t header;
+    lump_t lump[MAX_LUMPS];
+    cache lumpcache[MAX_LUMPS];
+    uint size;
 } wadFile_t;
 
 extern wadFile_t romWadFile;

@@ -33,9 +33,9 @@ typedef struct md5_context_s md5_context_t;
 typedef byte md5_digest_t[16];
 
 struct md5_context_s {
-        uint32_t buf[4];
-        uint32_t bytes[2];
-        uint32_t in[16];
+    uint32_t buf[4];
+    uint32_t bytes[2];
+    uint32_t in[16];
 };
 
 void MD5_Init(md5_context_t *context);
