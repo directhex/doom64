@@ -254,10 +254,10 @@ typedef enum {
 //  how many seconds till expiration,
 //
 typedef enum {
-    INVULNTICS    = (30*TICRATE),
-    INVISTICS     = (60*TICRATE),
-    INFRATICS     = (120*TICRATE),
-    IRONTICS      = (60*TICRATE),
+    INVULNTICS  = (30*TICRATE),
+    INVISTICS   = (60*TICRATE),
+    INFRATICS   = (120*TICRATE),
+    IRONTICS    = (60*TICRATE),
     STRTICS     = (3*TICRATE)
 
 } powerduration_t;
