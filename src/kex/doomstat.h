@@ -252,9 +252,6 @@ extern  FILE*       debugfile;
 // if true, load all graphics at level load
 extern  dboolean    precache;
 
-// outdated iwad file?
-extern  dboolean    oldiwad;
-
 #define MAXSENSITIVITY    32
 
 extern  int         bodyqueslot;
