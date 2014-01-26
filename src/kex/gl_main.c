@@ -586,7 +586,26 @@ void GL_Init(void) {
     }
 
     if(SDL_SetVideoMode(video_width, video_height, SDL_BPP, flags) == NULL) {
-        I_Error("GL_Init: Failed to set opengl");
+        // re-adjust depth size if video can't run it
+        if(v_depthsize.value >= 24) {
+            CON_CvarSetValue(v_depthsize.name, 16);
+        }
+        else if(v_depthsize.value >= 16) {
+            CON_CvarSetValue(v_depthsize.name, 8);
+        }
+
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, (int)v_depthsize.value);
+
+        if(SDL_SetVideoMode(video_width, video_height, SDL_BPP, flags) == NULL) {
+            // fall back to lower buffer setting
+            CON_CvarSetValue(v_buffersize.name, 16);
+            SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, (int)v_buffersize.value);
+
+            if(SDL_SetVideoMode(video_width, video_height, SDL_BPP, flags) == NULL) {
+                // give up
+                I_Error("GL_Init: Failed to set opengl");
+            }
+        }
     }
 
     gl_vendor = dglGetString(GL_VENDOR);
