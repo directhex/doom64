@@ -227,6 +227,8 @@ void G_PlayDemo(const char* name) {
         return;
     }
 
+    G_SaveDefaults();
+
     demo_p++;
     demo_p++;
     demo_p++;
