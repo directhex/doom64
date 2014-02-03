@@ -1688,14 +1688,14 @@ dboolean P_UseSpecialLine(mobj_t* thing, line_t* line, int side) {
         }
         else if(line->special & MLU_CROSS) {
             switch(SPECIALMASK(line->special)) {
-            case 4:     // RAISE DOOR
-            case 10:    // RAISE PLATFORM
-            case 39:    // TELEPORT TRIGGER
-            case 125:   // TELEPORT MONSTERONLY TRIGGER
-                break;
+                case 4:     // RAISE DOOR
+                case 10:    // RAISE PLATFORM
+                case 39:    // TELEPORT TRIGGER
+                case 125:   // TELEPORT MONSTERONLY TRIGGER
+                    break;
 
-            default:
-                return false;
+                default:
+                    return false;
             }
         }
     }
@@ -1754,7 +1754,7 @@ void P_PlayerInSpecialSector(player_t* player) {
 
     if(sector->flags & MS_SECRET) {
         player->secretcount++;
-        player->message = FOUNDSECRET;    //villsa
+        player->message = FOUNDSECRET;
         player->messagepic = 40;
         sector->flags &= ~MS_SECRET;
     }
@@ -1780,20 +1780,29 @@ void P_PlayerInSpecialSector(player_t* player) {
             }
         }
     }
-    if(sector->flags & MS_SCROLLFLOOR) {
-        angle_t angle = 0;
 
+    if(sector->flags & MS_SCROLLFLOOR) {
+        fixed_t speed;
+
+        if(sector->flags & MS_SCROLLFAST) {
+            speed = 0x3000;
+        }
+        else {
+            speed = 0x1000;
+        }
+
+        if(sector->flags & MS_SCROLLLEFT) {
+            P_Thrust(player, ANG180, speed);
+        }
+        if(sector->flags & MS_SCROLLRIGHT) {
+            P_Thrust(player, 0, speed);
+        }
         if(sector->flags & MS_SCROLLUP) {
-            angle += ANG90;
+            P_Thrust(player, ANG90, speed);
         }
         if(sector->flags & MS_SCROLLDOWN) {
-            angle += ANG270;
+            P_Thrust(player, ANG270, speed);
         }
-        if(sector->flags & MS_SCROLLLEFT) {
-            angle += ANG180;
-        }
-
-        P_Thrust(player, angle, sector->flags & MS_SCROLLFAST ? 0x3000 : 0x1000);
     }
 }
 
@@ -1849,20 +1858,26 @@ void P_UpdateSpecials(void) {
         sector = &sectors[i];
 
         if(sector->flags & (MS_SCROLLFLOOR|MS_SCROLLCEILING)) {
+            fixed_t speed;
+
+            if(sector->flags & MS_SCROLLFAST) {
+                speed = 3*FRACUNIT;
+            }
+            else {
+                speed = FRACUNIT;
+            }
+
             if(sector->flags & MS_SCROLLLEFT) {
-                sector->xoffset += sector->flags & MS_SCROLLFAST ? (3*FRACUNIT) : FRACUNIT;
+                sector->xoffset += speed;
             }
-
             if(sector->flags & MS_SCROLLRIGHT) {
-                sector->xoffset -= sector->flags & MS_SCROLLFAST ? (3*FRACUNIT) : FRACUNIT;
+                sector->xoffset -= speed;
             }
-
             if(sector->flags & MS_SCROLLUP) {
-                sector->yoffset += sector->flags & MS_SCROLLFAST ? (3*FRACUNIT) : FRACUNIT;
+                sector->yoffset += speed;
             }
-
             if(sector->flags & MS_SCROLLDOWN) {
-                sector->yoffset -= sector->flags & MS_SCROLLFAST ? (3*FRACUNIT) : FRACUNIT;
+                sector->yoffset -= speed;
             }
         }
 
