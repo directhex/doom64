@@ -547,10 +547,18 @@ typedef enum {
     modl_data
 } modifyline_t;
 
-static void P_ModifyLine(int tag1, int tag2, int type) {
+static int P_ModifyLine(int tag1, int tag2, int type) {
     int i = 0;
     line_t* line1;
-    line_t* line2 = &lines[P_FindLinedefFromTag(tag2)];
+    line_t* line2;
+    int linenum;
+    
+    linenum = P_FindLinedefFromTag(tag2);
+    if(linenum == -1) {
+        return 0;
+    }
+    
+    line2 = &lines[linenum];
 
     for(i = 0; i < numlines; i++) {
         line1 = &lines[i];
@@ -605,6 +613,8 @@ static void P_ModifyLine(int tag1, int tag2, int type) {
             }
         }
     }
+
+    return 1;
 }
 
 //
@@ -618,16 +628,29 @@ typedef enum {
     mods_flags,
 } modifysector_t;
 
-static void P_ModifySector(int tag1, int tag2, int type) {
-    int i = 0;
+static int P_ModifySector(line_t *line, int tag, int type) {
     int j = 0;
     sector_t* sec1;
-    sector_t* sec2 = &sectors[P_FindSectorFromTag(tag2)];
+    sector_t* sec2;
+    int secnum;
+    int rtn;
 
-    for(i = 0; i < numsectors; i++) {
-        sec1 = &sectors[i];
-        if(sec1->tag == tag1) {
-            switch(type) {
+    secnum = P_FindSectorFromTag(tag);
+
+    if(secnum == -1) {
+        return 0;
+    }
+
+    sec2 = &sectors[secnum];
+    
+    secnum = -1;
+    rtn = 0;
+
+    while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0) {
+        sec1 = &sectors[secnum];
+        rtn = 1;
+
+        switch(type) {
             case mods_lights:
                 for(j = 0; j < 5; j++) {
                     sec1->colors[j] = sec2->colors[j];
@@ -646,9 +669,10 @@ static void P_ModifySector(int tag1, int tag2, int type) {
                 break;
             default:
                 break;
-            }
         }
     }
+
+    return rtn;
 }
 
 //
@@ -658,31 +682,38 @@ static void P_ModifySector(int tag1, int tag2, int type) {
 // This doesn't appear to be used at all
 //
 
-void P_ModifySectorColor(line_t* line, int index, int type) {
-    int secnum = 0;
+int P_ModifySectorColor(line_t* line, int index, int type) {
+    int secnum;
+    int rtn;
     sector_t* sec;
+
+    secnum = -1;
+    rtn = 0;
 
     while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0) {
         sec = &sectors[secnum];
+        rtn = 1;
 
         switch(type) {
-        case LIGHT_FLOOR:
-            sec->colors[LIGHT_FLOOR] = index;
-            break;
-        case LIGHT_CEILING:
-            sec->colors[LIGHT_CEILING] = index;
-            break;
-        case LIGHT_THING:
-            sec->colors[LIGHT_THING] = index;
-            break;
-        case LIGHT_UPRWALL:
-            sec->colors[LIGHT_UPRWALL] = index;
-            break;
-        case LIGHT_LWRWALL:
-            sec->colors[LIGHT_LWRWALL] = index;
-            break;
+            case LIGHT_FLOOR:
+                sec->colors[LIGHT_FLOOR] = index;
+                break;
+            case LIGHT_CEILING:
+                sec->colors[LIGHT_CEILING] = index;
+                break;
+            case LIGHT_THING:
+                sec->colors[LIGHT_THING] = index;
+                break;
+            case LIGHT_UPRWALL:
+                sec->colors[LIGHT_UPRWALL] = index;
+                break;
+            case LIGHT_LWRWALL:
+                sec->colors[LIGHT_LWRWALL] = index;
+                break;
         }
     }
+    
+    return rtn;
 }
 
 //
@@ -1370,32 +1401,27 @@ int P_DoSpecialLine(mobj_t* thing, line_t* line, int side) {
 
     case 205:
         // Modify sector color
-        P_ModifySectorColor(line, globalint, 0);
-        ok = 1;
+        ok = P_ModifySectorColor(line, globalint, 0);
         break;
 
     case 206:
         // Modify sector color
-        P_ModifySectorColor(line, globalint, 1);
-        ok = 1;
+        ok = P_ModifySectorColor(line, globalint, 1);
         break;
 
     case 207:
         // Modify sector color
-        P_ModifySectorColor(line, globalint, 2);
-        ok = 1;
+        ok = P_ModifySectorColor(line, globalint, 2);
         break;
 
     case 208:
         // Modify sector color
-        P_ModifySectorColor(line, globalint, 3);
-        ok = 1;
+        ok = P_ModifySectorColor(line, globalint, 3);
         break;
 
     case 209:
         // Modify sector color
-        P_ModifySectorColor(line, globalint, 4);
-        ok = 1;
+        ok = P_ModifySectorColor(line, globalint, 4);
         break;
 
     case 210:
@@ -1413,38 +1439,32 @@ int P_DoSpecialLine(mobj_t* thing, line_t* line, int side) {
 
     case 218:
         //Modify Line Flags
-        P_ModifyLine(line->tag, globalint, modl_flags);
-        ok = 1;
+        ok = P_ModifyLine(line->tag, globalint, modl_flags);
         break;
 
     case 219:
         //Modify Line Texture
-        P_ModifyLine(line->tag, globalint, modl_texture);
-        ok = 1;
+        ok = P_ModifyLine(line->tag, globalint, modl_texture);
         break;
 
     case 220:
         // Modify Sector Flags
-        P_ModifySector(line->tag, globalint, mods_flags);
-        ok = 1;
+        ok = P_ModifySector(line, globalint, mods_flags);
         break;
 
     case 221:
         // Modify Sector Specials
-        P_ModifySector(line->tag, globalint, mods_special);
-        ok = 1;
+        ok = P_ModifySector(line, globalint, mods_special);
         break;
 
     case 222:
         // Modify Sector Lights
-        P_ModifySector(line->tag, globalint, mods_lights);
-        ok = 1;
+        ok = P_ModifySector(line, globalint, mods_lights);
         break;
 
     case 223:
         // Modify Sector Flats
-        P_ModifySector(line->tag, globalint, mods_flats);
-        ok = 1;
+        ok = P_ModifySector(line, globalint, mods_flats);
         break;
 
     case 224:
@@ -1476,8 +1496,7 @@ int P_DoSpecialLine(mobj_t* thing, line_t* line, int side) {
 
     case 230:
         // Modify Line Special
-        P_ModifyLine(line->tag, globalint, modl_data);
-        ok = 1;
+        ok = P_ModifyLine(line->tag, globalint, modl_data);
         break;
 
     case 231:
@@ -1504,8 +1523,7 @@ int P_DoSpecialLine(mobj_t* thing, line_t* line, int side) {
 
     case 235:
         // Modify Light Data
-        P_DoSectorLightChange(line, globalint);
-        ok = 1;
+        ok = P_DoSectorLightChange(line, globalint);
         break;
 
     case 236:
