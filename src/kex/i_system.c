@@ -547,6 +547,7 @@ void I_Error(char* string, ...) {
 
 void I_Quit(void) {
     if(demorecording) {
+        endDemo = true;
         G_CheckDemoStatus();
     }
 

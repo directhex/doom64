@@ -199,6 +199,7 @@ static void NET_CL_PlayerQuitGame(player_t *player)
 
     if (demorecording) 
     {
+        endDemo = true;
         G_CheckDemoStatus ();
     }
 }
