@@ -50,6 +50,7 @@
 #include "z_zone.h"
 #include "p_setup.h"
 #include "gl_draw.h"
+#include "g_demo.h"
 
 #ifdef _WIN32
 #include "i_xinput.h"
@@ -741,7 +742,7 @@ void ST_Drawer(void) {
         ST_FlashingScreen(st_flash_r, st_flash_g, st_flash_b, st_flash_a);
     }
 
-    if(demoplayback) {
+    if(iwadDemo) {
         return;
     }
 
