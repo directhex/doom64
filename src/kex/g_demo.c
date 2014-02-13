@@ -202,9 +202,7 @@ void G_RecordDemo(const char* name) {
     demorecording = true;
     usergame = false;
 
-    G_DoLoadLevel();
-    D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
-
+    G_RunGame();
     G_CheckDemoStatus();
 }
 
@@ -309,9 +307,7 @@ void G_PlayDemo(const char* name) {
     usergame = false;
     demoplayback = true;
 
-    G_DoLoadLevel();
-    D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);
-
+    G_RunGame();
     iwadDemo = false;
 }
 

@@ -39,6 +39,7 @@
 #include "con_console.h"
 #include "r_wipe.h"
 #include "p_setup.h"
+#include "g_demo.h"
 
 CVAR_EXTERNAL(i_interpolateframes);
 CVAR_EXTERNAL(p_damageindicator);
@@ -343,8 +344,10 @@ void P_Stop(void) {
         S_StopMusic();
     }
 
-    if(demoplayback) {
+    // end iwad demo playback here
+    if(demoplayback && iwadDemo) {
         demoplayback = false;
+        iwadDemo = false;
     }
 
     // do wipe/melt effect
@@ -367,7 +370,16 @@ void P_Stop(void) {
 
     S_ResetSound();
 
-    gameaction = action;
+    // action is warpquick only because the user
+    // cancelled demo playback...
+    // boot the user back to the title screen
+    if(gameaction == ga_warpquick && demoplayback) {
+        gameaction = ga_title;
+        demoplayback = false;
+    }
+    else {
+        gameaction = action;
+    }
 }
 
 //
