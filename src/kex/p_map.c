@@ -46,17 +46,17 @@
 
 
 fixed_t         tmbbox[4];
-mobj_t*         tmthing;
+mobj_t          *tmthing;
 int             tmflags;
 fixed_t         tmx;
 fixed_t         tmy;
 
-mobj_t*            blockthing;
+mobj_t          *blockthing;
 
 
 // If "floatok" true, move would be ok
 // if within "tmfloorz - tmceilingz".
-dboolean                floatok;
+dboolean        floatok;
 
 fixed_t         tmfloorz;
 fixed_t         tmceilingz;
@@ -64,13 +64,13 @@ fixed_t         tmdropoffz;
 
 // keep track of the line that lowers the ceiling,
 // so missiles don't explode against sky hack walls
-line_t*         tmhitline;
+line_t          *tmhitline;
 
 // keep track of special lines as they are hit,
 // but don't process them until the move is proven valid
 
-line_t*         spechit[MAXSPECIALCROSS];
-int             numspechit=0;
+line_t          *spechit[MAXSPECIALCROSS];
+int             numspechit = 0;
 
 //
 // P_CheckThingCollision
@@ -83,12 +83,11 @@ static dboolean P_CheckThingCollision(mobj_t *thing) {
     if(netgame && (tmthing->type == MT_PLAYER && thing->type == MT_PLAYER)) {
         return true;    // 20120122 villsa - allow players to go through each other
     }
-    else {
-        blockdist = thing->radius + tmthing->radius;
-    }
+
+    blockdist = thing->radius + tmthing->radius;
 
     if(D_abs(thing->x - tmx) >= blockdist ||
-            D_abs(thing->y - tmy) >= blockdist) {
+        D_abs(thing->y - tmy) >= blockdist) {
         // didn't hit it
         return true;
     }
@@ -171,9 +170,9 @@ dboolean PIT_CheckLine(line_t* ld) {
     sector_t* sector;
 
     if(tmbbox[BOXRIGHT] <= ld->bbox[BOXLEFT]
-            || tmbbox[BOXLEFT] >= ld->bbox[BOXRIGHT]
-            || tmbbox[BOXTOP] <= ld->bbox[BOXBOTTOM]
-            || tmbbox[BOXBOTTOM] >= ld->bbox[BOXTOP]) {
+    || tmbbox[BOXLEFT] >= ld->bbox[BOXRIGHT]
+    || tmbbox[BOXTOP] <= ld->bbox[BOXBOTTOM]
+    || tmbbox[BOXBOTTOM] >= ld->bbox[BOXTOP]) {
         return true;
     }
 
@@ -339,22 +338,23 @@ dboolean PIT_CheckThing(mobj_t* thing) {
         return false;
     }
 
+    solid = thing->flags & MF_SOLID;
+
     // check for special pickup
     if(thing->flags & MF_SPECIAL) {
-        solid = thing->flags & MF_SOLID;
         if(tmflags & MF_PICKUP) {
-            if(thing->z <= (tmthing->z + (tmthing->height>>1)) ||
-                    thing->flags & MF_NOSECTOR) {
-                // can remove thing
-                P_TouchSpecialThing(thing, tmthing);
+            // [kex] compatibility flags added for item grab bug fix
+            if(compatflags & COMPATF_REACHITEMS ||
+                (thing->z <= (tmthing->z + (tmthing->height>>1)) || thing->flags & MF_NOSECTOR)) {
+                    // [d64] store off special thing and return true
+                    tmthing->extradata = (mobj_t*)thing;
+                    return true;
             }
         }
-        return !solid;
     }
 
-    return !(thing->flags & MF_SOLID);
+    return !solid;
 }
-
 
 //
 // MOVEMENT CLIPPING

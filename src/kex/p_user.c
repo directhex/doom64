@@ -443,6 +443,21 @@ void P_PlayerXYMovment(mobj_t* mo) {
         P_SlideMove(mo);
     }
 
+    //
+    // [d64] seems more like a console optimization but now the player
+    // is no longer able to pick up items during the block things iteration.
+    // this means that only one item can be picked up per tic.
+    //
+    if(mo->flags & MF_PICKUP && mo->extradata) {
+        mobj_t *touchThing = (mobj_t*)mo->extradata;
+
+        if(touchThing->flags & MF_SPECIAL) {
+            // can remove thing
+            P_TouchSpecialThing(touchThing, mo);
+            mo->extradata = NULL;
+        }
+    }
+
     if(mo->z > mo->floorz && (!(mo->blockflag & BF_MOBJSTAND))) {
         return;    // no friction when airborne
     }
@@ -543,7 +558,7 @@ void P_PlayerTic(mobj_t* mo) {
     }
 
     mo->player->onground = ((mo->floorz < mo->z &&
-                             !(mo->blockflag & BF_MOBJSTAND)) ^ 1);
+        !(mo->blockflag & BF_MOBJSTAND)) ^ 1);
 
     if((mo->floorz != mo->z) || mo->momz || blockthing) {
         if(!P_OnMobjZ(mo)) {

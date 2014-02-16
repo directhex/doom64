@@ -237,7 +237,7 @@ void    P_SetThingPosition(mobj_t* thing);
 extern dboolean     floatok;
 extern fixed_t      tmfloorz;
 extern fixed_t      tmceilingz;
-extern    line_t*     tmhitline;
+extern line_t*      tmhitline;
 
 dboolean    P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
 dboolean    P_TryMove(mobj_t* thing, fixed_t x, fixed_t y);
