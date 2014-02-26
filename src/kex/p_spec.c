@@ -1673,13 +1673,20 @@ dboolean P_UseSpecialLine(mobj_t* thing, line_t* line, int side) {
     // Switches that other things can activate. MT_FAKEITEM has full player privilages.
     if(!thing->player && thing->type != MT_FAKEITEM) {
         if(thing->tid == line->tag) {
+            // triggered pickups can activate line specials
             if(thing->flags & MF_SPECIAL && thing->flags & MF_TRIGTOUCH) {
                 return P_InitSpecialLine(thing, line, side);
             }
 
+            // triggered dead things can activate line specials
             if(line->flags & ML_THINGTRIGGER && thing->flags & MF_TRIGDEATH) {
                 return P_InitSpecialLine(thing, line, side);
             }
+        }
+
+        // [d64] don't let monsters trigger this line
+        if(line->flags & ML_NOMONSTERTRIGGER) {
+            return false;
         }
 
         // never open secret doors
@@ -1688,10 +1695,8 @@ dboolean P_UseSpecialLine(mobj_t* thing, line_t* line, int side) {
         }
 
         // never allow a non-player mobj to use lines with these useflags
-        if(line->special & MLU_BLUE || line->special & MLU_YELLOW
-                || line->special & MLU_RED || line->special & MLU_SHOOT ||
-                line->special & MLU_MACRO) {
-            return false;
+        if(line->special & (MLU_BLUE|MLU_YELLOW|MLU_RED|MLU_SHOOT|MLU_MACRO)) {
+                return false;
         }
 
         // Missiles should NOT trigger specials...
