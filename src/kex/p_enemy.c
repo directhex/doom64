@@ -369,7 +369,7 @@ void T_MobjExplode(mobjexp_t *mexp) {
 // returns false if the move is blocked.
 //
 
-fixed_t    xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
+fixed_t xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
 fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 
 dboolean P_Move(mobj_t* actor) {
@@ -417,11 +417,12 @@ dboolean P_Move(mobj_t* actor) {
         good = false;
         while(numspechit--) {
             ld = spechit[numspechit];
-            // if the special is not a door
-            // that can be opened,
+            // if the special is not a door that can be opened,
             // return false
-            if(P_UseSpecialLine(actor, ld, 0) && ld->special & MLU_USE) {
-                good = true;
+            if(ld->special & MLU_USE) {
+                if(P_UseSpecialLine(actor, ld, 0)) {
+                    good = true;
+                }
             }
         }
         return good;
