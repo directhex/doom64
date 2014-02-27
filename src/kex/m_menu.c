@@ -1151,6 +1151,7 @@ CVAR_EXTERNAL(compat_grabitems);
 CVAR_EXTERNAL(r_wipe);
 CVAR_EXTERNAL(r_rendersprites);
 CVAR_EXTERNAL(r_texturecombiner);
+CVAR_EXTERNAL(r_colorscale);
 
 enum {
     misc_header1,
@@ -1170,6 +1171,7 @@ enum {
     misc_combine,
     misc_sprites,
     misc_skybox,
+    misc_rgbscale,
     misc_header4,
     misc_showkey,
     misc_showlocks,
@@ -1203,6 +1205,7 @@ menuitem_t MiscMenu[]= {
     {2,"Use Combiners:",M_MiscChoice, 'c' },
     {2,"Sprite Pitch:",M_MiscChoice,'p'},
     {2,"Skybox:",M_MiscChoice,'k'},
+    {2,"Color Scale:",M_MiscChoice,'o'},
     {-1,"Automap",0 },
     {2,"Key Pickups:",M_MiscChoice },
     {2,"Locked Doors:",M_MiscChoice },
@@ -1235,6 +1238,7 @@ char* MiscHints[misc_end]= {
     "use texture combining - not supported by low-end cards",
     "toggles billboard sprite rendering",
     "toggle skies to render either normally or as skyboxes",
+    "scales the overall color RGB",
     NULL,
     "display key pickups in automap",
     "colorize locked doors accordingly to the key in automap",
@@ -1262,6 +1266,7 @@ menudefault_t MiscDefault[] = {
     { &r_texturecombiner, 1 },
     { &r_rendersprites, 1 },
     { &r_skybox, 0 },
+    { &r_colorscale, 0 },
     { &am_showkeymarkers, 0 },
     { &am_showkeycolors, 0 },
     { &am_drawobjects, 0 },
@@ -1381,6 +1386,10 @@ void M_MiscChoice(int choice) {
         M_SetOptionValue(choice, 0, 1, 1, &r_skybox);
         break;
 
+    case misc_rgbscale:
+        M_SetOptionValue(choice, 0, 2, 1, &r_colorscale);
+        break;
+
     case misc_showkey:
         M_SetOptionValue(choice, 0, 1, 1, &am_showkeymarkers);
         break;
@@ -1420,6 +1429,7 @@ void M_DrawMisc(void) {
     static const char* mapdisplaytype[2] = { "Hide", "Show" };
     static const char* objectdrawtype[3] = { "Arrows", "Sprites", "Both" };
     static const char* texresizetype[3] = { "Auto", "Padded", "Scaled" };
+    static const char* rgbscaletype[3] = { "1x", "2x", "4x" };
     int y;
 
     if(currentMenu->menupageoffset <= misc_menufade+1 &&
@@ -1453,6 +1463,7 @@ void M_DrawMisc(void) {
     DRAWMISCITEM(misc_combine, r_texturecombiner.value, msgNames);
     DRAWMISCITEM(misc_sprites, r_rendersprites.value - 1, msgNames);
     DRAWMISCITEM(misc_skybox, r_skybox.value, msgNames);
+    DRAWMISCITEM(misc_rgbscale, r_colorscale.value, rgbscaletype);
     DRAWMISCITEM(misc_showkey, am_showkeymarkers.value, mapdisplaytype);
     DRAWMISCITEM(misc_showlocks, am_showkeycolors.value, mapdisplaytype);
     DRAWMISCITEM(misc_amobjects, am_drawobjects.value, objectdrawtype);

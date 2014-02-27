@@ -68,6 +68,7 @@ CVAR_EXTERNAL(st_flashoverlay);
 CVAR_EXTERNAL(v_vsync);
 CVAR_EXTERNAL(v_depthsize);
 CVAR_EXTERNAL(v_buffersize);
+CVAR_EXTERNAL(r_colorscale);
 
 //
 // CMD_DumpGLExtensions
@@ -331,6 +332,26 @@ void GL_SetDefaultCombiner(void) {
     }
     else {
         GL_SetTextureMode(GL_MODULATE);
+    }
+}
+
+//
+// GL_SetColorScale
+//
+
+void GL_SetColorScale(void) {
+    int cs = (int)r_colorscale.value;
+
+    switch(cs) {
+        case 1:
+            dglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 2);
+            break;
+        case 2:
+            dglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 4);
+            break;
+        default:
+            dglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE, 1);
+            break;
     }
 }
 

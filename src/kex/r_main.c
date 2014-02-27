@@ -93,6 +93,10 @@ CVAR(r_rendersprites, 1);
 CVAR(r_drawfill, 0);
 CVAR(r_skybox, 0);
 
+CVAR_CMD(r_colorscale, 0) {
+    GL_SetColorScale();
+}
+
 CVAR_CMD(r_filter, 0) {
     GL_DumpTextures();
     GL_SetTextureFilter();
@@ -937,6 +941,7 @@ void R_RegisterCvars(void) {
     CON_CvarRegister(&r_texnonpowresize);
     CON_CvarRegister(&r_drawfill);
     CON_CvarRegister(&r_skybox);
+    CON_CvarRegister(&r_colorscale);
 }
 
 
