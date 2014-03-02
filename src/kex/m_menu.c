@@ -2453,6 +2453,7 @@ static void M_PasswordSelect(void) {
             G_DeferedInitNew(gameskill, gamemap);
             doPassword = true;
             currentMenu->lastOn = itemOn;
+            S_StartSound(NULL, sfx_pistol);
             M_ClearMenus();
 
             return;
