@@ -509,7 +509,8 @@ alist_t* ParseActions(char *actions) {
         }
 
         while(*p == ';') {
-            p = SkipWhitespace(&p[1]);
+            *(p++) = 0;
+            p = SkipWhitespace(p);
         }
 
         dstrlwr(al->cmd);

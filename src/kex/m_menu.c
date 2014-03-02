@@ -2386,7 +2386,7 @@ void M_DrawPassword(void) {
     if(!xgamepad.connected)
 #endif
     {
-        Draw_BigText(-1, 240 - 48, MENUCOLORWHITE , "Press Backspace To Change");
+        Draw_BigText(-1, 240 - 48, MENUCOLORWHITE , "Press Delete To Change");
         Draw_BigText(-1, 240 - 32, MENUCOLORWHITE , "Press Escape To Return");
     }
 
