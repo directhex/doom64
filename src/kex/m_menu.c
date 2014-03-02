@@ -4561,9 +4561,6 @@ dboolean M_Responder(event_t* ev) {
     case BUTTON_START:
         ch = KEY_ESCAPE;
         break;
-    case BUTTON_BACK:
-        ch = KEY_BACKSPACE;
-        break;
     case BUTTON_A:
         ch = KEY_ENTER;
         break;
