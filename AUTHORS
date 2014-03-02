@@ -10,14 +10,20 @@ others to work on improving the game.
 In October 1999, id Software re-released the Doom source code under the
 GNU General Public License.
 
-Samuel 'Kaiser' Villarreal <svkaiser@gmail.com>
+Samuel Villarreal <svkaiser@gmail.com>
 Doom64 EX Author
 
 Paul Brook
-Author of the Doom3D source port in which Doom64 EX was originally based off of.
+Author of the Doom3D source port in which Doom64 EX was originally based off of
+
+Zohar Malamant
+Additional programming, multi-platform support
+
+Cray Elliott
+Additional programming, multi-platform support
 
 Urchlay B. Watson
-*Unix maintainer
+*Unix support
 
 James 'Quasar' Haley <haleyjd@hotmail.com>
 For providing wisdom when it comes to working with all the backend stuff such as
