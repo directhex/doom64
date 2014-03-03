@@ -817,8 +817,9 @@ static void P_SpawnQuake(line_t* line) {
 // P_AlertTaggedMobj
 //
 
-static void P_AlertTaggedMobj(player_t* player, int tid) {
+static void P_AlertTaggedMobj(mobj_t *activator, int tid) {
     mobj_t* mo;
+    player_t *player;
     state_t* st;
 
     for(mo = mobjhead.next; mo != &mobjhead; mo = mo->next) {
@@ -850,6 +851,19 @@ static void P_AlertTaggedMobj(player_t* player, int tid) {
         }
 
         st = &states[mo->info->seestate];
+
+        // 03022014 villsa - handle checks if activator is not a player
+        if(activator->player) {
+            player = activator->player;
+        }
+        else if(activator->target && activator->target->player) {
+            // if the activator's target is a player
+            player = activator->target->player;
+        }
+        else {
+            // default to player 1
+            player = &players[0];
+        }
 
         P_SetTarget(&mo->target, player->mo);
 
@@ -1301,7 +1315,7 @@ int P_DoSpecialLine(mobj_t* thing, line_t* line, int side) {
 
     case 94:
         // Noise Alert
-        P_AlertTaggedMobj(thing->player, line->tag);
+        P_AlertTaggedMobj(thing, line->tag);
         ok = 1;
         break;
 
