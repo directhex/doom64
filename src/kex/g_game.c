@@ -911,7 +911,8 @@ void G_DoLoadLevel(void) {
     map = P_GetMapInfo(gamemap);
 
     if(map == NULL) {
-        I_Error("G_DoLoadLevel: No mapinfo data found for MAP%02d", gamemap);
+        // boot out to main menu
+        gameaction = ga_title;
         return;
     }
 
@@ -1470,6 +1471,10 @@ void G_RunGame(void) {
         }
         else {
             G_DoLoadLevel();
+
+            if(gameaction == ga_title) {
+                break;
+            }
         }
 
         next = D_MiniLoop(P_Start, P_Stop, P_Drawer, P_Ticker);

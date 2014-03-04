@@ -496,15 +496,12 @@ static int Title_Ticker(void) {
 static void Title_Start(void) {
     gameaction = ga_nothing;
     pagetic = gametic;
-    allowmenu = true;
-    menuactive = true;
-    mainmenuactive = true;
     usergame = false;   // no save / end game here
     paused = false;
     allowclearmenu = false;
 
     S_StartMusic(mus_title);
-    M_StartControlPanel(false);
+    M_StartMainMenu();
 }
 
 //

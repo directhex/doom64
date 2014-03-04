@@ -4915,6 +4915,19 @@ void M_StartControlPanel(dboolean forcenext) {
 }
 
 //
+// M_StartMainMenu
+//
+
+void M_StartMainMenu(void) {
+    currentMenu = &MainDef;
+    itemOn = 0;
+    allowmenu = true;
+    menuactive = true;
+    mainmenuactive = true;
+    M_StartControlPanel(false);
+}
+
+//
 // M_DrawMenuSkull
 //
 // Draws skull icon from the symbols lump

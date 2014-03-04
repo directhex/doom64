@@ -202,9 +202,10 @@ int WI_Ticker(void) {
         cluster = P_GetCluster(gamemap);
         nextcluster = P_GetCluster(nextmap);
 
-        if((nextcluster && cluster != nextcluster && nextcluster->enteronly) ||
-                (cluster && cluster != nextcluster && !cluster->enteronly)) {
-            return ga_victory;
+        if(!nextcluster                                                         ||
+            ((nextcluster && cluster != nextcluster && nextcluster->enteronly)  ||
+            (cluster && cluster != nextcluster && !cluster->enteronly))) {
+                return ga_victory;
         }
 
         return 1;

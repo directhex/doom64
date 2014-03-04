@@ -55,6 +55,8 @@ void M_Init(void);
 // does nothing if menu is already up.
 void M_StartControlPanel(dboolean forcenext);
 
+void M_StartMainMenu(void);
+
 void M_RegisterCvars(void);
 
 
