@@ -223,7 +223,7 @@ int IN_Ticker(void) {
         }
     }
 
-    if(fInterDone || devparm) {
+    if(fInterDone) {
         // check for button presses to skip delays
         for(i = 0, player = players; i < MAXPLAYERS; i++, player++) {
             if(playeringame[i]) {

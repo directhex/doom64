@@ -148,7 +148,7 @@ NETCVAR_PARAM(p_autoaim,        1,  gameflags,      GF_ALLOWAUTOAIM);
 NETCVAR_PARAM(compat_collision, 1,  compatflags,    COMPATF_COLLISION);
 NETCVAR_PARAM(compat_mobjpass,  1,  compatflags,    COMPATF_MOBJPASS);
 NETCVAR_PARAM(compat_limitpain, 1,  compatflags,    COMPATF_LIMITPAIN);
-NETCVAR_PARAM(compat_grabitems, 0,  compatflags,    COMPATF_REACHITEMS);
+NETCVAR_PARAM(compat_grabitems, 1,  compatflags,    COMPATF_REACHITEMS);
 
 CVAR_EXTERNAL(v_mlook);
 CVAR_EXTERNAL(v_mlookinvert);

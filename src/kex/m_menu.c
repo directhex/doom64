@@ -1274,7 +1274,7 @@ menudefault_t MiscDefault[] = {
     { &compat_collision, 1 },
     { &compat_limitpain, 1 },
     { &compat_mobjpass, 1 },
-    { &compat_grabitems, 0 },
+    { &compat_grabitems, 1 },
     { NULL, -1 }
 };
 

@@ -1430,10 +1430,17 @@ void P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, in
 // USE LINES
 //
 
-static mobj_t*  usething = NULL;
-static dboolean usecontext = false;
-static dboolean displaycontext = false;
-line_t* contextline = NULL;
+static mobj_t       *usething = NULL;
+static dboolean     usecontext = false;
+static dboolean     displaycontext = false;
+
+// [d64] these variables are also from jaguar port
+static fixed_t      usebbox[4];
+static divline_t    useline;
+static line_t       *closeline;
+static fixed_t      closedist;
+
+line_t              *contextline = NULL;
 
 //
 // P_CheckUseHeight
@@ -1475,47 +1482,55 @@ static dboolean P_CheckUseHeight(line_t *line, mobj_t *thing) {
     return true;
 }
 
-
 //
-// PTR_UseTraverse
+// PIT_UseLines
 //
 
-dboolean PTR_UseTraverse(intercept_t* in) {
-    if(!in->d.line->special) {
-        P_LineOpening(in->d.line);
+dboolean PIT_UseLines(line_t *li) {
+    divline_t   dl;
+    fixed_t     frac;
+        
+    // check bounding box first
+    if(usebbox[BOXRIGHT] <= li->bbox[BOXLEFT]   || 
+        usebbox[BOXLEFT] >= li->bbox[BOXRIGHT]  ||
+        usebbox[BOXTOP] <= li->bbox[BOXBOTTOM]  ||
+        usebbox[BOXBOTTOM] >= li->bbox[BOXTOP]) {
+        return true;
+    }
 
-        if(openrange <= 0) {
-            //
-            // [kex] don't spam oof sound if usecontext is on
-            //
-            if(!usecontext) {
-                S_StartSound(usething, sfx_noway);
-            }
-
-            return false;    // can't use through a wall
+    if(li->special) {
+        if(P_PointOnLineSide(usething->x, usething->y, li) == 1) {
+            return true;
         }
-
-
-        return true;    // keep checking
     }
 
-    if(!(in->d.line->special & MLU_USE) || !P_CheckUseHeight(in->d.line, usething)) {
-        return false;
+    // find distance along usetrace
+    P_MakeDivline(li, &dl);
+    frac = P_InterceptVector(&useline, &dl);
+    if(frac < 0) {
+        // behind source
+        return true;
+    }
+    if(frac > closedist) {
+        // too far away
+        return true;
     }
 
-    //
-    // [kex] don't trigger special if usecontext is on
-    //
-    if(!usecontext) {
-        P_UseSpecialLine(usething, in->d.line,
-                         (P_PointOnLineSide(usething->x, usething->y, in->d.line) == 1));
-    }
+    // the line is actually hit, find the distance
+    if(!li->special) {
+        P_LineOpening(li);
 
-    displaycontext = true;
-    contextline = in->d.line;
+        if(openrange > 0) {
+            // keep checking
+            return true;
+        }
+    }
+    
+    closeline = li;
+    closedist = frac;
 
     // can't use for than one special line in a row
-    return false;
+    return true;
 }
 
 //
@@ -1524,11 +1539,17 @@ dboolean PTR_UseTraverse(intercept_t* in) {
 //
 
 dboolean P_UseLines(player_t *player, dboolean showcontext) {
-    int        angle;
-    fixed_t    x1;
-    fixed_t    y1;
-    fixed_t    x2;
-    fixed_t    y2;
+    int     angle;
+    fixed_t x1;
+    fixed_t y1;
+    fixed_t x2;
+    fixed_t y2;
+    int     x;
+    int     y;
+    int     xl;
+    int     xh;
+    int     yl;
+    int     yh;
 
     usething = player->mo;
 
@@ -1546,7 +1567,68 @@ dboolean P_UseLines(player_t *player, dboolean showcontext) {
     x2 = x1 + F2INT(USERANGE)*finecosine[angle];
     y2 = y1 + F2INT(USERANGE)*finesine[angle];
 
-    P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse);
+    useline.x = x1;
+    useline.y = y1;
+    useline.dx = x2-x1;
+    useline.dy = y2-y1;
+
+    if(useline.dx > 0) {
+        usebbox[BOXRIGHT] = x2;
+        usebbox[BOXLEFT] = x1;
+    }
+    else {
+        usebbox[BOXRIGHT] = x1;
+        usebbox[BOXLEFT] = x2;
+    }
+    
+    if(useline.dy > 0) {
+        usebbox[BOXTOP] = y2;
+        usebbox[BOXBOTTOM] = y1;
+    }
+    else {
+        usebbox[BOXTOP] = y1;
+        usebbox[BOXBOTTOM] = y2;
+    }
+    
+    yh = (usebbox[BOXTOP] - bmaporgy)>>MAPBLOCKSHIFT;
+    yl = (usebbox[BOXBOTTOM] - bmaporgy)>>MAPBLOCKSHIFT;
+    xh = (usebbox[BOXRIGHT] - bmaporgx)>>MAPBLOCKSHIFT;
+    xl = (usebbox[BOXLEFT] - bmaporgx)>>MAPBLOCKSHIFT;
+    
+    closeline = NULL;
+    closedist = FRACUNIT;
+    validcount++;
+
+    for(y = yl; y <= yh; y++) {
+        for(x = xl; x <= xh; x++) {
+            P_BlockLinesIterator(x, y, PIT_UseLines);
+        }
+    }
+
+    // check for closest line
+    if(closeline == NULL) {
+        return false;
+    }
+
+    if(!(closeline->special & MLU_USE) || !P_CheckUseHeight(closeline, usething)) {
+        //
+        // [kex] don't spam oof sound if usecontext is on
+        //
+        if(!usecontext) {
+            S_StartSound(usething, sfx_noway);
+        }
+    }
+    else {
+        //
+        // [kex] don't trigger special if usecontext is on
+        //
+        if(!usecontext) {
+            P_UseSpecialLine(usething, closeline, 0);
+        }
+
+        displaycontext = true;
+        contextline = closeline;
+    }
 
     return displaycontext;
 }
