@@ -1203,14 +1203,13 @@ void G_PlayerReborn(int player) {
         p->maxammo[i] = maxammo[i];
     }
 
-    p->artifacts = artifacts;
-
     if(netgame) {
         for(i = 0; i < NUMCARDS; i++) {
             players[player].cards[i] = cards[i];
         }
 
         if(gameflags & GF_KEEPITEMS) {
+            p->artifacts = artifacts;
             p->backpack = backpack;
 
             for(i = 0; i < NUMAMMO; i++) {
