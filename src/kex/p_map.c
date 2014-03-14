@@ -1179,8 +1179,10 @@ dboolean PTR_ShootTraverse(intercept_t* in) {
             }
         }
 
-        if(!(hitz > sidesector->floorheight && hitz < sidesector->ceilingheight)) {
-            hitplane = true;
+        if(sidesector != NULL) {
+            if(!(hitz > sidesector->floorheight && hitz < sidesector->ceilingheight)) {
+                hitplane = true;
+            }
         }
 
         //
