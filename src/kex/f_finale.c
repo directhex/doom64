@@ -166,7 +166,7 @@ int F_Ticker(void) {
             castnum = 0;
         }
 
-        finalePal.a = 255;
+        finalePal.a = mobjinfo[castorder[castnum].type].alpha;
         finalePal.r = 0;
         finalePal.g = 0;
         finalePal.b = 0;
