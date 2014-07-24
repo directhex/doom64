@@ -534,6 +534,9 @@ dboolean P_TryMove(mobj_t* thing, fixed_t x, fixed_t y) {
                 }
             }
         }
+
+        // 20140713 villsa - do not leave numspechit == -1
+        numspechit = 0;
     }
 
     return true;

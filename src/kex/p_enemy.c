@@ -425,6 +425,8 @@ dboolean P_Move(mobj_t* actor) {
                 }
             }
         }
+        // 20140713 villsa - do not leave numspechit == -1
+        numspechit = 0;
         return good;
     }
     //else
