@@ -9,6 +9,8 @@ find_package(FluidSynth REQUIRED)
 find_package(SDL_net REQUIRED)
 find_package(OpenGL REQUIRED)
 
+find_library(M_LIB m)
+
 include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/Ext ${FluidSynth_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${PNG_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
 
 # Get around a issue
@@ -126,4 +128,4 @@ add_executable(doom64ex
 	Ext/ChocolateDoom/net_structrw.c
 )
 
-target_link_libraries(doom64ex ${ZLIB_LIBRARY} ${PNG_LIBRARY} ${SDL_LIBRARY} ${FLUIDSYNTH_LIBRARIES} ${SDLNET_LIBRARY} ${OPENGL_LIBRARY})
+target_link_libraries(doom64ex ${ZLIB_LIBRARY} ${PNG_LIBRARY} ${SDL_LIBRARY} ${FLUIDSYNTH_LIBRARIES} ${SDLNET_LIBRARY} ${OPENGL_LIBRARY} ${M_LIB})
