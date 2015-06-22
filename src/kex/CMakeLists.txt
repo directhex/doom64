@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(Doom64Ex)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/kex/")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/")
 find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 find_package(SDL REQUIRED)
@@ -9,7 +9,7 @@ find_package(FluidSynth REQUIRED)
 find_package(SDL_net REQUIRED)
 find_package(OpenGL REQUIRED)
 
-include_directories(${CMAKE_SOURCE_DIR}/kex ${CMAKE_SOURCE_DIR}/kex/Ext ${FluidSynth_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${PNG_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/Ext ${FluidSynth_INCLUDE_DIR} ${SDL_INCLUDE_DIR} ${PNG_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
 
 # Get around a issue
 add_definitions(-Ddprintf=_dprintf -D__cdecl=)
