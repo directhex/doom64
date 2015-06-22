@@ -27,6 +27,22 @@
 #define _USE_XINPUT
 #endif
 
+#define BUTTON_DPAD_UP                  400
+#define BUTTON_DPAD_DOWN                401
+#define BUTTON_DPAD_LEFT                402
+#define BUTTON_DPAD_RIGHT               403
+#define BUTTON_START                    404
+#define BUTTON_BACK                     405
+#define BUTTON_LEFT_THUMB               406
+#define BUTTON_RIGHT_THUMB              407
+#define BUTTON_LEFT_SHOULDER            408
+#define BUTTON_RIGHT_SHOULDER           409
+#define BUTTON_A                        410
+#define BUTTON_B                        411
+#define BUTTON_X                        412
+#define BUTTON_Y                        413
+#define BUTTON_LEFT_TRIGGER             414
+#define BUTTON_RIGHT_TRIGGER            415
 
 #ifdef _USE_XINPUT
 
@@ -52,23 +68,6 @@
 #define XINPUT_GAMEPAD_RIGHT_TRIGGER    0x20000
 #define XINPUT_GAMEPAD_LEFT_STICK       0x40000
 #define XINPUT_GAMEPAD_RIGHT_STICK      0x80000
-
-#define BUTTON_DPAD_UP                  400
-#define BUTTON_DPAD_DOWN                401
-#define BUTTON_DPAD_LEFT                402
-#define BUTTON_DPAD_RIGHT               403
-#define BUTTON_START                    404
-#define BUTTON_BACK                     405
-#define BUTTON_LEFT_THUMB               406
-#define BUTTON_RIGHT_THUMB              407
-#define BUTTON_LEFT_SHOULDER            408
-#define BUTTON_RIGHT_SHOULDER           409
-#define BUTTON_A                        410
-#define BUTTON_B                        411
-#define BUTTON_X                        412
-#define BUTTON_Y                        413
-#define BUTTON_LEFT_TRIGGER             414
-#define BUTTON_RIGHT_TRIGGER            415
 
 //
 // Structures used for XInput

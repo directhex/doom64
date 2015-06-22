@@ -66,9 +66,7 @@
 #include "gl_texture.h"
 #include "gl_draw.h"
 
-#ifdef _WIN32
 #include "i_xinput.h"
-#endif
 
 //
 // definitions
